@@ -252,6 +252,56 @@
         </section>
     </main>
 
+    <!-- ═══ LIKES & COMMENTS SECTION ═══ -->
+    <section id="feedback" class="container section reveal">
+        <h2>Feedback de la Comunidad</h2>
+        <p class="section-subtitle">¿Qué piensas de Exilium? Déjanos tu opinión.</p>
+
+        <!-- Page Like -->
+        <div id="page-like-block" style="display:flex;align-items:center;gap:16px;margin-bottom:2.5rem;padding:1.2rem 1.5rem;background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;">
+            <button id="page-like-btn" onclick="togglePageLike()" style="display:flex;align-items:center;gap:8px;background:none;border:2px solid var(--border-color);border-radius:50px;padding:10px 22px;cursor:pointer;font-size:1rem;color:var(--text-muted);transition:all .2s;font-family:inherit;">
+                <span id="page-like-icon" style="font-size:1.4rem;transition:transform .2s;">&#128077;</span>
+                <span id="page-like-label">Me gusta</span>
+            </button>
+            <div>
+                <span id="page-like-count" style="font-size:1.5rem;font-weight:800;color:var(--accent-color);">0</span>
+                <span style="font-size:.85em;color:var(--text-muted);margin-left:4px;">personas les gusta esto</span>
+            </div>
+        </div>
+
+        <!-- Comments -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+            <!-- Form -->
+            <div>
+                <h3 style="font-size:1rem;margin-bottom:1rem;color:var(--text-color);">Deja un comentario</h3>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <input id="comment-author" type="text" maxlength="40" placeholder="Tu nombre o apodo (máx. 40 caracteres)"
+                        style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:10px 14px;color:var(--text-color);font-size:.9rem;font-family:inherit;outline:none;transition:border-color .2s;"
+                        onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='var(--border-color)'">
+                    <textarea id="comment-text" maxlength="300" rows="4" placeholder="Tu opinión, sugerencia o saludo... (máx. 300 caracteres)"
+                        style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:10px 14px;color:var(--text-color);font-size:.9rem;font-family:inherit;resize:vertical;outline:none;transition:border-color .2s;"
+                        onfocus="this.style.borderColor='var(--accent-color)'" onblur="this.style.borderColor='var(--border-color)'"></textarea>
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <span id="comment-char-count" style="font-size:.78em;color:var(--text-muted);">0 / 300</span>
+                        <button onclick="submitComment()" id="comment-submit-btn"
+                            style="background:var(--accent-color);color:#000;border:none;border-radius:8px;padding:10px 24px;font-weight:700;font-size:.9rem;cursor:pointer;font-family:inherit;transition:opacity .2s;">
+                            &#128172; Enviar comentario
+                        </button>
+                    </div>
+                    <div id="comment-feedback" style="font-size:.85em;display:none;padding:8px 12px;border-radius:6px;"></div>
+                </div>
+            </div>
+
+            <!-- List -->
+            <div>
+                <h3 style="font-size:1rem;margin-bottom:1rem;color:var(--text-color);">Comentarios recientes</h3>
+                <div id="comments-list" style="display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;padding-right:4px;">
+                    <div style="color:var(--text-muted);font-size:.85em;text-align:center;padding:2rem 0;">Cargando comentarios...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <p>© 2026 Exilium Guild · PvP · Creado por <a href="#">Mitzukyhs</a> · No afiliado con Blizzard Entertainment.</p>

@@ -95,6 +95,74 @@ async function handleRequest(request, env, ctx) {
     return cachedJsonResponse(raw || { entries: [] }, 120);
   }
 
+  // ── Public Comments ──
+  if (method === 'GET' && path === '/api/comments') {
+    const raw = await env.EXILIUM_KV.get('public:comments', 'json');
+    return jsonResponse(raw || []);
+  }
+
+  if (method === 'POST' && path === '/api/comments') {
+    let body;
+    try { body = await request.json(); } catch (_) { return jsonResponse({ error: 'JSON inválido' }, 400); }
+    const author = (body.author || '').trim().slice(0, 40);
+    const text = (body.text || '').trim().slice(0, 300);
+    if (!author || !text) return jsonResponse({ error: 'Autor y texto requeridos' }, 400);
+
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const existing = await env.EXILIUM_KV.get('public:comments', 'json') || [];
+
+    // Rate limit: max 2 comments per IP in last 5 minutes
+    const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+    const recentFromIp = existing.filter(c => c.ip === ip && c.ts > fiveMinAgo);
+    if (recentFromIp.length >= 2) return jsonResponse({ error: 'Espera un poco antes de comentar de nuevo' }, 429);
+
+    const newComment = { id: Date.now(), author, text, ts: Date.now(), ip, likes: 0 };
+    const updated = [newComment, ...existing].slice(0, 200);
+    await env.EXILIUM_KV.put('public:comments', JSON.stringify(updated));
+    const { ip: _ip, ...safe } = newComment;
+    return jsonResponse({ ok: true, comment: safe });
+  }
+
+  // ── Comment Likes ──
+  if (method === 'POST' && path.startsWith('/api/comments/') && path.endsWith('/like')) {
+    const commentId = parseInt(path.split('/')[3], 10);
+    if (!commentId) return jsonResponse({ error: 'ID inválido' }, 400);
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+    const likeKey = `likes:comment:${commentId}:${ip}`;
+    const alreadyLiked = await env.EXILIUM_KV.get(likeKey);
+    if (alreadyLiked) return jsonResponse({ error: 'Ya diste like a este comentario' }, 409);
+
+    const existing = await env.EXILIUM_KV.get('public:comments', 'json') || [];
+    const idx = existing.findIndex(c => c.id === commentId);
+    if (idx === -1) return jsonResponse({ error: 'Comentario no encontrado' }, 404);
+    existing[idx].likes = (existing[idx].likes || 0) + 1;
+    await env.EXILIUM_KV.put('public:comments', JSON.stringify(existing));
+    await env.EXILIUM_KV.put(likeKey, '1', { expirationTtl: 60 * 60 * 24 * 30 });
+    return jsonResponse({ ok: true, likes: existing[idx].likes });
+  }
+
+  // ── Page Like (general) ──
+  if (method === 'GET' && path === '/api/page-likes') {
+    const raw = await env.EXILIUM_KV.get('public:page_likes', 'json');
+    return jsonResponse(raw || { total: 0 });
+  }
+
+  if (method === 'POST' && path === '/api/page-likes') {
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const likeKey = `likes:page:${ip}`;
+    const alreadyLiked = await env.EXILIUM_KV.get(likeKey);
+
+    const raw = await env.EXILIUM_KV.get('public:page_likes', 'json') || { total: 0 };
+    if (alreadyLiked) {
+      return jsonResponse({ ok: true, total: raw.total, already: true });
+    }
+    raw.total = (raw.total || 0) + 1;
+    await env.EXILIUM_KV.put('public:page_likes', JSON.stringify(raw));
+    await env.EXILIUM_KV.put(likeKey, '1', { expirationTtl: 60 * 60 * 24 * 30 });
+    return jsonResponse({ ok: true, total: raw.total, already: false });
+  }
+
   // Serve R2 media files publicly
   if (method === 'GET' && path.startsWith('/media/')) {
     const key = 'media/' + path.slice(7);

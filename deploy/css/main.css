@@ -8,6 +8,7 @@
 @font-face {
     font-family: 'Sport Break';
     src: url('../assets/Sport_Break_Free_Version.otf') format('opentype');
+    unicode-range: U+0020-007E;
 }
 
 :root {

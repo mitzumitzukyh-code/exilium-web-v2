@@ -914,4 +914,183 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollReveal();
     initActiveNav();
     fetchData();
+
+    // ══════════════════════════════════════════════════════
+    //  PAGE LIKES
+    // ══════════════════════════════════════════════════════
+    const LIKE_KEY = 'exilium_page_liked';
+    let _pageLiked = localStorage.getItem(LIKE_KEY) === '1';
+
+    function initPageLikes() {
+        fetch(API_URL + '/page-likes').then(r => r.json()).then(data => {
+            document.getElementById('page-like-count').textContent = data.total || 0;
+        }).catch(() => {});
+        updateLikeBtn();
+    }
+
+    function updateLikeBtn() {
+        const btn = document.getElementById('page-like-btn');
+        const icon = document.getElementById('page-like-icon');
+        const label = document.getElementById('page-like-label');
+        if (!btn) return;
+        if (_pageLiked) {
+            btn.style.borderColor = 'var(--accent-color)';
+            btn.style.color = 'var(--accent-color)';
+            btn.style.background = 'rgba(212,160,23,.1)';
+            icon.textContent = '👍';
+            label.textContent = 'Te gusta';
+        } else {
+            btn.style.borderColor = 'var(--border-color)';
+            btn.style.color = 'var(--text-muted)';
+            btn.style.background = 'none';
+            icon.textContent = '👍';
+            label.textContent = 'Me gusta';
+        }
+    }
+
+    window.togglePageLike = function() {
+        const icon = document.getElementById('page-like-icon');
+        const countEl = document.getElementById('page-like-count');
+        icon.style.transform = 'scale(1.4)';
+        setTimeout(() => { icon.style.transform = 'scale(1)'; }, 200);
+
+        fetch(API_URL + '/page-likes', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                countEl.textContent = data.total || 0;
+                if (!data.already) {
+                    _pageLiked = true;
+                    localStorage.setItem(LIKE_KEY, '1');
+                }
+                updateLikeBtn();
+            }).catch(() => {});
+    };
+
+    initPageLikes();
+
+    // ══════════════════════════════════════════════════════
+    //  COMMENTS
+    // ══════════════════════════════════════════════════════
+    let _comments = [];
+    let _likedComments = JSON.parse(localStorage.getItem('exilium_liked_comments') || '[]');
+
+    function timeAgo(ts) {
+        const diff = Math.floor((Date.now() - ts) / 1000);
+        if (diff < 60) return 'hace ' + diff + 's';
+        if (diff < 3600) return 'hace ' + Math.floor(diff / 60) + 'm';
+        if (diff < 86400) return 'hace ' + Math.floor(diff / 3600) + 'h';
+        return 'hace ' + Math.floor(diff / 86400) + 'd';
+    }
+
+    function renderComments() {
+        const list = document.getElementById('comments-list');
+        if (!list) return;
+        if (!_comments.length) {
+            list.innerHTML = '<div style="color:var(--text-muted);font-size:.85em;text-align:center;padding:2rem 0;">Sé el primero en comentar ✨</div>';
+            return;
+        }
+        list.innerHTML = _comments.map(c => {
+            const liked = _likedComments.includes(c.id);
+            const initials = (c.author || '?').slice(0, 2).toUpperCase();
+            const colors = ['#d4a017','#8b5cf6','#3b82f6','#10b981','#ef4444','#f59e0b'];
+            const color = colors[c.id % colors.length];
+            return `<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:10px;padding:12px 14px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;color:#000;flex-shrink:0;">${initials}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-weight:700;color:var(--text-color);font-size:.9rem;">${escapeHtmlPublic(c.author)}</div>
+                        <div style="font-size:.75em;color:var(--text-muted);">${timeAgo(c.ts)}</div>
+                    </div>
+                    <button onclick="likeComment(${c.id}, this)" style="display:flex;align-items:center;gap:4px;background:none;border:1px solid ${liked ? 'var(--accent-color)' : 'var(--border-color)'};border-radius:20px;padding:4px 10px;cursor:pointer;color:${liked ? 'var(--accent-color)' : 'var(--text-muted)'};font-size:.8rem;transition:all .2s;font-family:inherit;" ${liked ? 'disabled' : ''}>
+                        <span>&#10084;</span> <span class="like-count">${c.likes || 0}</span>
+                    </button>
+                </div>
+                <p style="font-size:.88rem;color:var(--text-color);line-height:1.5;margin:0;">${escapeHtmlPublic(c.text)}</p>
+            </div>`;
+        }).join('');
+    }
+
+    function escapeHtmlPublic(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function loadComments() {
+        fetch(API_URL + '/comments').then(r => r.json()).then(data => {
+            _comments = Array.isArray(data) ? data : [];
+            renderComments();
+        }).catch(() => {
+            const list = document.getElementById('comments-list');
+            if (list) list.innerHTML = '<div style="color:var(--text-muted);font-size:.85em;text-align:center;padding:2rem 0;">Error cargando comentarios</div>';
+        });
+    }
+
+    window.likeComment = function(id, btn) {
+        fetch(API_URL + '/comments/' + id + '/like', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    _likedComments.push(id);
+                    localStorage.setItem('exilium_liked_comments', JSON.stringify(_likedComments));
+                    btn.style.borderColor = 'var(--accent-color)';
+                    btn.style.color = 'var(--accent-color)';
+                    btn.disabled = true;
+                    btn.querySelector('.like-count').textContent = data.likes;
+                }
+            }).catch(() => {});
+    };
+
+    window.submitComment = function() {
+        const authorEl = document.getElementById('comment-author');
+        const textEl = document.getElementById('comment-text');
+        const feedbackEl = document.getElementById('comment-feedback');
+        const btn = document.getElementById('comment-submit-btn');
+        const author = authorEl.value.trim();
+        const text = textEl.value.trim();
+
+        function showFeedback(msg, ok) {
+            feedbackEl.style.display = 'block';
+            feedbackEl.style.background = ok ? 'rgba(16,185,129,.12)' : 'rgba(239,68,68,.12)';
+            feedbackEl.style.color = ok ? '#10b981' : '#ef4444';
+            feedbackEl.style.border = '1px solid ' + (ok ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)');
+            feedbackEl.textContent = msg;
+        }
+
+        if (!author) { showFeedback('Ingresa tu nombre o apodo', false); authorEl.focus(); return; }
+        if (!text) { showFeedback('Escribe un comentario', false); textEl.focus(); return; }
+
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+
+        fetch(API_URL + '/comments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author, text }),
+        }).then(r => r.json()).then(data => {
+            if (data.ok) {
+                showFeedback('✅ Comentario publicado. ¡Gracias!', true);
+                authorEl.value = '';
+                textEl.value = '';
+                document.getElementById('comment-char-count').textContent = '0 / 300';
+                loadComments();
+            } else {
+                showFeedback(data.error || 'Error al enviar', false);
+            }
+        }).catch(() => {
+            showFeedback('Error de conexión', false);
+        }).finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '&#128172; Enviar comentario';
+        });
+    };
+
+    // Char counter for textarea
+    const commentTextEl = document.getElementById('comment-text');
+    if (commentTextEl) {
+        commentTextEl.addEventListener('input', function() {
+            const count = document.getElementById('comment-char-count');
+            if (count) count.textContent = this.value.length + ' / 300';
+        });
+    }
+
+    loadComments();
 });
