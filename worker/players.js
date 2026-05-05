@@ -237,6 +237,10 @@ export async function syncPlayer(request, env, playerId) {
       max_rs: 0, max_r2: 0, max_r3: 0, max_rbg: 0, max_bgs: 0,
     };
 
+    const BRACKET_LABELS = { rs: 'Solo Shuffle', r2: '2v2', r3: '3v3', rbg: 'RBG', bgs: 'Blitz' };
+    const MILESTONE_RATINGS = [1800, 2100, 2400];
+    const milestoneAlerts = [];
+
     const brackets = ['rs', 'r2', 'r3', 'rbg', 'bgs'];
     brackets.forEach((key) => {
       const maxKey = `max_${key}`;
@@ -245,11 +249,46 @@ export async function syncPlayer(request, env, playerId) {
       const currentMax = player.pvp.season_max[maxKey] || 0;
 
       if (totalGames > 0) {
+        const newMax = Math.max(currentMax, newRating);
         // Solo actualizar hacia arriba: preservar el peak rating histórico
-        player.pvp.season_max[maxKey] = Math.max(currentMax, newRating);
+        player.pvp.season_max[maxKey] = newMax;
+
+        // Detectar milestones cruzados por primera vez
+        for (const milestone of MILESTONE_RATINGS) {
+          if (newMax >= milestone && currentMax < milestone) {
+            milestoneAlerts.push({ bracket: BRACKET_LABELS[key], rating: newMax, milestone });
+          }
+        }
       }
       // Si totalGames === 0, se mantiene el peak existente (no se resetea)
     });
+
+    // Disparar notificaciones para cada milestone alcanzado (fire & forget)
+    if (milestoneAlerts.length > 0) {
+      try {
+        const webhookUrl = await env.EXILIUM_KV.get('config:n8n_webhook_url');
+        if (webhookUrl) {
+          for (const alert of milestoneAlerts) {
+            fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event: 'rating_milestone',
+                player_name: player.name,
+                player_class: player.class || '',
+                player_spec: player.spec || '',
+                player_realm: player.realm_display || player.realm || '',
+                player_avatar: player.media?.avatar || '',
+                bracket: alert.bracket,
+                rating: alert.rating,
+                milestone: alert.milestone,
+                timestamp: new Date().toISOString(),
+              }),
+            }).catch(() => {});
+          }
+        }
+      } catch (_) {}
+    }
 
     // Cargar config healer bonus y aplicar si corresponde
     let healerOpts = null;

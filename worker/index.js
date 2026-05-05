@@ -465,6 +465,48 @@ async function handleRequest(request, env, ctx) {
       return jsonResponse({ ok: true, config });
     }
 
+    // ── N8N Webhook Config ──
+    if (method === 'GET' && path === '/admin/n8n-config') {
+      const url = await env.EXILIUM_KV.get('config:n8n_webhook_url') || '';
+      const discordUrl = await env.EXILIUM_KV.get('config:discord_webhook_url') || '';
+      return jsonResponse({ webhook_url: url, discord_webhook_url: discordUrl });
+    }
+
+    if (method === 'PUT' && path === '/admin/n8n-config') {
+      const body = await request.json();
+      if (body.webhook_url !== undefined) {
+        await env.EXILIUM_KV.put('config:n8n_webhook_url', body.webhook_url.trim());
+      }
+      if (body.discord_webhook_url !== undefined) {
+        await env.EXILIUM_KV.put('config:discord_webhook_url', body.discord_webhook_url.trim());
+      }
+      return jsonResponse({ ok: true });
+    }
+
+    // Endpoint for admin to test the N8N webhook manually
+    if (method === 'POST' && path === '/admin/n8n-test') {
+      const webhookUrl = await env.EXILIUM_KV.get('config:n8n_webhook_url');
+      if (!webhookUrl) return jsonResponse({ error: 'No hay webhook configurado' }, 400);
+      const res = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'rating_milestone',
+          player_name: 'TestPlayer',
+          player_class: 'Warrior',
+          player_spec: 'Arms',
+          player_realm: 'Ragnaros',
+          player_avatar: '',
+          bracket: 'Solo Shuffle',
+          rating: 2400,
+          milestone: 2400,
+          timestamp: new Date().toISOString(),
+          test: true,
+        }),
+      });
+      return jsonResponse({ ok: res.ok, status: res.status });
+    }
+
     // ── Battle Pass Config ──
     if (method === 'GET' && path === '/admin/battlepass-config') {
       const raw = await env.EXILIUM_KV.get('config:battlepass_rewards');

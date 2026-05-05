@@ -57,6 +57,7 @@
             <button data-tab="officers"><span class="nav-icon">👑</span> Oficiales</button>
             <button data-tab="hall-of-fame"><span class="nav-icon">🏛️</span> Salón de la Fama</button>
             <button data-tab="analytics"><span class="nav-icon">📈</span> Analíticas</button>
+            <button data-tab="n8n"><span class="nav-icon">⚡</span> N8N / Discord</button>
             <button data-tab="errors"><span class="nav-icon">🔬</span> Errores</button>
         </nav>
         <div class="sidebar-footer">
@@ -639,6 +640,61 @@
                     <div style="display:flex;gap:8px;margin-top:8px;">
                         <button class="btn btn-success" id="hof-form-save-btn">💾 Agregar</button>
                         <button class="btn" id="hof-form-cancel-btn">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: N8N / DISCORD ═══════ -->
+        <div id="tab-n8n" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">⚡ N8N &amp; Discord</h2>
+            </div>
+
+            <!-- Instrucciones -->
+            <div class="card" style="margin-bottom:1rem;border-left:3px solid var(--accent);">
+                <div class="card-body" style="font-size:.9em;">
+                    <strong style="color:var(--accent);">¿Cómo configurar?</strong>
+                    <ol style="margin-top:8px;padding-left:18px;line-height:1.8;color:var(--text-muted);">
+                        <li>Crea una cuenta gratis en <a href="https://app.n8n.cloud" target="_blank" style="color:var(--accent);">app.n8n.cloud</a></li>
+                        <li>Crea un nuevo workflow e importa el JSON de abajo (<strong>Import → From JSON</strong>)</li>
+                        <li>Abre el nodo <strong>Webhook</strong>, copia la URL de producción y pégala aquí abajo</li>
+                        <li>Crea un Discord Webhook en tu canal y pégalo también</li>
+                        <li>Activa el workflow en N8N (toggle Active)</li>
+                        <li>Haz clic en <strong>Probar webhook</strong> para verificar</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Config form -->
+            <div class="card" style="margin-bottom:1rem;">
+                <div class="card-header"><span class="card-title">🔗 Configuración de webhooks</span></div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="n8n-webhook-url">URL del webhook N8N (producción)</label>
+                        <input class="input" type="url" id="n8n-webhook-url" placeholder="https://tu-instancia.app.n8n.cloud/webhook/xxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label for="n8n-discord-url">URL del Discord Webhook (opcional — para el flujo de parches)</label>
+                        <input class="input" type="url" id="n8n-discord-url" placeholder="https://discord.com/api/webhooks/xxxxx/yyyyy">
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="btn btn-primary" id="n8n-save-btn">💾 Guardar configuración</button>
+                        <button class="btn" id="n8n-test-btn">🧪 Probar webhook</button>
+                    </div>
+                    <div id="n8n-status" style="margin-top:10px;font-size:.85em;display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Workflow JSON export -->
+            <div class="card">
+                <div class="card-header"><span class="card-title">📋 Workflow N8N — Importar en tu instancia</span></div>
+                <div class="card-body">
+                    <p style="color:var(--text-muted);font-size:.85em;margin-bottom:12px;">Copia este JSON y en N8N ve a <strong>Import → From JSON</strong>. Luego configura los nodos con tus credenciales de Discord.</p>
+                    <div style="position:relative;">
+                        <button onclick="copyN8nWorkflow()" style="position:absolute;top:8px;right:8px;background:var(--accent);color:#000;border:none;border-radius:4px;padding:4px 10px;font-size:.75em;font-weight:700;cursor:pointer;">📋 Copiar</button>
+                        <textarea id="n8n-workflow-json" readonly rows="14"
+                            style="width:100%;background:var(--bg-color);border:1px solid var(--border);border-radius:6px;padding:12px;color:var(--text-muted);font-family:monospace;font-size:.75em;resize:vertical;"></textarea>
                     </div>
                 </div>
             </div>

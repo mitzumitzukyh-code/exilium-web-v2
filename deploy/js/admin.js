@@ -224,6 +224,7 @@ function switchTab(tabName) {
     case 'officers': loadOfficers(); break;
     case 'hall-of-fame': loadHallOfFame(); break;
     case 'analytics': loadAnalytics(); break;
+    case 'n8n': loadN8nConfig(); break;
     case 'errors': loadErrors(); break;
   }
 }
@@ -2171,9 +2172,133 @@ document.addEventListener('DOMContentLoaded', function() {
   // Tab: Battle Pass - Healer Bonus
   $('save-healer-bonus-btn').addEventListener('click', saveHealerBonus);
 
+  // Tab: N8N
+  $('n8n-save-btn').addEventListener('click', saveN8nConfig);
+  $('n8n-test-btn').addEventListener('click', testN8nWebhook);
+
   // Tab: Errors
   $('clear-errors-btn').addEventListener('click', clearErrors);
 
   // Check existing session
   checkSession();
 });
+
+// ══════════════════════════════════════════════════════════
+//  N8N / DISCORD
+// ══════════════════════════════════════════════════════════
+
+const N8N_WORKFLOW_JSON = JSON.stringify({
+  "name": "Exilium Rating Milestones → Discord",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "exilium-milestone", "responseMode": "responseNode", "options": {} },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "exilium-milestone"
+    },
+    {
+      "parameters": {
+        "content": "=## ⚔️ ¡Nuevo Milestone PvP en Exilium!\n\n🏆 **{{ $json.body.player_name }}** ({{ $json.body.player_class }} — {{ $json.body.player_realm }}) ha alcanzado **{{ $json.body.milestone }}** de rating en **{{ $json.body.bracket }}**!\n\nRating actual: **{{ $json.body.rating }}**\n📅 {{ $json.body.timestamp }}"
+      },
+      "id": "set-message",
+      "name": "Prepare Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Prepare Message').item.json.discord_webhook_url || 'PEGA_AQUI_TU_DISCORD_WEBHOOK' }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "content", "value": "=⚔️ **{{ $('webhook-node').item.json.body.player_name }}** alcanzó **{{ $('webhook-node').item.json.body.milestone }}** en **{{ $('webhook-node').item.json.body.bracket }}**! ({{ $('webhook-node').item.json.body.rating }} rating)" },
+            { "name": "username", "value": "Exilium Bot" },
+            { "name": "avatar_url", "value": "https://exilium-battlepass.pages.dev/assets/logo.png" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "discord-node",
+      "name": "Send to Discord",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={ \"ok\": true }" },
+      "id": "respond-node",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Prepare Message", "type": "main", "index": 0 }]] },
+    "Prepare Message": { "main": [[{ "node": "Send to Discord", "type": "main", "index": 0 }]] },
+    "Send to Discord": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}, null, 2);
+
+async function loadN8nConfig() {
+  try {
+    const data = await apiCall('/admin/n8n-config');
+    $('n8n-webhook-url').value = data.webhook_url || '';
+    $('n8n-discord-url').value = data.discord_webhook_url || '';
+  } catch (_) {}
+  $('n8n-workflow-json').value = N8N_WORKFLOW_JSON;
+}
+
+async function saveN8nConfig() {
+  const webhookUrl = $('n8n-webhook-url').value.trim();
+  const discordUrl = $('n8n-discord-url').value.trim();
+  const statusEl = $('n8n-status');
+  try {
+    await apiCall('/admin/n8n-config', 'PUT', { webhook_url: webhookUrl, discord_webhook_url: discordUrl });
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--success)';
+    statusEl.textContent = '✅ Configuración guardada correctamente';
+    toast('N8N configurado', 'success');
+  } catch (err) {
+    statusEl.style.display = 'block';
+    statusEl.style.color = 'var(--danger)';
+    statusEl.textContent = '❌ Error: ' + err.message;
+    toast('Error guardando: ' + err.message, 'error');
+  }
+}
+
+async function testN8nWebhook() {
+  const statusEl = $('n8n-status');
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--text-muted)';
+  statusEl.textContent = '⏳ Enviando prueba al webhook...';
+  try {
+    const data = await apiCall('/admin/n8n-test', 'POST');
+    if (data.ok) {
+      statusEl.style.color = 'var(--success)';
+      statusEl.textContent = '✅ Webhook respondió OK (status ' + data.status + ') — revisa tu canal de Discord';
+      toast('Webhook enviado correctamente', 'success');
+    } else {
+      statusEl.style.color = 'var(--warning)';
+      statusEl.textContent = '⚠️ Webhook respondió con status ' + data.status + ' — revisa la URL';
+      toast('El webhook respondió con error ' + data.status, 'error');
+    }
+  } catch (err) {
+    statusEl.style.color = 'var(--danger)';
+    statusEl.textContent = '❌ ' + (err.message || 'Error al probar el webhook');
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+window.copyN8nWorkflow = function() {
+  const ta = $('n8n-workflow-json');
+  ta.select();
+  document.execCommand('copy');
+  toast('JSON del workflow copiado al portapapeles', 'success');
+};
