@@ -1425,7 +1425,7 @@ async function hofUploadVideo() {
     return;
   }
 
-  const MAX_MB = 200;
+  const MAX_MB = 500;
   if (file.size > MAX_MB * 1024 * 1024) {
     toast('El archivo supera los ' + MAX_MB + 'MB', 'error');
     return;
@@ -1439,73 +1439,155 @@ async function hofUploadVideo() {
   progressEl.style.display = 'block';
   btn.disabled = true;
   barEl.style.width = '0%';
-  statusEl.textContent = 'Subiendo... 0%';
 
-  // Use XMLHttpRequest for progress tracking
-  return new Promise(function(resolve) {
-    const xhr = new XMLHttpRequest();
-    const token = getToken();
-    const filename = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const token = getToken();
+  const filename = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const ext = file.name.split('.').pop().toLowerCase();
+  const extTypes = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', avi: 'video/x-msvideo', mkv: 'video/x-matroska' };
+  const contentType = (file.type && file.type.startsWith('video/')) ? file.type : (extTypes[ext] || 'video/mp4');
 
-    xhr.upload.addEventListener('progress', function(e) {
-      if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 100);
-        barEl.style.width = pct + '%';
-        statusEl.textContent = 'Subiendo... ' + pct + '%';
-      }
-    });
+  const CHUNK_SIZE = 25 * 1024 * 1024; // 25MB por chunk
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    xhr.addEventListener('load', function() {
-      btn.disabled = false;
-      if (xhr.status === 200) {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          if (data.url) {
-            $('hof-main-video').value = data.url;
-            statusEl.textContent = '✅ Subido correctamente';
-            barEl.style.width = '100%';
-            toast('Video subido. Recuerda guardar los cambios.', 'success');
-          }
-        } catch (e) {
-          statusEl.textContent = '❌ Error procesando respuesta';
-          toast('Error procesando respuesta del servidor', 'error');
+  // Si el archivo es pequeño (<= 90MB) usa upload directo
+  if (file.size <= 90 * 1024 * 1024) {
+    statusEl.textContent = 'Subiendo... 0%';
+    return new Promise(function(resolve) {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          barEl.style.width = pct + '%';
+          statusEl.textContent = 'Subiendo... ' + pct + '%';
         }
-      } else {
-        var errMsg = '';
-        try { errMsg = JSON.parse(xhr.responseText).error || ''; } catch(_) {}
-        statusEl.textContent = '❌ Error ' + xhr.status + (errMsg ? ': ' + errMsg : '');
-        toast('Error al subir el video (' + xhr.status + ')' + (errMsg ? ': ' + errMsg : ''), 'error');
+      });
+      xhr.addEventListener('load', function() {
+        btn.disabled = false;
+        if (xhr.status === 200) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.url) {
+              $('hof-main-video').value = data.url;
+              statusEl.textContent = '✅ Subido correctamente';
+              barEl.style.width = '100%';
+              toast('Video subido. Recuerda guardar los cambios.', 'success');
+            }
+          } catch (e) {
+            statusEl.textContent = '❌ Error procesando respuesta';
+            toast('Error procesando respuesta del servidor', 'error');
+          }
+        } else {
+          var errMsg = '';
+          try { errMsg = JSON.parse(xhr.responseText).error || ''; } catch(_) {}
+          statusEl.textContent = '❌ Error ' + xhr.status + (errMsg ? ': ' + errMsg : '');
+          toast('Error HTTP ' + xhr.status + (errMsg ? ': ' + errMsg : ''), 'error');
+        }
+        resolve();
+      });
+      xhr.addEventListener('error', function() {
+        btn.disabled = false;
+        statusEl.textContent = '❌ Error de red';
+        toast('Error de red al subir. Verifica tu conexión.', 'error');
+        resolve();
+      });
+      xhr.timeout = 180000;
+      xhr.addEventListener('timeout', function() {
+        btn.disabled = false;
+        statusEl.textContent = '❌ Tiempo de espera agotado';
+        toast('Subida muy lenta. Intenta con un archivo más pequeño.', 'error');
+        resolve();
+      });
+      xhr.open('POST', API_URL + '/admin/upload-media');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.setRequestHeader('Content-Type', contentType);
+      xhr.setRequestHeader('X-Filename', filename);
+      xhr.send(file);
+    });
+  }
+
+  // Archivos grandes: multipart upload en chunks de 25MB
+  statusEl.textContent = 'Iniciando subida en ' + totalChunks + ' partes...';
+  let uploadId, key;
+
+  try {
+    // 1. Init multipart
+    const initRes = await fetch(API_URL + '/admin/upload-media/init', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': contentType,
+        'X-Filename': filename,
+      },
+    });
+    if (!initRes.ok) throw new Error('Init falló: HTTP ' + initRes.status);
+    const initData = await initRes.json();
+    uploadId = initData.uploadId;
+    key = initData.key;
+
+    // 2. Subir cada chunk
+    const parts = [];
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+      const partNum = i + 1;
+
+      const pct = Math.round((i / totalChunks) * 100);
+      barEl.style.width = pct + '%';
+      statusEl.textContent = 'Subiendo parte ' + partNum + ' de ' + totalChunks + ' (' + pct + '%)';
+
+      const partRes = await fetch(API_URL + '/admin/upload-media/part', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/octet-stream',
+          'X-Upload-Id': uploadId,
+          'X-Upload-Key': key,
+          'X-Part-Number': String(partNum),
+        },
+        body: chunk,
+      });
+      if (!partRes.ok) {
+        const errData = await partRes.json().catch(() => ({}));
+        throw new Error('Parte ' + partNum + ' falló: HTTP ' + partRes.status + (errData.error ? ' - ' + errData.error : ''));
       }
-      resolve();
+      const partData = await partRes.json();
+      parts.push({ partNumber: partData.partNumber, etag: partData.etag });
+    }
+
+    // 3. Complete multipart
+    barEl.style.width = '95%';
+    statusEl.textContent = 'Finalizando...';
+    const completeRes = await fetch(API_URL + '/admin/upload-media/complete', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ uploadId, key, parts }),
     });
+    if (!completeRes.ok) throw new Error('Complete falló: HTTP ' + completeRes.status);
+    const completeData = await completeRes.json();
 
-    xhr.addEventListener('error', function() {
-      btn.disabled = false;
-      statusEl.textContent = '❌ Error de red (el archivo puede ser demasiado grande o hay un problema de conexión)';
-      toast('Error de red al subir. Verifica que el archivo no supere 100MB.', 'error');
-      resolve();
-    });
+    $('hof-main-video').value = completeData.url;
+    barEl.style.width = '100%';
+    statusEl.textContent = '✅ Subido correctamente (' + totalChunks + ' partes)';
+    toast('Video subido correctamente. Recuerda guardar los cambios.', 'success');
 
-    xhr.addEventListener('timeout', function() {
-      btn.disabled = false;
-      statusEl.textContent = '❌ Tiempo de espera agotado';
-      toast('La subida tardó demasiado. Intenta con un archivo más pequeño.', 'error');
-      resolve();
-    });
-
-    xhr.timeout = 120000;
-
-    // Detect content-type by extension as fallback (Windows sometimes sends octet-stream)
-    var ext = file.name.split('.').pop().toLowerCase();
-    var extTypes = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', avi: 'video/x-msvideo', mkv: 'video/x-matroska' };
-    var contentType = (file.type && file.type.startsWith('video/')) ? file.type : (extTypes[ext] || 'video/mp4');
-
-    xhr.open('POST', API_URL + '/admin/upload-media');
-    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-    xhr.setRequestHeader('Content-Type', contentType);
-    xhr.setRequestHeader('X-Filename', filename);
-    xhr.send(file);
-  });
+  } catch (err) {
+    // Abortar si tenemos uploadId
+    if (uploadId && key) {
+      fetch(API_URL + '/admin/upload-media/abort', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId, key }),
+      }).catch(() => {});
+    }
+    statusEl.textContent = '❌ ' + err.message;
+    toast('Error al subir: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function hofPreviewVideo() {
