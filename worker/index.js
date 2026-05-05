@@ -435,14 +435,7 @@ async function handleRequest(request, env, ctx) {
 export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': env.CORS_ORIGIN || '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Token',
-          'Access-Control-Max-Age': '86400',
-        },
-      });
+      return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
     let response;
