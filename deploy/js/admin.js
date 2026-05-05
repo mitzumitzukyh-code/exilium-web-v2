@@ -2191,7 +2191,12 @@ const N8N_WORKFLOW_JSON = JSON.stringify({
   "name": "Exilium Rating Milestones → Discord",
   "nodes": [
     {
-      "parameters": { "httpMethod": "POST", "path": "exilium-milestone", "responseMode": "responseNode", "options": {} },
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "exilium-milestone",
+        "responseMode": "responseNode",
+        "options": {}
+      },
       "id": "webhook-node",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
@@ -2201,25 +2206,33 @@ const N8N_WORKFLOW_JSON = JSON.stringify({
     },
     {
       "parameters": {
-        "content": "=## ⚔️ ¡Nuevo Milestone PvP en Exilium!\n\n🏆 **{{ $json.body.player_name }}** ({{ $json.body.player_class }} — {{ $json.body.player_realm }}) ha alcanzado **{{ $json.body.milestone }}** de rating en **{{ $json.body.bracket }}**!\n\nRating actual: **{{ $json.body.rating }}**\n📅 {{ $json.body.timestamp }}"
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "a1", "name": "player_name", "value": "={{ $json.body.player_name }}", "type": "string" },
+            { "id": "a2", "name": "player_class", "value": "={{ $json.body.player_class }}", "type": "string" },
+            { "id": "a3", "name": "player_realm", "value": "={{ $json.body.player_realm }}", "type": "string" },
+            { "id": "a4", "name": "bracket", "value": "={{ $json.body.bracket }}", "type": "string" },
+            { "id": "a5", "name": "rating", "value": "={{ $json.body.rating }}", "type": "number" },
+            { "id": "a6", "name": "milestone", "value": "={{ $json.body.milestone }}", "type": "number" },
+            { "id": "a7", "name": "message", "value": "=⚔️ **{{ $json.body.player_name }}** ({{ $json.body.player_class }} — {{ $json.body.player_realm }}) alcanzó **{{ $json.body.milestone }}** en **{{ $json.body.bracket }}**! Rating actual: **{{ $json.body.rating }}**", "type": "string" }
+          ]
+        },
+        "options": {}
       },
       "id": "set-message",
       "name": "Prepare Message",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3,
+      "typeVersion": 3.4,
       "position": [460, 300]
     },
     {
       "parameters": {
-        "url": "={{ $('Prepare Message').item.json.discord_webhook_url || 'PEGA_AQUI_TU_DISCORD_WEBHOOK' }}",
+        "method": "POST",
+        "url": "PEGA_AQUI_TU_DISCORD_WEBHOOK",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            { "name": "content", "value": "=⚔️ **{{ $('webhook-node').item.json.body.player_name }}** alcanzó **{{ $('webhook-node').item.json.body.milestone }}** en **{{ $('webhook-node').item.json.body.bracket }}**! ({{ $('webhook-node').item.json.body.rating }} rating)" },
-            { "name": "username", "value": "Exilium Bot" },
-            { "name": "avatar_url", "value": "https://exilium-battlepass.pages.dev/assets/logo.png" }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={ \"content\": \"{{ $json.message }}\", \"username\": \"Exilium Bot\" }",
         "options": {}
       },
       "id": "discord-node",
@@ -2229,7 +2242,10 @@ const N8N_WORKFLOW_JSON = JSON.stringify({
       "position": [680, 300]
     },
     {
-      "parameters": { "respondWith": "json", "responseBody": "={ \"ok\": true }" },
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true }"
+      },
       "id": "respond-node",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",

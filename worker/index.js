@@ -44,11 +44,6 @@ async function handleRequest(request, env, ctx) {
   const path = url.pathname;
   const method = request.method;
 
-  // Handle CORS preflight
-  if (method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS_HEADERS });
-  }
-
   // --- Public routes ---
   if (method === 'GET' && path === '/api/health') return new Response('OK');
 
@@ -97,8 +92,10 @@ async function handleRequest(request, env, ctx) {
 
   // ── Public Comments ──
   if (method === 'GET' && path === '/api/comments') {
-    const raw = await env.EXILIUM_KV.get('public:comments', 'json');
-    return jsonResponse(raw || []);
+    const raw = await env.EXILIUM_KV.get('public:comments', 'json') || [];
+    // Strip IP addresses before returning to clients (privacy)
+    const safe = raw.map(({ ip, ...rest }) => rest);
+    return jsonResponse(safe);
   }
 
   if (method === 'POST' && path === '/api/comments') {

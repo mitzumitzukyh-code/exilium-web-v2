@@ -1,3 +1,31 @@
+# Dependencies
 node_modules/
-worker/.wrangler/
+
+# Cloudflare Wrangler
 .wrangler/
+worker/.wrangler/
+
+# Archive (old/unused files)
+_archive/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Temp
+*.tmp
+*.bak
