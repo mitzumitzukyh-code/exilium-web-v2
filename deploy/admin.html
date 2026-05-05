@@ -591,25 +591,52 @@
                     <span class="card-title" id="hof-form-title">Agregar jugador destacado</span>
                 </div>
                 <div class="card-body">
-                    <div class="form-group">
-                        <label for="hof-player-select">Jugador inscrito</label>
-                        <select class="input" id="hof-player-select">
-                            <option value="">— Seleccionar jugador —</option>
-                        </select>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label for="hof-player-select">Jugador inscrito</label>
+                            <select class="input" id="hof-player-select">
+                                <option value="">— Seleccionar jugador —</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="hof-category">Categoría</label>
+                            <select class="input" id="hof-category">
+                                <option value="weekly">⚔️ Jugador de la Semana</option>
+                                <option value="monthly">🏆 Jugador del Mes</option>
+                                <option value="gold">💰 Recompensa de Oro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label for="hof-achievement">Logro destacado</label>
+                            <input class="input" type="text" id="hof-achievement" placeholder="Ej: 2400 Solo Shuffle" maxlength="60">
+                        </div>
+                        <div class="form-group">
+                            <label for="hof-rating">Rating máximo</label>
+                            <input class="input" type="number" id="hof-rating" placeholder="Ej: 2450" min="0" max="9999">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="hof-category">Categoría</label>
-                        <select class="input" id="hof-category">
-                            <option value="weekly">⚔️ Mejor Jugador de la Semana</option>
-                            <option value="monthly">🏆 Mejor Jugador del Mes</option>
-                            <option value="gold">💰 Recompensa de Oro</option>
-                        </select>
+                        <label for="hof-reason">Descripción (se muestra en la página)</label>
+                        <textarea class="input" id="hof-reason" rows="3" maxlength="250" placeholder="Ej: Alcanzó Gladiador esta semana con un rendimiento excepcional en arenas"></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="hof-reason">Razón / Descripción (se muestra en la página)</label>
-                        <textarea class="input" id="hof-reason" rows="3" maxlength="200" placeholder="Ej: Alcanzó 2400 en Solo Shuffle esta semana"></textarea>
+                        <label>Video individual del jugador (opcional)</label>
+                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                            <input type="file" id="hof-entry-video-file" accept="video/*" style="flex:1;padding:6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-main);cursor:pointer;">
+                            <button class="btn btn-success" id="hof-entry-upload-btn">⬆️ Subir</button>
+                        </div>
+                        <div id="hof-entry-upload-progress" style="display:none;margin-bottom:8px;">
+                            <div style="background:var(--bg-secondary);border-radius:4px;height:8px;overflow:hidden;">
+                                <div id="hof-entry-upload-bar" style="height:100%;width:0%;background:var(--accent);transition:width 0.3s;"></div>
+                            </div>
+                            <span id="hof-entry-upload-status" style="font-size:.8em;color:var(--text-muted);margin-top:4px;display:block;"></span>
+                        </div>
+                        <div style="text-align:center;color:var(--text-muted);font-size:.85em;margin:4px 0;">— o pega una URL —</div>
+                        <input class="input" type="text" id="hof-entry-video-url" placeholder="URL del video (YouTube, MP4...)" style="margin-top:4px;">
                     </div>
-                    <div style="display:flex;gap:8px;">
+                    <div style="display:flex;gap:8px;margin-top:8px;">
                         <button class="btn btn-success" id="hof-form-save-btn">💾 Agregar</button>
                         <button class="btn" id="hof-form-cancel-btn">Cancelar</button>
                     </div>

@@ -1590,6 +1590,142 @@ async function hofUploadVideo() {
   }
 }
 
+async function hofUploadEntryVideo() {
+  const fileInput = $('hof-entry-video-file');
+  const file = fileInput.files[0];
+  if (!file) { toast('Selecciona un archivo de video primero', 'error'); return; }
+
+  const MAX_MB = 500;
+  if (file.size > MAX_MB * 1024 * 1024) { toast('El archivo supera los ' + MAX_MB + 'MB', 'error'); return; }
+
+  const progressEl = $('hof-entry-upload-progress');
+  const barEl = $('hof-entry-upload-bar');
+  const statusEl = $('hof-entry-upload-status');
+  const btn = $('hof-entry-upload-btn');
+
+  progressEl.style.display = 'block';
+  btn.disabled = true;
+  barEl.style.width = '0%';
+
+  const token = getToken();
+  const filename = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const ext = file.name.split('.').pop().toLowerCase();
+  const extTypes = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', avi: 'video/x-msvideo', mkv: 'video/x-matroska' };
+  const contentType = (file.type && file.type.startsWith('video/')) ? file.type : (extTypes[ext] || 'video/mp4');
+  const CHUNK_SIZE = 25 * 1024 * 1024;
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+  if (file.size <= 90 * 1024 * 1024) {
+    statusEl.textContent = 'Subiendo... 0%';
+    return new Promise(function(resolve) {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          barEl.style.width = pct + '%';
+          statusEl.textContent = 'Subiendo... ' + pct + '%';
+        }
+      });
+      xhr.addEventListener('load', function() {
+        btn.disabled = false;
+        if (xhr.status === 200) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (data.url) {
+              $('hof-entry-video-url').value = data.url;
+              statusEl.textContent = '✅ Subido correctamente';
+              barEl.style.width = '100%';
+              toast('Video del jugador subido.', 'success');
+            }
+          } catch (e) {
+            statusEl.textContent = '❌ Error procesando respuesta';
+            toast('Error procesando respuesta', 'error');
+          }
+        } else {
+          var errMsg = '';
+          try { errMsg = JSON.parse(xhr.responseText).error || ''; } catch(_) {}
+          statusEl.textContent = '❌ Error ' + xhr.status + (errMsg ? ': ' + errMsg : '');
+          toast('Error HTTP ' + xhr.status + (errMsg ? ': ' + errMsg : ''), 'error');
+        }
+        resolve();
+      });
+      xhr.addEventListener('error', function() {
+        btn.disabled = false;
+        statusEl.textContent = '❌ Error de red';
+        toast('Error de red al subir.', 'error');
+        resolve();
+      });
+      xhr.timeout = 180000;
+      xhr.addEventListener('timeout', function() {
+        btn.disabled = false;
+        statusEl.textContent = '❌ Tiempo de espera agotado';
+        resolve();
+      });
+      xhr.open('POST', API_URL + '/admin/upload-media');
+      xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      xhr.setRequestHeader('Content-Type', contentType);
+      xhr.setRequestHeader('X-Filename', filename);
+      xhr.send(file);
+    });
+  }
+
+  // Multipart para archivos grandes
+  statusEl.textContent = 'Iniciando subida en ' + totalChunks + ' partes...';
+  let uploadId, key;
+  try {
+    const initRes = await fetch(API_URL + '/admin/upload-media/init', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': contentType, 'X-Filename': filename },
+    });
+    if (!initRes.ok) throw new Error('Init falló: HTTP ' + initRes.status);
+    const initData = await initRes.json();
+    uploadId = initData.uploadId; key = initData.key;
+
+    const parts = [];
+    for (let i = 0; i < totalChunks; i++) {
+      const chunk = file.slice(i * CHUNK_SIZE, Math.min((i + 1) * CHUNK_SIZE, file.size));
+      const pct = Math.round((i / totalChunks) * 100);
+      barEl.style.width = pct + '%';
+      statusEl.textContent = 'Subiendo parte ' + (i + 1) + ' de ' + totalChunks + ' (' + pct + '%)';
+      const partRes = await fetch(API_URL + '/admin/upload-media/part', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/octet-stream', 'X-Upload-Id': uploadId, 'X-Upload-Key': key, 'X-Part-Number': String(i + 1) },
+        body: chunk,
+      });
+      if (!partRes.ok) { const d = await partRes.json().catch(() => ({})); throw new Error('Parte ' + (i+1) + ' falló: ' + partRes.status + (d.error ? ' - ' + d.error : '')); }
+      const partData = await partRes.json();
+      parts.push({ partNumber: partData.partNumber, etag: partData.etag });
+    }
+
+    barEl.style.width = '95%';
+    statusEl.textContent = 'Finalizando...';
+    const completeRes = await fetch(API_URL + '/admin/upload-media/complete', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uploadId, key, parts }),
+    });
+    if (!completeRes.ok) throw new Error('Complete falló: HTTP ' + completeRes.status);
+    const completeData = await completeRes.json();
+
+    $('hof-entry-video-url').value = completeData.url;
+    barEl.style.width = '100%';
+    statusEl.textContent = '✅ Subido correctamente (' + totalChunks + ' partes)';
+    toast('Video del jugador subido.', 'success');
+  } catch (err) {
+    if (uploadId && key) {
+      fetch(API_URL + '/admin/upload-media/abort', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uploadId, key }),
+      }).catch(() => {});
+    }
+    statusEl.textContent = '❌ ' + err.message;
+    toast('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function hofPreviewVideo() {
   var url = $('hof-main-video').value.trim();
   var previewContainer = $('hof-video-preview');
@@ -1632,37 +1768,71 @@ function renderHofEntries() {
     return;
   }
 
-  let html = '<table style="width:100%;border-collapse:collapse;">';
-  html += '<thead><tr>' +
-    '<th style="text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--text-dim);">#</th>' +
-    '<th style="text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--text-dim);">Jugador</th>' +
-    '<th style="text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--text-dim);">Categoría</th>' +
-    '<th style="text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--text-dim);">Razón</th>' +
-    '<th style="text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--text-dim);">Fecha</th>' +
-    '<th style="text-align:left;padding:8px;border-bottom:1px solid var(--border);color:var(--text-dim);">Acciones</th>' +
-    '</tr></thead><tbody>';
+  let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
 
   hofData.entries.forEach(function(entry, i) {
     var cat = HOF_CATEGORIES[entry.category] || { label: entry.category, icon: '🏛️' };
-    var reasonPreview = entry.reason ? (entry.reason.length > 50 ? entry.reason.substring(0, 50) + '...' : entry.reason) : '<em style="color:var(--text-dim);">—</em>';
     var dateStr = entry.featured_at ? new Date(entry.featured_at).toLocaleDateString('es') : '—';
-    var featured = i === 0 ? ' <span style="background:var(--accent);color:var(--bg-color);font-size:.7em;padding:2px 6px;border-radius:3px;font-weight:700;">DESTACADO</span>' : '';
+    var isFeatured = i === 0;
+    var avatarSrc = entry.player_avatar || 'assets/logo.png';
+    var hasVideo = !!(entry.entry_video_url);
+    var videoThumb = '';
+    if (hasVideo) {
+      var ytId = entry.entry_video_url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      if (ytId) {
+        videoThumb = '<img src="https://img.youtube.com/vi/' + ytId[1] + '/mqdefault.jpg" style="width:80px;height:45px;object-fit:cover;border-radius:4px;border:1px solid var(--border);flex-shrink:0;" alt="video">';
+      } else {
+        videoThumb = '<div style="width:80px;height:45px;background:var(--bg-color);border-radius:4px;border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.7em;color:var(--accent);">▶ MP4</div>';
+      }
+    }
 
-    html += '<tr style="border-bottom:1px solid var(--border);">';
-    html += '<td style="padding:8px;">' + (i + 1) + '</td>';
-    html += '<td style="padding:8px;font-weight:600;">' + escapeHtml(entry.player_name || '—') + featured + '</td>';
-    html += '<td style="padding:8px;">' + cat.icon + ' ' + cat.label + '</td>';
-    html += '<td style="padding:8px;font-size:0.85em;">' + reasonPreview + '</td>';
-    html += '<td style="padding:8px;font-size:0.85em;color:var(--text-dim);">' + dateStr + '</td>';
-    html += '<td style="padding:8px;white-space:nowrap;">';
-    if (i > 0) html += '<button class="btn btn-sm" onclick="hofMoveUp(' + i + ')">⬆️</button> ';
-    if (i < hofData.entries.length - 1) html += '<button class="btn btn-sm" onclick="hofMoveDown(' + i + ')">⬇️</button> ';
-    html += '<button class="btn btn-sm" onclick="hofEdit(' + i + ')">✏️</button> ';
-    html += '<button class="btn btn-sm btn-danger" onclick="hofRemove(' + i + ')">🗑️</button>';
-    html += '</td></tr>';
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-secondary);border-radius:8px;border:1px solid ' + (isFeatured ? 'var(--accent)' : 'var(--border)') + ';">';
+
+    // Número y avatar
+    html += '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px;">';
+    html += '<span style="font-size:.75em;color:var(--text-dim);">#' + (i + 1) + '</span>';
+    html += '<img src="' + escapeHtml(avatarSrc) + '" style="width:36px;height:36px;border-radius:50%;border:2px solid ' + (isFeatured ? 'var(--accent)' : 'var(--border)') + ';" onerror="this.src=\'assets/logo.png\'">';
+    html += '</div>';
+
+    // Video miniatura
+    if (hasVideo) {
+      html += '<div style="flex-shrink:0;">' + videoThumb + '</div>';
+    }
+
+    // Info del jugador
+    html += '<div style="flex:1;min-width:0;">';
+    html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">';
+    html += '<strong style="color:var(--text-main);">' + escapeHtml(entry.player_name || '—') + '</strong>';
+    if (isFeatured) html += '<span style="background:var(--accent);color:var(--bg-color);font-size:.65em;padding:1px 6px;border-radius:3px;font-weight:700;">★ DESTACADO</span>';
+    html += '<span style="font-size:.8em;color:var(--text-muted);">' + cat.icon + ' ' + cat.label + '</span>';
+    html += '</div>';
+
+    if (entry.achievement) {
+      html += '<div style="font-size:.8em;color:var(--accent);margin-top:2px;">🏅 ' + escapeHtml(entry.achievement) + (entry.rating ? ' · <strong>' + entry.rating + '</strong> rating' : '') + '</div>';
+    } else if (entry.rating) {
+      html += '<div style="font-size:.8em;color:var(--accent);margin-top:2px;">⚔️ Rating: <strong>' + entry.rating + '</strong></div>';
+    }
+
+    if (entry.reason) {
+      html += '<div style="font-size:.82em;color:var(--text-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;">' + escapeHtml(entry.reason) + '</div>';
+    }
+    html += '<div style="font-size:.75em;color:var(--text-dim);margin-top:2px;">📅 ' + dateStr + ' · ' + escapeHtml(entry.player_class || '') + (entry.player_realm ? ' · ' + escapeHtml(entry.player_realm) : '') + '</div>';
+    html += '</div>';
+
+    // Acciones
+    html += '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">';
+    html += '<div style="display:flex;gap:4px;">';
+    if (i > 0) html += '<button class="btn btn-sm" title="Subir" onclick="hofMoveUp(' + i + ')">⬆️</button>';
+    if (i < hofData.entries.length - 1) html += '<button class="btn btn-sm" title="Bajar" onclick="hofMoveDown(' + i + ')">⬇️</button>';
+    html += '</div>';
+    html += '<button class="btn btn-sm" onclick="hofEdit(' + i + ')">✏️ Editar</button>';
+    html += '<button class="btn btn-sm btn-danger" onclick="hofRemove(' + i + ')">🗑️ Quitar</button>';
+    html += '</div>';
+
+    html += '</div>';
   });
 
-  html += '</tbody></table>';
+  html += '</div>';
   container.innerHTML = html;
 }
 
@@ -1689,11 +1859,19 @@ function showHofForm(entry, editIndex) {
     select.value = entry.player_id || '';
     $('hof-category').value = entry.category || 'weekly';
     $('hof-reason').value = entry.reason || '';
+    $('hof-achievement').value = entry.achievement || '';
+    $('hof-rating').value = entry.rating || '';
+    $('hof-entry-video-url').value = entry.entry_video_url || '';
   } else {
     select.value = '';
     $('hof-category').value = 'weekly';
     $('hof-reason').value = '';
+    $('hof-achievement').value = '';
+    $('hof-rating').value = '';
+    $('hof-entry-video-url').value = '';
   }
+  $('hof-entry-video-file').value = '';
+  $('hof-entry-upload-progress').style.display = 'none';
 
   formCard.scrollIntoView({ behavior: 'smooth' });
 }
@@ -1719,6 +1897,10 @@ function hofFormSave() {
   var playerClass = player ? player.class : '';
   var playerRealm = player ? (player.realm_display || player.realm) : '';
 
+  var achievement = $('hof-achievement').value.trim();
+  var rating = parseInt($('hof-rating').value, 10) || 0;
+  var entryVideoUrl = $('hof-entry-video-url').value.trim();
+
   var entry = {
     player_id: playerId,
     player_name: playerName,
@@ -1727,6 +1909,9 @@ function hofFormSave() {
     player_realm: playerRealm,
     category: category,
     reason: reason,
+    achievement: achievement,
+    rating: rating || undefined,
+    entry_video_url: entryVideoUrl || undefined,
     featured_at: new Date().toISOString(),
   };
 
@@ -1978,6 +2163,7 @@ document.addEventListener('DOMContentLoaded', function() {
   $('hof-form-cancel-btn').addEventListener('click', hideHofForm);
   $('hof-preview-video-btn').addEventListener('click', hofPreviewVideo);
   $('hof-upload-video-btn').addEventListener('click', hofUploadVideo);
+  $('hof-entry-upload-btn').addEventListener('click', hofUploadEntryVideo);
 
   // Tab: Analytics
   $('refresh-analytics-btn').addEventListener('click', loadAnalytics);

@@ -431,12 +431,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const videoUrl = state.hallOfFame.video_url || '';
 
         const HOF_CAT = {
-            weekly: { label: 'Mejor Jugador de la Semana', icon: '&#9876;', desc: 'Rating más alto en arenas' },
-            monthly: { label: 'Mejor Jugador del Mes', icon: '&#127942;', desc: 'Máximo rendimiento global' },
-            gold: { label: 'Recompensa de Oro', icon: '&#128176;', desc: 'Premio en oro para el destacado' },
+            weekly: { label: 'Jugador de la Semana', icon: '&#9876;' },
+            monthly: { label: 'Jugador del Mes', icon: '&#127942;' },
+            gold: { label: 'Recompensa de Oro', icon: '&#128176;' },
         };
 
-        // Update video from admin-configured URL
+        // Update main video
         if (videoUrl) {
             const frame = section.querySelector('.hof-video-frame');
             if (frame) {
@@ -454,51 +454,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const featured = entries[0];
 
-        // Update featured player name
+        // Update featured player info
         const nameEl = section.querySelector('.hof-player-name');
-        if (nameEl) {
-            nameEl.textContent = featured.player_name || 'Jugador Destacado';
-        }
+        if (nameEl) nameEl.textContent = featured.player_name || 'Jugador Destacado';
 
-        // Update badge label
         const badgeLabel = section.querySelector('.hof-badge-label');
         if (badgeLabel) {
             const cat = HOF_CAT[featured.category] || HOF_CAT.weekly;
             badgeLabel.textContent = cat.label;
         }
 
-        // Update description
         const descEl = section.querySelector('.hof-player-desc');
-        if (descEl && featured.reason) {
-            descEl.textContent = featured.reason;
-        }
+        if (descEl) descEl.textContent = featured.reason || 'Cada semana reconocemos al guerrero que más ha brillado en los campos de batalla de Exilium.';
 
-        // Rebuild category cards from all entries (group by category, show latest of each)
+        // Rebuild category cards
         const catContainer = section.querySelector('.hof-categories');
         if (catContainer) {
             const byCategory = {};
-            entries.forEach(e => {
-                if (!byCategory[e.category]) byCategory[e.category] = e;
-            });
-
+            entries.forEach(e => { if (!byCategory[e.category]) byCategory[e.category] = e; });
             let catHtml = '';
             ['weekly', 'monthly', 'gold'].forEach(catKey => {
                 const cat = HOF_CAT[catKey];
                 const entry = byCategory[catKey];
                 const playerLabel = entry ? entry.player_name : '—';
-                const desc = entry && entry.reason ? entry.reason : cat.desc;
-
-                catHtml += `
-                    <div class="hof-cat-card">
-                        <div class="hof-cat-icon">${cat.icon}</div>
-                        <div class="hof-cat-info">
-                            <strong>${cat.label}</strong>
-                            <span>${playerLabel}${entry ? ' — ' + desc : ''}</span>
-                        </div>
-                    </div>`;
+                const sub = entry ? (entry.achievement || entry.reason || cat.label) : cat.label;
+                catHtml += `<div class="hof-cat-card">
+                    <div class="hof-cat-icon">${cat.icon}</div>
+                    <div class="hof-cat-info">
+                        <strong>${cat.label}</strong>
+                        <span style="color:var(--accent-color);font-weight:600;">${playerLabel}</span>
+                        <span style="font-size:.8em;opacity:.7;">${sub}</span>
+                    </div>
+                </div>`;
             });
             catContainer.innerHTML = catHtml;
         }
+
+        // Player list with individual videos
+        let listContainer = section.querySelector('.hof-players-list');
+        if (!listContainer) {
+            listContainer = document.createElement('div');
+            listContainer.className = 'hof-players-list';
+            listContainer.style.cssText = 'margin-top:2.5rem;';
+            const showcase = section.querySelector('.hof-showcase');
+            if (showcase) showcase.after(listContainer);
+            else section.appendChild(listContainer);
+        }
+
+        let listHtml = '<h3 style="color:var(--accent-color);margin-bottom:1.2rem;font-size:1.1rem;letter-spacing:.05em;text-transform:uppercase;">&#9733; Jugadores Destacados</h3>';
+        listHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.2rem;">';
+
+        entries.forEach((entry, i) => {
+            const cat = HOF_CAT[entry.category] || HOF_CAT.weekly;
+            const avatar = entry.player_avatar || 'assets/logo.png';
+            const dateStr = entry.featured_at ? new Date(entry.featured_at).toLocaleDateString('es', { day:'2-digit', month:'short', year:'numeric' }) : '';
+            const isFeatured = i === 0;
+            const hasEntryVideo = !!(entry.entry_video_url);
+            const embedUrl = hasEntryVideo ? hofGetEmbedUrl(entry.entry_video_url) : null;
+
+            let videoHtml = '';
+            if (hasEntryVideo) {
+                if (embedUrl) {
+                    videoHtml = `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:6px;margin-bottom:10px;">
+                        <iframe src="${embedUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="autoplay;encrypted-media" allowfullscreen loading="lazy"></iframe>
+                    </div>`;
+                } else {
+                    videoHtml = `<video src="${entry.entry_video_url}" style="width:100%;border-radius:6px;margin-bottom:10px;max-height:170px;object-fit:cover;" muted loop playsinline controls></video>`;
+                }
+            }
+
+            listHtml += `<div style="background:var(--card-bg,rgba(255,255,255,.04));border:1px solid ${isFeatured ? 'var(--accent-color)' : 'rgba(255,255,255,.08)'};border-radius:10px;padding:14px;position:relative;">
+                ${isFeatured ? '<span style="position:absolute;top:10px;right:10px;background:var(--accent-color);color:#000;font-size:.65em;padding:2px 8px;border-radius:3px;font-weight:800;letter-spacing:.05em;">&#9733; DESTACADO</span>' : ''}
+                ${videoHtml}
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <img src="${avatar}" style="width:42px;height:42px;border-radius:50%;border:2px solid ${isFeatured ? 'var(--accent-color)' : 'rgba(255,255,255,.2)'};" onerror="this.src='assets/logo.png'" loading="lazy">
+                    <div>
+                        <div style="font-weight:700;color:var(--text-main,#fff);font-size:1rem;">${entry.player_name || '—'}</div>
+                        <div style="font-size:.78em;color:var(--accent-color);opacity:.9;">${cat.icon} ${cat.label}</div>
+                    </div>
+                </div>
+                ${entry.achievement ? `<div style="font-size:.82em;background:rgba(240,160,0,.1);border:1px solid rgba(240,160,0,.25);border-radius:5px;padding:4px 8px;margin-bottom:6px;color:var(--accent-color);">&#127941; ${entry.achievement}${entry.rating ? ' &middot; <strong>' + entry.rating + '</strong> rating' : ''}</div>` : (entry.rating ? `<div style="font-size:.82em;color:var(--accent-color);margin-bottom:6px;">&#9876; Rating: <strong>${entry.rating}</strong></div>` : '')}
+                ${entry.reason ? `<p style="font-size:.83em;color:rgba(255,255,255,.6);margin:0 0 6px;line-height:1.4;">${entry.reason}</p>` : ''}
+                ${entry.player_class ? `<div style="font-size:.75em;color:rgba(255,255,255,.4);">${entry.player_class}${entry.player_realm ? ' &middot; ' + entry.player_realm : ''}${dateStr ? ' &middot; ' + dateStr : ''}</div>` : ''}
+            </div>`;
+        });
+
+        listHtml += '</div>';
+        listContainer.innerHTML = listHtml;
     }
 
     // --- GUILD RANKING ---
