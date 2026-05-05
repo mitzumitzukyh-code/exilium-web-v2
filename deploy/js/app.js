@@ -1,5 +1,5 @@
 /*
- * EXILIUM BATTLE PASS (v3.1)
+ * EXILIUM BATTLE PASS (v3.2)
  * Lógica principal del Frontend
  */
 
