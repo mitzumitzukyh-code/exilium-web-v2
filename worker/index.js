@@ -298,12 +298,14 @@ async function handleRequest(request, env, ctx) {
 
     // ── Media Upload (R2) ──
     if (method === 'POST' && path === '/admin/upload-media') {
-      const contentType = request.headers.get('Content-Type') || '';
-      if (!contentType.startsWith('video/') && !contentType.startsWith('image/')) {
-        return jsonResponse({ error: 'Solo se permiten archivos de video o imagen' }, 400);
-      }
       const filename = request.headers.get('X-Filename') || ('upload-' + Date.now());
       const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const ext = safeFilename.split('.').pop().toLowerCase();
+      const extTypes = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', avi: 'video/x-msvideo', mkv: 'video/x-matroska', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' };
+      let contentType = request.headers.get('Content-Type') || '';
+      if (!contentType.startsWith('video/') && !contentType.startsWith('image/')) {
+        contentType = extTypes[ext] || 'video/mp4';
+      }
       const key = 'media/' + safeFilename;
       await env.EXILIUM_MEDIA.put(key, request.body, {
         httpMetadata: { contentType },

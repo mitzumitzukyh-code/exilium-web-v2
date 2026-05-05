@@ -1471,22 +1471,38 @@ async function hofUploadVideo() {
           toast('Error procesando respuesta del servidor', 'error');
         }
       } else {
-        statusEl.textContent = '❌ Error al subir (' + xhr.status + ')';
-        toast('Error al subir el video: ' + xhr.status, 'error');
+        var errMsg = '';
+        try { errMsg = JSON.parse(xhr.responseText).error || ''; } catch(_) {}
+        statusEl.textContent = '❌ Error ' + xhr.status + (errMsg ? ': ' + errMsg : '');
+        toast('Error al subir el video (' + xhr.status + ')' + (errMsg ? ': ' + errMsg : ''), 'error');
       }
       resolve();
     });
 
     xhr.addEventListener('error', function() {
       btn.disabled = false;
-      statusEl.textContent = '❌ Error de conexión';
-      toast('Error de conexión al subir el video', 'error');
+      statusEl.textContent = '❌ Error de red (el archivo puede ser demasiado grande o hay un problema de conexión)';
+      toast('Error de red al subir. Verifica que el archivo no supere 100MB.', 'error');
       resolve();
     });
 
+    xhr.addEventListener('timeout', function() {
+      btn.disabled = false;
+      statusEl.textContent = '❌ Tiempo de espera agotado';
+      toast('La subida tardó demasiado. Intenta con un archivo más pequeño.', 'error');
+      resolve();
+    });
+
+    xhr.timeout = 120000;
+
+    // Detect content-type by extension as fallback (Windows sometimes sends octet-stream)
+    var ext = file.name.split('.').pop().toLowerCase();
+    var extTypes = { mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime', avi: 'video/x-msvideo', mkv: 'video/x-matroska' };
+    var contentType = (file.type && file.type.startsWith('video/')) ? file.type : (extTypes[ext] || 'video/mp4');
+
     xhr.open('POST', API_URL + '/admin/upload-media');
     xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-    xhr.setRequestHeader('Content-Type', file.type || 'video/mp4');
+    xhr.setRequestHeader('Content-Type', contentType);
     xhr.setRequestHeader('X-Filename', filename);
     xhr.send(file);
   });
