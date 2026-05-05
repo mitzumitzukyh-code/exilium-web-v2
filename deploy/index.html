@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exilium Battle Pass · Temporada 1</title>
+    <meta name="description" content="Sistema de progresión PvP para World of Warcraft. Compite en arenas y campos de batalla para subir de rango y desbloquear recompensas exclusivas.">
+    <meta name="theme-color" content="#f0a000">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://exilium-battlepass.pages.dev/">
+    <meta property="og:title" content="Exilium Battle Pass · Temporada 1">
+    <meta property="og:description" content="Sistema de progresión PvP para World of Warcraft. Compite en arenas y campos de batalla para subir de rango y desbloquear recompensas exclusivas.">
+    <meta property="og:image" content="https://exilium-battlepass.pages.dev/assets/exilium-fondo.jpg?v=2">
+    <meta property="og:image:secure_url" content="https://exilium-battlepass.pages.dev/assets/exilium-fondo.jpg?v=2">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:site_name" content="Exilium">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://exilium-battlepass.pages.dev/">
+    <meta property="twitter:title" content="Exilium Battle Pass · Temporada 1">
+    <meta property="twitter:description" content="Sistema de progresión PvP para World of Warcraft. Compite en arenas y campos de batalla para subir de rango y desbloquear recompensas exclusivas.">
+    <meta property="twitter:image" content="https://exilium-battlepass.pages.dev/assets/exilium-fondo.jpg?v=2">
+
+    <link rel="image_src" href="https://exilium-battlepass.pages.dev/assets/exilium-fondo.jpg?v=2">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+</head>
+<body>
+
+    <!-- Announcement Banner -->
+    <div id="announcement-banner" class="announcement-banner"></div>
+
+    <!-- Header -->
+    <header id="main-header">
+        <div class="logo">
+            <a href="#hero"><img src="assets/logo.png" alt="Exilium"></a>
+        </div>
+        <button class="hamburger" aria-label="Abrir menú">
+            <span></span><span></span><span></span>
+        </button>
+        <nav class="nav-menu">
+            <a href="#hero">Inicio</a>
+            <a href="#hall-of-fame">Salón de la Fama</a>
+            <a href="#leaderboard">Leaderboard</a>
+            <a href="#brackets">Brackets</a>
+            <a href="#pvp-ranking">Ranking PvP</a>
+            <a href="#officers">Oficiales</a>
+            <a href="#guild-ranking">Guild Top 20</a>
+            <a href="#how-it-works">¿Como funciona?</a>
+            <a href="admin.html" target="_blank" rel="noopener" class="admin-link">Admin</a>
+        </nav>
+    </header>
+
+<main>
+        <!-- Hero Section -->
+        <section id="hero">
+            <div class="hero-particles">
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="hero-content">
+                <h1>Exilium Battle Pass</h1>
+                <p>Temporada 1: La Sombra de Midnight</p>
+                <div id="guild-stats" class="guild-stats"></div>
+            </div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- Salón de la Fama Section -->
+        <section id="hall-of-fame" class="container section reveal">
+            <h2>Salón de la Fama</h2>
+            <p class="section-subtitle">Los guerreros más destacados de la hermandad. Demuestra tu valía en el campo de batalla y tu nombre será inmortalizado aquí.</p>
+
+            <div class="hof-showcase">
+                <div class="hof-video-wrapper">
+                    <div class="hof-video-frame">
+                        <video id="hof-video" autoplay muted loop playsinline>
+                            <source src="assets/hall-of-fame.mp4" type="video/mp4">
+                        </video>
+                        <div class="hof-video-overlay"></div>
+                    </div>
+                </div>
+
+                <div class="hof-info-panel">
+                    <div class="hof-badge">
+                        <span class="hof-badge-icon">&#9733;</span>
+                        <span class="hof-badge-label">Jugador Destacado</span>
+                    </div>
+                    <h3 class="hof-player-name">Jugador de la Semana</h3>
+                    <p class="hof-player-desc">Cada semana reconocemos al guerrero que más ha brillado en los campos de batalla de Exilium. Compite por oro, títulos y el honor de aparecer en este salón.</p>
+
+                    <div class="hof-categories">
+                        <div class="hof-cat-card">
+                            <div class="hof-cat-icon">&#9876;</div>
+                            <div class="hof-cat-info">
+                                <strong>Mejor Jugador de la Semana</strong>
+                                <span>Rating más alto en arenas</span>
+                            </div>
+                        </div>
+                        <div class="hof-cat-card">
+                            <div class="hof-cat-icon">&#127942;</div>
+                            <div class="hof-cat-info">
+                                <strong>Mejor Jugador del Mes</strong>
+                                <span>Máximo rendimiento global</span>
+                            </div>
+                        </div>
+                        <div class="hof-cat-card">
+                            <div class="hof-cat-icon">&#128176;</div>
+                            <div class="hof-cat-info">
+                                <strong>Recompensa de Oro</strong>
+                                <span>Premio en oro para el destacado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="hof-cta">¿Quieres aparecer aquí? Sube tu rating y demuestra que eres el mejor.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- Leaderboard Section -->
+        <section id="leaderboard" class="container section reveal">
+            <h2>Leaderboard de Experiencia</h2>
+            <div id="podium" class="podium"></div>
+            <div id="leaderboard-table-container">
+                <table id="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Jugador</th>
+                            <th>Nivel</th>
+                            <th>XP Total</th>
+                            <th>Rango</th>
+                            <th>Progreso</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- Brackets Section -->
+        <section id="brackets" class="container section reveal">
+            <h2>Top por Bracket</h2>
+            <div id="brackets-container" class="brackets-grid"></div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- PvP Ranking Section -->
+        <section id="pvp-ranking" class="container section reveal">
+            <h2>Ranking PvP</h2>
+            <div id="ranking-tabs" class="ranking-tabs">
+                <button class="ranking-tab active" data-bracket="all">Todos</button>
+                <button class="ranking-tab" data-bracket="rs">Shuffle</button>
+                <button class="ranking-tab" data-bracket="r2">2v2</button>
+                <button class="ranking-tab" data-bracket="r3">3v3</button>
+                <button class="ranking-tab" data-bracket="rbg">RBG</button>
+                <button class="ranking-tab" data-bracket="bgs">Blitz</button>
+            </div>
+            <div id="ranking-content" class="ranking-content"></div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- Conquistadores Section -->
+        <section id="conquerors" class="container section reveal">
+            <h2>Conquistadores</h2>
+            <p class="section-subtitle">Jugadores que han alcanzado los rangos más altos del Battle Pass.</p>
+            <div id="conquerors-container" class="conquerors-grid"></div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- Officers Section -->
+        <section id="officers" class="container section reveal">
+            <h2>Oficiales de la Guild</h2>
+            <p class="section-subtitle">Los lideres que forjan el destino de Exilium en los campos de batalla.</p>
+            <div id="officers-container" class="officers-grid"></div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- Guild Ranking Section -->
+        <section id="guild-ranking" class="container section reveal">
+            <h2>Guild Top 20</h2>
+            <p class="section-subtitle">Los 20 jugadores con mayor rating PvP de la hermandad Exilium, verificados directamente desde Blizzard.</p>
+            <div id="guild-ranking-container"></div>
+        </section>
+
+        <hr class="section-divider">
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="container section reveal">
+            <h2>¿Como funciona?</h2>
+            <p class="section-subtitle">Tu progreso del pase se calcula con picos de rating por bracket y se convierte a XP con tablas fijas.</p>
+            <div class="how-it-works-grid">
+                <div class="how-card">
+                    <div class="how-icon">⚔️</div>
+                    <h3>1. Juega PvP</h3>
+                    <p>Participa en Solo Shuffle, 2v2, 3v3, RBG o Blitz. En cada bracket se toma tu rating máximo de temporada para calcular XP.</p>
+                </div>
+                <div class="how-card">
+                    <div class="how-icon">📊</div>
+                    <h3>2. Rating → XP</h3>
+                    <p>Tablas oficiales: estándar (RS/2v2/RBG/Blitz) hasta 4,550 XP por bracket y 3v3 hasta 5,800 XP por bracket.</p>
+                </div>
+                <div class="how-card">
+                    <div class="how-icon">🏆</div>
+                    <h3>3. Sube de nivel</h3>
+                    <p>XP total = RS + 2v2 + 3v3 + RBG + Blitz + bonus manual. Ese total define tu nivel (0-40) y rango.</p>
+                </div>
+                <div class="how-card">
+                    <div class="how-icon">🎁</div>
+                    <h3>4. Reclama premios</h3>
+                    <p>Cada nivel otorga recompensa: oro, gemas, juguetes, heliotropos y títulos de rango, culminando en Exarca al nivel 40.</p>
+                </div>
+            </div>
+
+            <div class="how-explainer">
+                <div class="how-detail-card">
+                    <h3>Conversión rápida de rating a XP</h3>
+                    <ul class="how-list">
+                        <li><strong>RS / 2v2 / RBG / Blitz:</strong> 1000 = 50 XP · 1600 = 550 XP · 2100 = 2,550 XP · 2400 = 4,550 XP.</li>
+                        <li><strong>3v3:</strong> 1000 = 50 XP · 1800 = 1,300 XP · 2100 = 3,300 XP · 2400 = 5,800 XP.</li>
+                        <li><strong>Tope de brackets:</strong> 24,000 XP base entre los 5 brackets (sin contar bonus manual).</li>
+                    </ul>
+                </div>
+
+                <div class="how-detail-card">
+                    <h3>Resumen de recompensas por niveles</h3>
+                    <ul class="how-list">
+                        <li><strong>0-5:</strong> paquete inicial, oro base, bodas rango 3 y 1 heliotropo infundido.</li>
+                        <li><strong>6-17:</strong> gemas stat, más oro y desbloqueo de rangos <strong>Penitente</strong> y <strong>Sombra</strong>.</li>
+                        <li><strong>18-29:</strong> más oro, juguetes, 2 gemas/heliotropos y rangos <strong>Apóstata</strong> y <strong>Rompejuramentos</strong>.</li>
+                        <li><strong>30-39:</strong> recompensas altas (más juguetes, 4k/5k de oro y heliotropos) con rangos <strong>Hereje</strong> y <strong>Profeta</strong>.</li>
+                        <li><strong>40 (Exarca):</strong> 8 heliotropos infundidos, reconocimiento en la guild, sugerir temática de season, sonido en panel de voz y rango <strong>Exarca</strong>.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 Exilium Guild · PvP · Creado por <a href="#">Mitzukyhs</a> · No afiliado con Blizzard Entertainment.</p>
+        <div class="footer-links">
+            <a href="#hero">Inicio</a>
+            <a href="#hall-of-fame">Salón de la Fama</a>
+            <a href="#leaderboard">Leaderboard</a>
+            <a href="#brackets">Brackets</a>
+            <a href="https://discord.gg/gdekyTrv" target="_blank">Discord</a>
+        </div>
+    </footer>
+
+    <!-- Player Modal -->
+    <div class="modal-overlay" id="player-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalle del Jugador</h3>
+                <button class="modal-close" id="modal-close">✕</button>
+            </div>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top -->
+    <button class="scroll-top-btn" id="scroll-top-btn" aria-label="Volver arriba">↑</button>
+
+    <script src="js/xp-engine.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

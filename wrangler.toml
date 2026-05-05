@@ -1,0 +1,14 @@
+name = "exilium-blizzard"
+main = "worker/index.js"
+compatibility_date = "2024-01-01"
+
+[triggers]
+crons = ["*/30 * * * *"]
+
+[[kv_namespaces]]
+binding = "EXILIUM_KV"
+id = "2d6d2badfc184b408f6c5af7e380d6be"
+
+[[r2_buckets]]
+binding = "EXILIUM_MEDIA"
+bucket_name = "exilium-media"

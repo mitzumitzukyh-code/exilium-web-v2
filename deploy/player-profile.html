@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil — Exilium Battle Pass</title>
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        body { background: var(--bg-color); min-height: 100vh; }
+
+        .profile-wrapper {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .profile-back {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: .9rem;
+            margin-bottom: 1.5rem;
+            transition: color .2s;
+        }
+        .profile-back:hover { color: var(--accent-color); }
+
+        /* ── Header Card ── */
+        .profile-header {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-color);
+            flex-shrink: 0;
+        }
+
+        .profile-info h1 {
+            font-size: 1.8rem;
+            margin-bottom: .25rem;
+        }
+
+        .profile-info .meta {
+            color: var(--text-muted);
+            font-size: .95rem;
+        }
+
+        .profile-info .rank-line {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin-top: .5rem;
+        }
+
+        .profile-info .rank-line img {
+            width: 28px; height: 28px;
+        }
+
+        .profile-info .rank-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* ── Stats Row ── */
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .pstat {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .pstat-val {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .pstat-label {
+            color: var(--text-muted);
+            font-size: .8rem;
+            margin-top: .25rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ── Brackets ── */
+        .profile-brackets {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .pbracket {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .pbracket-icon { font-size: 1.5rem; }
+        .pbracket-name {
+            color: var(--text-muted);
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: .25rem 0;
+        }
+        .pbracket-rating {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        .pbracket-wl {
+            font-size: .75rem;
+            color: var(--text-muted);
+            margin-top: .25rem;
+        }
+
+        /* ── XP Progress ── */
+        .xp-progress-section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .xp-progress-section h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .xp-bar-outer {
+            width: 100%;
+            height: 18px;
+            background: var(--bg-tertiary);
+            border-radius: 9px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .xp-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-color-hover));
+            border-radius: 9px;
+            transition: width .6s ease;
+        }
+
+        .xp-bar-text {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .75rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,.6);
+        }
+
+        .xp-breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: .75rem;
+            margin-top: 1rem;
+        }
+
+        .xp-src {
+            text-align: center;
+            padding: .5rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+        }
+
+        .xp-src-val {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--accent-color);
+        }
+
+        .xp-src-label {
+            color: var(--text-muted);
+            font-size: .75rem;
+        }
+
+        /* ── Rewards ── */
+        .rewards-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .reward-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            opacity: .4;
+            filter: grayscale(.8);
+            transition: opacity .3s, filter .3s, border-color .3s;
+        }
+
+        .reward-card.unlocked {
+            opacity: 1;
+            filter: none;
+            border-color: var(--accent-color);
+        }
+
+        .reward-card img {
+            width: 100%;
+            display: block;
+        }
+
+        .reward-card-body {
+            padding: .75rem 1rem;
+        }
+
+        .reward-card-body h4 {
+            font-size: .85rem;
+            margin-bottom: .25rem;
+        }
+
+        .reward-card-body p {
+            color: var(--text-muted);
+            font-size: .8rem;
+        }
+
+        .reward-badge {
+            display: inline-block;
+            font-size: .7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .reward-badge.locked {
+            background: #333;
+            color: #888;
+        }
+
+        .reward-badge.earned {
+            background: var(--accent-color);
+            color: var(--bg-color);
+        }
+
+        /* ── Rewards Summary ── */
+        .rewards-summary {
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .rewards-summary h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .rewards-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: .75rem;
+        }
+
+        .reward-sum-item {
+            text-align: center;
+            padding: .75rem .5rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+        }
+
+        .reward-sum-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .reward-sum-label {
+            color: var(--text-muted);
+            font-size: .75rem;
+            margin-top: .2rem;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .reward-sum-total {
+            background: linear-gradient(135deg, rgba(240,160,0,.15), rgba(240,160,0,.05));
+            border: 1px solid var(--accent-color);
+        }
+
+        .reward-sum-total .reward-sum-val {
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        .reward-sum-total .reward-sum-label {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .rewards-progress-text {
+            margin-top: 1rem;
+            font-size: .85rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .rewards-progress-text strong {
+            color: var(--accent-color);
+        }
+
+        .profile-loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 640px) {
+            .profile-header { flex-direction: column; text-align: center; padding: 1.5rem; }
+            .profile-avatar { width: 72px; height: 72px; }
+            .profile-info .rank-line { justify-content: center; }
+            .rewards-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-wrapper">
+        <a href="index.html" class="profile-back">← Volver al Battle Pass</a>
+        <div id="profile-content">
+            <div class="profile-loading">Cargando perfil del jugador...</div>
+        </div>
+    </div>
+
+    <script src="js/xp-engine.js"></script>
+    <script>
+    (function() {
+        const API_URL = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev/api';
+
+        const EMBLEM_MAP = {
+            'EXILIADO': 'assets/emblema_1.png', 'INICIADO': 'assets/emblema_1.png',
+            'PENITENTE': 'assets/emblema_2.png', 'SOMBRA': 'assets/emblema_3.png',
+            'APÓSTATA': 'assets/emblema_4.png', 'ROMPEJURAMENTOS': 'assets/emblema_5.png',
+            'HEREJE': 'assets/emblema_6.png', 'PROFETA': 'assets/emblema_7.png',
+            'EXARCA': 'assets/emblema_8.png',
+        };
+
+        const RANK_COLORS = {
+            'EXILIADO': '#9a8878', 'INICIADO': '#9a8878', 'PENITENTE': '#7a9abb',
+            'SOMBRA': '#8888cc', 'APÓSTATA': '#cc6644', 'ROMPEJURAMENTOS': '#dd4444',
+            'HEREJE': '#ee2222', 'PROFETA': '#ff8800', 'EXARCA': '#d4a017',
+        };
+
+        const BRACKET_NAMES = { rs: 'Solo Shuffle', r2: 'Arena 2v2', r3: 'Arena 3v3', rbg: 'RBG', bgs: 'Blitz' };
+        const BRACKET_ICONS = { rs: '⚔️', r2: '🗡️', r3: '⚡', rbg: '🏳️', bgs: '💨' };
+
+        // Reward tiers — sincronizado con DEFAULT_REWARDS de admin.js
+        const REWARDS = [
+            { level: 0,  label: 'Paquete Inicial', desc: '30 frascos de honor, 1 gema stat, 10 consumibles, Rango Exiliado', image: 'assets/rewards/PB1.png' },
+            { level: 1,  label: 'Nivel 1',  desc: '1k gold + x2 boda rango 3', image: 'assets/rewards/PB1.png' },
+            { level: 2,  label: 'Nivel 2',  desc: '1k gold + x2 boda rango 3', image: 'assets/rewards/PB1.png' },
+            { level: 3,  label: 'Nivel 3',  desc: '1k gold + x2 boda rango 3', image: 'assets/rewards/PB1.png' },
+            { level: 4,  label: 'Nivel 4',  desc: '1k gold + x2 boda rango 3', image: 'assets/rewards/PB1.png' },
+            { level: 5,  label: 'Nivel 5',  desc: '1 Heliotropo infundido', image: 'assets/rewards/PB1.png' },
+            { level: 6,  label: 'Nivel 6',  desc: '1 gema stat', image: 'assets/rewards/PB2.png' },
+            { level: 7,  label: 'Nivel 7',  desc: '1 gema stat', image: 'assets/rewards/PB2.png' },
+            { level: 8,  label: 'Nivel 8',  desc: '2k gold + x2 boda rango 3', image: 'assets/rewards/PB2.png' },
+            { level: 9,  label: 'Nivel 9',  desc: '2k gold + x2 boda rango 3', image: 'assets/rewards/PB2.png' },
+            { level: 10, label: 'Nivel 10', desc: '1 sangrita c. + Rango PENITENTE', image: 'assets/rewards/PB2.png' },
+            { level: 11, label: 'Nivel 11', desc: '2k gold', image: 'assets/rewards/PB2.png' },
+            { level: 12, label: 'Nivel 12', desc: '2k gold', image: 'assets/rewards/PB3.png' },
+            { level: 13, label: 'Nivel 13', desc: '2k gold + x2 boda rango 3', image: 'assets/rewards/PB3.png' },
+            { level: 14, label: 'Nivel 14', desc: '1 gema stat', image: 'assets/rewards/PB3.png' },
+            { level: 15, label: 'Nivel 15', desc: 'Rango SOMBRA', image: 'assets/rewards/PB3.png' },
+            { level: 16, label: 'Nivel 16', desc: '2k gold', image: 'assets/rewards/PB3.png' },
+            { level: 17, label: 'Nivel 17', desc: '2k gold', image: 'assets/rewards/PB3.png' },
+            { level: 18, label: 'Nivel 18', desc: '3k gold + x2 boda rango 3', image: 'assets/rewards/PB4.png' },
+            { level: 19, label: 'Nivel 19', desc: '1 gema stat', image: 'assets/rewards/PB4.png' },
+            { level: 20, label: 'Nivel 20', desc: '1 Juguete + Rango APÓSTATA', image: 'assets/rewards/PB4.png' },
+            { level: 21, label: 'Nivel 21', desc: '3k gold', image: 'assets/rewards/PB4.png' },
+            { level: 22, label: 'Nivel 22', desc: '2 gemas stat', image: 'assets/rewards/PB4.png' },
+            { level: 23, label: 'Nivel 23', desc: '1 Juguete', image: 'assets/rewards/PB4.png' },
+            { level: 24, label: 'Nivel 24', desc: '4k gold + x2 boda rango 3', image: 'assets/rewards/PB5.png' },
+            { level: 25, label: 'Nivel 25', desc: '1 Juguete + Banco hermandad + Rango ROMPEJURAMENTOS', image: 'assets/rewards/PB5.png' },
+            { level: 26, label: 'Nivel 26', desc: '2 Heliotropos infundidos', image: 'assets/rewards/PB5.png' },
+            { level: 27, label: 'Nivel 27', desc: '2 Heliotropos infundidos', image: 'assets/rewards/PB5.png' },
+            { level: 28, label: 'Nivel 28', desc: '4k gold + x2 boda rango 3', image: 'assets/rewards/PB5.png' },
+            { level: 29, label: 'Nivel 29', desc: '2 gemas stat', image: 'assets/rewards/PB5.png' },
+            { level: 30, label: 'Nivel 30', desc: '2 juguetes + Rango HEREJE', image: 'assets/rewards/PB3.2.png' },
+            { level: 31, label: 'Nivel 31', desc: '4k gold', image: 'assets/rewards/PB3.2.png' },
+            { level: 32, label: 'Nivel 32', desc: '3 Heliotropos infundidos', image: 'assets/rewards/PB3.2.png' },
+            { level: 33, label: 'Nivel 33', desc: '5k gold + x2 boda rango 3', image: 'assets/rewards/PB3.2.png' },
+            { level: 34, label: 'Nivel 34', desc: '3 Heliotropos infundidos', image: 'assets/rewards/PB3.2.png' },
+            { level: 35, label: 'Nivel 35', desc: '5k gold + Rango PROFETA', image: 'assets/rewards/PB6.png' },
+            { level: 36, label: 'Nivel 36', desc: '3 Heliotropos infundidos', image: 'assets/rewards/PB6.png' },
+            { level: 37, label: 'Nivel 37', desc: '5k gold', image: 'assets/rewards/PB6.png' },
+            { level: 38, label: 'Nivel 38', desc: '5k gold', image: 'assets/rewards/PB6.png' },
+            { level: 39, label: 'Nivel 39', desc: '3 Heliotropos infundidos', image: 'assets/rewards/PB6.png' },
+            { level: 40, label: 'Nivel 40 — EXARCA', desc: '8 Heliotropos infundidos, Reconocimiento en guild, Sugerir temática season, Sonido panel de voz, Rango EXARCA', image: 'assets/rewards/PB7.png' },
+        ];
+
+        function getPlayerBattlePass(player) {
+            const bp = player.battlepass || {};
+            const totalXp = bp.total_xp || 0;
+            const calc = getLevelFromXP(totalXp);
+            return { total_xp: totalXp, level: calc.level, rank_name: calc.rank, xp_breakdown: bp.xp_breakdown || {} };
+        }
+
+        async function loadRewardsConfig() {
+            try {
+                const res = await fetch(`${API_URL}/battlepass-config`);
+                const data = await res.json();
+                if (data.rewards && data.rewards.length > 0) {
+                    return data.rewards.map(function(r) {
+                        return { level: r.level, label: r.label, desc: r.desc, image: 'assets/rewards/' + (r.image || 'PB1.png') };
+                    });
+                }
+            } catch (e) { /* fallback to defaults */ }
+            return REWARDS;
+        }
+
+        async function loadProfile() {
+            const params = new URLSearchParams(window.location.search);
+            const playerId = params.get('id');
+            const container = document.getElementById('profile-content');
+
+            if (!playerId) {
+                container.innerHTML = '<div class="profile-loading">❌ No se especificó un jugador. Agrega ?id=nombre-realm a la URL.</div>';
+                return;
+            }
+
+            try {
+                const [playersRes, rewardsData] = await Promise.all([
+                    fetch(`${API_URL}/players`).then(function(r) { return r.json(); }),
+                    loadRewardsConfig()
+                ]);
+                const players = Array.isArray(playersRes) ? playersRes : [];
+                const player = players.find(function(p) { return p.id === playerId; });
+
+                if (!player) {
+                    container.innerHTML = '<div class="profile-loading">❌ Jugador no encontrado: ' + playerId + '</div>';
+                    return;
+                }
+
+                renderProfile(player, container, rewardsData);
+            } catch (err) {
+                container.innerHTML = '<div class="profile-loading">❌ Error al cargar datos: ' + err.message + '</div>';
+            }
+        }
+
+        function stripDiacritics(str) {
+            return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : str;
+        }
+
+        function renderProfile(player, container, rewardsData) {
+            const bp = getPlayerBattlePass(player);
+            const rankName = bp.rank_name;
+            const emblem = EMBLEM_MAP[rankName] || '';
+            const rankColor = RANK_COLORS[rankName] || '#fff';
+            const pvp = player.pvp || { current: {}, wins: {}, losses: {} };
+            const xpb = bp.xp_breakdown || {};
+
+            const xpStart = getXpForCurrentLevel(bp.level);
+            const xpEnd = getXpForNextLevel(bp.level);
+            const progress = xpEnd === xpStart ? 100 : (((bp.total_xp) - xpStart) / (xpEnd - xpStart)) * 100;
+
+            document.title = player.name + ' — Exilium Battle Pass';
+
+            let html = '';
+
+            // Header
+            html += '<div class="profile-header">' +
+                '<img src="' + (player.media?.avatar || 'assets/logo.png') + '" class="profile-avatar" alt="">' +
+                '<div class="profile-info">' +
+                    '<h1 style="color:' + rankColor + '">' + stripDiacritics(player.name) + '</h1>' +
+                    '<div class="meta">' + (player.class || '') + ' · ' + (player.realm_display || player.realm || '') +
+                    (player.marriage?.partner_name ? ' · 💍 ' + player.marriage.partner_name : '') + '</div>' +
+                    '<div class="rank-line">' +
+                        (emblem ? '<img src="' + emblem + '" alt="">' : '') +
+                        '<span class="rank-name" style="color:' + rankColor + '">' + rankName + '</span>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+
+            // Stats
+            const seasonMax = pvp.season_max || {};
+            const maxRating = Math.max(0, seasonMax.max_rs || 0, seasonMax.max_r2 || 0, seasonMax.max_r3 || 0, seasonMax.max_rbg || 0, seasonMax.max_bgs || 0, pvp.current?.rs || 0, pvp.current?.r2 || 0, pvp.current?.r3 || 0, pvp.current?.rbg || 0, pvp.current?.bgs || 0);
+            html += '<div class="profile-stats">' +
+                '<div class="pstat"><div class="pstat-val">' + bp.level + '</div><div class="pstat-label">Nivel</div></div>' +
+                '<div class="pstat"><div class="pstat-val">' + bp.total_xp.toLocaleString() + '</div><div class="pstat-label">XP Total</div></div>' +
+                '<div class="pstat"><div class="pstat-val">' + maxRating.toLocaleString() + '</div><div class="pstat-label">Mayor Rating</div></div>' +
+                '<div class="pstat"><div class="pstat-val">' + (player.ilvl || '—') + '</div><div class="pstat-label">Item Level</div></div>' +
+            '</div>';
+
+            // Brackets
+            html += '<div class="profile-brackets">';
+            ['rs', 'r2', 'r3', 'rbg', 'bgs'].forEach(function(b) {
+                var peakRating = seasonMax['max_' + b] || 0;
+                var currentRating = pvp.current?.[b] || 0;
+                var rating = Math.max(peakRating, currentRating);
+                var wins = pvp.wins?.[b] || 0;
+                var losses = pvp.losses?.[b] || 0;
+                html += '<div class="pbracket">' +
+                    '<div class="pbracket-icon">' + (BRACKET_ICONS[b] || '') + '</div>' +
+                    '<div class="pbracket-name">' + BRACKET_NAMES[b] + '</div>' +
+                    '<div class="pbracket-rating">' + (rating > 0 ? rating.toLocaleString() : '—') + '</div>' +
+                    '<div class="pbracket-wl">' + wins + 'W / ' + losses + 'L</div>' +
+                '</div>';
+            });
+            html += '</div>';
+
+            // XP Progress
+            html += '<div class="xp-progress-section">' +
+                '<h2>Progreso de Experiencia</h2>' +
+                '<div class="xp-bar-outer"><div class="xp-bar-inner" style="width:' + Math.min(progress, 100).toFixed(1) + '%"></div>' +
+                '<div class="xp-bar-text">Nivel ' + bp.level + ' → ' + Math.min(bp.level + 1, 40) + '  (' + bp.total_xp.toLocaleString() + ' / ' + xpEnd.toLocaleString() + ' XP)</div></div>' +
+                '<div class="xp-breakdown-grid">' +
+                    '<div class="xp-src"><div class="xp-src-val">' + (xpb.from_rs || 0) + '</div><div class="xp-src-label">Shuffle</div></div>' +
+                    '<div class="xp-src"><div class="xp-src-val">' + (xpb.from_r2 || 0) + '</div><div class="xp-src-label">2v2</div></div>' +
+                    '<div class="xp-src"><div class="xp-src-val">' + (xpb.from_r3 || 0) + '</div><div class="xp-src-label">3v3</div></div>' +
+                    '<div class="xp-src"><div class="xp-src-val">' + (xpb.from_rbg || 0) + '</div><div class="xp-src-label">RBG</div></div>' +
+                    '<div class="xp-src"><div class="xp-src-val">' + (xpb.from_bgs || 0) + '</div><div class="xp-src-label">Blitz</div></div>' +
+                    '<div class="xp-src"><div class="xp-src-val">' + (xpb.manual_bonus || 0) + '</div><div class="xp-src-label">Bonus</div></div>' +
+                '</div>' +
+            '</div>';
+
+            // Rewards
+            var displayRewards = (rewardsData && rewardsData.length > 0) ? rewardsData : REWARDS;
+
+            // Count unlocked rewards and parse totals from descriptions
+            var unlockedCount = 0;
+            var lockedCount = 0;
+            var totalGold = 0;
+            var totalGemas = 0;
+            var totalHeliotropos = 0;
+            var totalJuguetes = 0;
+            var totalBodas = 0;
+            var totalSangritas = 0;
+            var totalFrascos = 0;
+            var totalConsumibles = 0;
+
+            displayRewards.forEach(function(r) {
+                if (bp.level >= r.level) {
+                    unlockedCount++;
+                    var desc = (r.desc || '').toLowerCase();
+
+                    // Gold: "1k gold", "2k gold", "3k gold", "4k gold", "5k gold"
+                    var goldMatch = desc.match(/(\d+)k\s*gold/);
+                    if (goldMatch) totalGold += parseInt(goldMatch[1], 10) * 1000;
+
+                    // Gemas: "1 gema stat", "2 gemas stat"
+                    var gemasMatch = desc.match(/(\d+)\s*gemas?\s*stat/);
+                    if (gemasMatch) totalGemas += parseInt(gemasMatch[1], 10);
+
+                    // Heliotropos: "1 heliotropo", "2 heliotropos", "3 heliotropos", "8 heliotropos"
+                    var helioMatch = desc.match(/(\d+)\s*heliotropos?\s*infundidos?/);
+                    if (helioMatch) totalHeliotropos += parseInt(helioMatch[1], 10);
+
+                    // Juguetes: "1 juguete", "2 juguetes"
+                    var jugMatch = desc.match(/(\d+)\s*juguetes?/);
+                    if (jugMatch) totalJuguetes += parseInt(jugMatch[1], 10);
+
+                    // Bodas: "x2 boda rango 3"
+                    var bodaMatch = desc.match(/x(\d+)\s*boda/);
+                    if (bodaMatch) totalBodas += parseInt(bodaMatch[1], 10);
+
+                    // Sangritas: "1 sangrita"
+                    var sangMatch = desc.match(/(\d+)\s*sangrita/);
+                    if (sangMatch) totalSangritas += parseInt(sangMatch[1], 10);
+
+                    // Frascos: "30 frascos"
+                    var frascMatch = desc.match(/(\d+)\s*frascos?/);
+                    if (frascMatch) totalFrascos += parseInt(frascMatch[1], 10);
+
+                    // Consumibles: "10 consumibles"
+                    var consMatch = desc.match(/(\d+)\s*consumibles?/);
+                    if (consMatch) totalConsumibles += parseInt(consMatch[1], 10);
+                } else {
+                    lockedCount++;
+                }
+            });
+
+            // Build rewards summary
+            html += '<div class="rewards-section"><h2>🎁 Recompensas del Pase de Batalla</h2>';
+
+            // Summary card
+            html += '<div class="rewards-summary">';
+            html += '<h3>📦 Total de Recompensas Obtenidas</h3>';
+            html += '<div class="rewards-summary-grid">';
+            if (totalGold > 0) html += '<div class="reward-sum-item"><div class="reward-sum-val">' + totalGold.toLocaleString() + '</div><div class="reward-sum-label">Oro</div></div>';
+            if (totalGemas > 0) html += '<div class="reward-sum-item"><div class="reward-sum-val">' + totalGemas + '</div><div class="reward-sum-label">Gemas Stat</div></div>';
+            if (totalHeliotropos > 0) html += '<div class="reward-sum-item"><div class="reward-sum-val">' + totalHeliotropos + '</div><div class="reward-sum-label">Heliotropos</div></div>';
+            if (totalJuguetes > 0) html += '<div class="reward-sum-item"><div class="reward-sum-val">' + totalJuguetes + '</div><div class="reward-sum-label">Juguetes</div></div>';
+            if (totalBodas > 0) html += '<div class="reward-sum-item"><div class="reward-sum-val">' + totalBodas + '</div><div class="reward-sum-label">Bodas Rango 3</div></div>';
+            if (totalSangritas > 0) html += '<div class="reward-sum-item"><div class="reward-sum-val">' + totalSangritas + '</div><div class="reward-sum-label">Sangritas</div></div>';
+            if (totalFrascos > 0) html += '<div class="reward-sum-item"><div class="reward-sum-val">' + totalFrascos + '</div><div class="reward-sum-label">Frascos Honor</div></div>';
+            if (totalConsumibles > 0) html += '<div class="reward-sum-item"><div class="reward-sum-val">' + totalConsumibles + '</div><div class="reward-sum-label">Consumibles</div></div>';
+            var totalItems = totalGemas + totalHeliotropos + totalJuguetes + totalBodas + totalSangritas + totalFrascos + totalConsumibles;
+            html += '<div class="reward-sum-item reward-sum-total"><div class="reward-sum-val">' + totalItems + '</div><div class="reward-sum-label">Total Items</div></div>';
+            if (totalGold > 0) html += '<div class="reward-sum-item reward-sum-total"><div class="reward-sum-val">' + totalGold.toLocaleString() + 'g</div><div class="reward-sum-label">Total Oro</div></div>';
+            html += '</div>';
+            html += '<div class="rewards-progress-text"><strong>' + unlockedCount + '</strong> de <strong>' + displayRewards.length + '</strong> recompensas desbloqueadas';
+            if (lockedCount > 0) html += ' — ' + lockedCount + ' pendientes';
+            html += '</div>';
+            html += '</div>';
+
+            // Rewards grid
+            html += '<div class="rewards-grid">';
+            displayRewards.forEach(function(r) {
+                var unlocked = bp.level >= r.level;
+                html += '<div class="reward-card ' + (unlocked ? 'unlocked' : '') + '">' +
+                    '<img src="' + r.image + '" alt="' + r.label + '" loading="lazy">' +
+                    '<div class="reward-card-body">' +
+                        '<h4>' + r.label + '</h4>' +
+                        '<p>' + r.desc + '</p>' +
+                        '<span class="reward-badge ' + (unlocked ? 'earned' : 'locked') + '">' + (unlocked ? '✅ Desbloqueado' : '🔒 Nivel ' + r.level) + '</span>' +
+                    '</div>' +
+                '</div>';
+            });
+            html += '</div></div>';
+
+            container.innerHTML = html;
+        }
+
+        loadProfile();
+    })();
+    </script>
+</body>
+</html>

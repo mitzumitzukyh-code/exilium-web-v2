@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exilium Admin</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="icon" href="assets/logo.png">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════
+     LOGIN VIEW
+     ════════════════════════════════════════════════ -->
+<div id="login-view">
+    <div class="login-box">
+        <img src="assets/logo.png" alt="Exilium" class="login-logo">
+        <div class="login-title">EXILIUM ADMIN</div>
+        <div class="login-subtitle">Panel de administración del guild</div>
+        <div class="login-field">
+            <label for="login-password">Contraseña</label>
+            <input type="password" id="login-password" placeholder="Contraseña de administrador" autocomplete="current-password">
+        </div>
+        <button class="login-btn" id="login-btn">Entrar</button>
+        <div class="login-error" id="login-error"></div>
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     DASHBOARD VIEW
+     ════════════════════════════════════════════════ -->
+<div id="dashboard-view">
+
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <button class="hamburger-btn" id="hamburger-btn">☰</button>
+        <span style="font-family:var(--font-title);letter-spacing:2px;color:var(--text-bright);">EXILIUM</span>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <img src="assets/logo.png" alt="Exilium" class="sidebar-logo">
+            <span class="sidebar-brand">EXILIUM</span>
+            <span class="sidebar-badge">Admin</span>
+        </div>
+        <nav class="sidebar-nav" id="sidebar-nav">
+            <button class="active" data-tab="players"><span class="nav-icon">⚔️</span> Jugadores</button>
+            <button data-tab="sync"><span class="nav-icon">🔄</span> Sincronización</button>
+            <button data-tab="xp"><span class="nav-icon">📊</span> Ajuste de XP</button>
+            <button data-tab="marriages"><span class="nav-icon">💍</span> Bodas</button>
+            <button data-tab="announcement"><span class="nav-icon">📢</span> Anuncio</button>
+            <button data-tab="export"><span class="nav-icon">📦</span> Exportar Addon</button>
+            <button data-tab="season"><span class="nav-icon">🏆</span> Temporada</button>
+            <button data-tab="battlepass"><span class="nav-icon">🎖️</span> Pase de Batalla</button>
+            <button data-tab="officers"><span class="nav-icon">👑</span> Oficiales</button>
+            <button data-tab="hall-of-fame"><span class="nav-icon">🏛️</span> Salón de la Fama</button>
+            <button data-tab="analytics"><span class="nav-icon">📈</span> Analíticas</button>
+            <button data-tab="errors"><span class="nav-icon">🔬</span> Errores</button>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn-logout" id="logout-btn">Cerrar sesión</button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content">
+
+        <!-- ═══════ TAB: JUGADORES ═══════ -->
+        <div id="tab-players" class="tab-content active">
+            <div class="tab-header">
+                <h2 class="tab-title">Jugadores</h2>
+                <div class="tab-actions">
+                    <button class="btn" id="refresh-players-btn">🔄 Refresh</button>
+                    <button class="btn btn-success" id="inscribir-btn">➕ Inscribir</button>
+                </div>
+            </div>
+            <div class="search-bar">
+                <input class="input" type="text" id="player-search" placeholder="Buscar por nombre, clase, realm...">
+                <select class="input" id="player-filter">
+                    <option value="all">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="banned">Baneados</option>
+                </select>
+                <span class="players-count" id="players-count">—</span>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table" id="players-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th></th>
+                            <th>Nombre · Realm</th>
+                            <th>Clase</th>
+                            <th>iLvl</th>
+                            <th>XP</th>
+                            <th>Nivel</th>
+                            <th>Rango</th>
+                            <th>Sync</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="players-tbody">
+                        <tr><td colspan="11" class="empty-state"><p>Cargando...</p></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: SINCRONIZACIÓN ═══════ -->
+        <div id="tab-sync" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Sincronizacion</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Estado del Sync</span>
+                </div>
+                <div class="card-body">
+                    <div class="stat-grid" id="sync-stats">
+                        <div class="stat-card">
+                            <div class="stat-val" id="sync-last-run">—</div>
+                            <div class="stat-label">Último sync</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="sync-ok-count">—</div>
+                            <div class="stat-label">Sincronizados OK</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="sync-error-count">—</div>
+                            <div class="stat-label">Con problemas</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="mass-sync-btn">🔄 Sincronizar TODOS los jugadores</button>
+                    <span class="loading-text" id="sync-loading" style="display:none;"><span class="spinner"></span> Sincronizando...</span>
+                    <div id="sync-result" style="margin-top:14px;"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Jugadores con problemas</span>
+                </div>
+                <div class="card-body">
+                    <div id="sync-problems" class="problem-list">
+                        <div class="empty-state"><p>Cargando...</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: AJUSTE DE XP ═══════ -->
+        <div id="tab-xp" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Ajuste de XP</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Seleccionar jugador</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="xp-player-select">Jugador</label>
+                        <select class="input" id="xp-player-select">
+                            <option value="">— Seleccionar —</option>
+                        </select>
+                    </div>
+                    <div id="xp-player-info" style="display:none;">
+                        <div class="xp-breakdown" id="xp-breakdown"></div>
+                        <div class="stat-grid" id="xp-summary"></div>
+                        <hr style="border-color:var(--border);margin:16px 0;">
+                        <h4 style="color:var(--text-bright);margin-bottom:12px;">Aplicar ajuste manual</h4>
+                        <div class="form-inline" style="margin-bottom:10px;">
+                            <div class="form-group" style="flex:1;margin-bottom:0;">
+                                <label for="xp-amount">Cantidad (+/-)</label>
+                                <input class="input" type="number" id="xp-amount" placeholder="Ej: 500 o -200">
+                            </div>
+                            <div class="form-group" style="flex:2;margin-bottom:0;">
+                                <label for="xp-reason">Razón</label>
+                                <input class="input" type="text" id="xp-reason" placeholder="Premio evento Halloween">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="apply-xp-btn">Aplicar ajuste</button>
+                        <div class="title-buttons">
+                            <button class="btn btn-success" id="title-legend-btn">🏆 Otorgar LEYENDA</button>
+                            <button class="btn btn-success" id="title-gladiator-btn">⚔️ Otorgar GLADIATOR</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: BODAS ═══════ -->
+        <div id="tab-marriages" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Bodas</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Matrimonios activos</span>
+                </div>
+                <div class="card-body" id="marriages-list">
+                    <div class="empty-state"><p>Cargando...</p></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">💒 Casar jugadores</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-inline" style="margin-bottom:12px;flex-wrap:wrap;">
+                        <div class="form-group" style="flex:1;min-width:180px;margin-bottom:0;">
+                            <label for="marry-p1">Jugador 1</label>
+                            <select class="input" id="marry-p1"><option value="">— Seleccionar —</option></select>
+                        </div>
+                        <div class="form-group" style="flex:1;min-width:180px;margin-bottom:0;">
+                            <label for="marry-p2">Jugador 2</label>
+                            <select class="input" id="marry-p2"><option value="">— Seleccionar —</option></select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="marry-btn">💒 Casar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: ANUNCIO ═══════ -->
+        <div id="tab-announcement" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Anuncio</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Anuncio actual</span>
+                </div>
+                <div class="card-body">
+                    <div id="announce-current" class="announce-current empty">No hay anuncio activo</div>
+                    <button class="btn btn-danger" id="delete-announce-btn" style="display:none;">🗑️ Eliminar anuncio actual</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Publicar nuevo anuncio</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="announce-message">Mensaje</label>
+                        <textarea class="input" id="announce-message" maxlength="280" placeholder="Escribe tu anuncio aquí..."></textarea>
+                        <div class="char-counter"><span id="announce-chars">0</span>/280</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="announce-type">Tipo</label>
+                        <select class="input" id="announce-type">
+                            <option value="info">ℹ️ Info</option>
+                            <option value="success">✅ Success</option>
+                            <option value="warning">⚠️ Warning</option>
+                            <option value="critical">🚨 Critical</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="publish-announce-btn">📢 Publicar anuncio</button>
+                    <div class="announce-preview">
+                        <div class="announce-preview-label">Preview</div>
+                        <div class="announce-preview-banner preview-info" id="announce-preview-banner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: EXPORTAR ADDON ═══════ -->
+        <div id="tab-export" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Exportar Addon</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Generar datos para ExiliumXP</span>
+                </div>
+                <div class="card-body">
+                    <p style="color:var(--text-muted);margin-bottom:16px;">
+                        Genera el string de datos para el addon WoW ExiliumXP.
+                        Incluye todos los jugadores activos con su XP y nivel.
+                    </p>
+                    <button class="btn btn-primary" id="generate-export-btn">📦 Generar Export</button>
+                    <div class="export-output" id="export-output" style="display:none;">
+                        <textarea class="export-textarea" id="export-textarea" readonly></textarea>
+                        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+                            <button class="btn btn-success" id="copy-export-btn">📋 Copiar al portapapeles</button>
+                            <div class="export-meta" id="export-meta"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: TEMPORADA ═══════ -->
+        <div id="tab-season" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Temporada</h2>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Información de temporada actual</span>
+                </div>
+                <div class="card-body">
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-val">s1-midnight</div>
+                            <div class="stat-label">ID de Temporada</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="season-player-count">—</div>
+                            <div class="stat-label">Jugadores activos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="danger-zone">
+                <h3>⚠️ Zona de peligro — Cerrar temporada</h3>
+                <p>Al cerrar la temporada:</p>
+                <ul>
+                    <li>Los máximos históricos se guardarán en el historial</li>
+                    <li>Los season_max se resetearán a 0</li>
+                    <li>Los bonus manuales se resetearán a 0</li>
+                    <li>Los jugadores baneados seguirán baneados</li>
+                    <li>Esta acción es <strong style="color:var(--danger);">IRREVERSIBLE</strong></li>
+                </ul>
+                <div class="confirm-field" style="margin-top:16px;">
+                    <label><input type="checkbox" id="season-understand"> Entiendo que esta acción es irreversible</label>
+                </div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label for="season-confirm-text">Escribe CONFIRMAR para habilitar el botón</label>
+                    <input class="input" type="text" id="season-confirm-text" placeholder="CONFIRMAR" style="max-width:300px;">
+                </div>
+                <button class="btn btn-danger" id="close-season-btn" disabled>☠️ Cerrar Temporada</button>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: PASE DE BATALLA ═══════ -->
+        <div id="tab-battlepass" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Pase de Batalla</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-success" id="bp-add-reward-btn">➕ Agregar recompensa</button>
+                    <button class="btn btn-primary" id="bp-save-btn">💾 Guardar cambios</button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📊 Resumen del Pase</span>
+                </div>
+                <div class="card-body">
+                    <div class="stat-grid" id="bp-stats">
+                        <div class="stat-card">
+                            <div class="stat-val" id="bp-total-rewards">—</div>
+                            <div class="stat-label">Recompensas configuradas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="bp-max-level">40</div>
+                            <div class="stat-label">Nivel máximo</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="bp-players-maxed">—</div>
+                            <div class="stat-label">Jugadores nivel 40</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="bp-avg-level">—</div>
+                            <div class="stat-label">Nivel promedio</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config extra -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">⚙️ Configuración del Pase</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-inline" style="flex-wrap:wrap;gap:12px;">
+                        <div class="form-group" style="flex:1;min-width:200px;">
+                            <label for="bp-season-name">Nombre de temporada</label>
+                            <input class="input" type="text" id="bp-season-name" placeholder="Temporada 1: La Sombra de Midnight">
+                        </div>
+                        <div class="form-group" style="flex:1;min-width:200px;">
+                            <label for="bp-xp-multiplier">Multiplicador de XP global</label>
+                            <input class="input" type="number" id="bp-xp-multiplier" value="1.0" step="0.1" min="0.1" max="5.0">
+                        </div>
+                        <div class="form-group" style="flex:1;min-width:200px;">
+                            <label for="bp-max-bonus">Bonus manual máximo permitido</label>
+                            <input class="input" type="number" id="bp-max-bonus" value="10000" step="100">
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <label><input type="checkbox" id="bp-rewards-visible"> Mostrar recompensas en la página pública</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Healer RBG Bonus -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">💚 Bonus Healer RBG</span>
+                </div>
+                <div class="card-body">
+                    <p style="color:var(--text-muted);margin-bottom:12px;font-size:.9em;">
+                        Los healers que participen en RBG reciben un multiplicador extra de XP en el bracket RBG del pase de batalla.
+                        Specs healer: Holy, Discipline, Restoration, Mistweaver, Preservation.
+                    </p>
+                    <div class="form-inline" style="flex-wrap:wrap;gap:12px;align-items:flex-end;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label><input type="checkbox" id="healer-bonus-enabled"> Activar bonus healer</label>
+                        </div>
+                        <div class="form-group" style="min-width:160px;margin-bottom:0;">
+                            <label for="healer-bonus-multiplier">Multiplicador RBG XP</label>
+                            <select class="input" id="healer-bonus-multiplier">
+                                <option value="2">x2 (doble XP)</option>
+                                <option value="3">x3 (triple XP)</option>
+                                <option value="5">x5 (quíntuple XP)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="save-healer-bonus-btn">💾 Guardar Healer Bonus</button>
+                    </div>
+                    <div id="healer-bonus-status" style="margin-top:10px;"></div>
+                </div>
+            </div>
+
+            <!-- Rewards Table -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🎁 Recompensas por nivel</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrap">
+                        <table class="data-table" id="bp-rewards-table">
+                            <thead>
+                                <tr>
+                                    <th>Nivel</th>
+                                    <th>Recompensa</th>
+                                    <th>Descripción</th>
+                                    <th>Imagen</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bp-rewards-tbody">
+                                <tr><td colspan="5" class="empty-state"><p>Cargando...</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player Progress Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">👥 Progreso de jugadores</span>
+                </div>
+                <div class="card-body">
+                    <div id="bp-player-progress" class="problem-list">
+                        <div class="empty-state"><p>Cargando...</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: OFICIALES ═══════ -->
+        <div id="tab-officers" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Oficiales</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-success" id="add-officer-btn">➕ Agregar Oficial</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Oficiales actuales</span>
+                </div>
+                <div class="card-body">
+                    <div id="officers-list">
+                        <div class="empty-state"><p>Cargando...</p></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Add officer form (hidden by default) -->
+            <div class="card" id="officer-form-card" style="display:none;margin-top:1rem;">
+                <div class="card-header">
+                    <span class="card-title">Agregar / Editar Oficial</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group" id="officer-lookup-group">
+                        <label>Buscar personaje (cualquier miembro de la guild)</label>
+                        <div style="display:flex;gap:8px;align-items:flex-end;">
+                            <div style="flex:1;">
+                                <input class="input" type="text" id="officer-char-name" placeholder="Nombre (ej: Elmexica)" maxlength="30">
+                            </div>
+                            <div style="flex:1;">
+                                <input class="input" type="text" id="officer-char-realm" placeholder="Realm (ej: Quel'Thalas)" maxlength="30" value="Quel'Thalas">
+                            </div>
+                            <button class="btn" id="officer-lookup-btn">🔍 Buscar</button>
+                        </div>
+                        <div id="officer-lookup-result" style="margin-top:8px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="officer-title-input">Titulo (ej: Guild Master, Oficial, Estratega)</label>
+                        <input class="input" type="text" id="officer-title-input" placeholder="Oficial" maxlength="50">
+                    </div>
+                    <div class="form-group">
+                        <label for="officer-lore-input">Lore / Historia epica (se muestra en la pagina publica)</label>
+                        <textarea class="input" id="officer-lore-input" rows="5" maxlength="500" placeholder="Escribe una historia epica de RBG..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="officer-order-input">Orden (menor = primero)</label>
+                        <input class="input" type="number" id="officer-order-input" value="0" min="0" max="99">
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-success" id="officer-save-btn">💾 Guardar Oficial</button>
+                        <button class="btn" id="officer-cancel-btn">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: SALÓN DE LA FAMA ═══════ -->
+        <div id="tab-hall-of-fame" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Salón de la Fama</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-success" id="hof-add-btn">➕ Agregar destacado</button>
+                    <button class="btn btn-primary" id="hof-save-btn">💾 Guardar todo</button>
+                </div>
+            </div>
+
+            <!-- Video principal -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">� Video del Salón de la Fama</span>
+                </div>
+                <div class="card-body">
+                    <p style="color:var(--text-muted);margin-bottom:12px;font-size:.9em;">
+                        Pega aquí el enlace del video que aparecerá en la sección pública. Soporta <strong>YouTube</strong>, <strong>Google Drive</strong> o cualquier <strong>enlace directo a un .mp4</strong>.
+                    </p>
+                    <div class="form-group" style="margin-bottom:8px;">
+                        <label>Subir video directamente</label>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <input type="file" id="hof-video-file" accept="video/*" style="flex:1;padding:6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-main);cursor:pointer;">
+                            <button class="btn btn-success" id="hof-upload-video-btn">⬆️ Subir</button>
+                        </div>
+                        <div id="hof-upload-progress" style="display:none;margin-top:8px;">
+                            <div style="background:var(--bg-secondary);border-radius:4px;height:8px;overflow:hidden;">
+                                <div id="hof-upload-bar" style="height:100%;width:0%;background:var(--accent);transition:width 0.3s;"></div>
+                            </div>
+                            <span id="hof-upload-status" style="font-size:.8em;color:var(--text-muted);margin-top:4px;display:block;"></span>
+                        </div>
+                    </div>
+                    <div style="text-align:center;color:var(--text-muted);font-size:.85em;margin:8px 0;">— o pega una URL —</div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label for="hof-main-video">URL del video (YouTube, Google Drive, enlace .mp4…)</label>
+                        <div style="display:flex;gap:8px;">
+                            <input class="input" type="text" id="hof-main-video" placeholder="Ej: https://www.youtube.com/watch?v=XXXXX" style="flex:1;">
+                            <button class="btn" id="hof-preview-video-btn">👁️ Vista previa</button>
+                        </div>
+                    </div>
+                    <div id="hof-video-preview" style="display:none;margin-top:12px;max-width:480px;">
+                        <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;border:1px solid var(--border);">
+                            <div id="hof-video-preview-inner" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+                        </div>
+                        <p style="margin-top:6px;font-size:.8em;color:var(--text-muted);">Vista previa del video</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jugadores destacados -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🏛️ Jugadores destacados</span>
+                </div>
+                <div class="card-body">
+                    <p style="color:var(--text-muted);margin-bottom:16px;font-size:.9em;">
+                        Gestiona los jugadores que aparecen en el Salón de la Fama.
+                        El primer jugador de la lista será el destacado principal.
+                    </p>
+                    <div id="hof-entries-list">
+                        <div class="empty-state"><p>Cargando...</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="hof-form-card" style="display:none;margin-top:1rem;">
+                <div class="card-header">
+                    <span class="card-title" id="hof-form-title">Agregar jugador destacado</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="hof-player-select">Jugador inscrito</label>
+                        <select class="input" id="hof-player-select">
+                            <option value="">— Seleccionar jugador —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hof-category">Categoría</label>
+                        <select class="input" id="hof-category">
+                            <option value="weekly">⚔️ Mejor Jugador de la Semana</option>
+                            <option value="monthly">🏆 Mejor Jugador del Mes</option>
+                            <option value="gold">💰 Recompensa de Oro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="hof-reason">Razón / Descripción (se muestra en la página)</label>
+                        <textarea class="input" id="hof-reason" rows="3" maxlength="200" placeholder="Ej: Alcanzó 2400 en Solo Shuffle esta semana"></textarea>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-success" id="hof-form-save-btn">💾 Agregar</button>
+                        <button class="btn" id="hof-form-cancel-btn">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: ANALÍTICAS ═══════ -->
+        <div id="tab-analytics" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Analíticas</h2>
+                <div class="tab-actions">
+                    <button class="btn" id="refresh-analytics-btn">🔄 Actualizar</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📊 Visitas a la página</span>
+                </div>
+                <div class="card-body">
+                    <div class="stat-grid" id="analytics-stats">
+                        <div class="stat-card">
+                            <div class="stat-val" id="analytics-total">—</div>
+                            <div class="stat-label">Visitas totales</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="analytics-today">—</div>
+                            <div class="stat-label">Hoy</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="analytics-week">—</div>
+                            <div class="stat-label">Últimos 7 días</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="analytics-avg">—</div>
+                            <div class="stat-label">Promedio diario (7d)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📅 Visitas por día (últimos 14 días)</span>
+                </div>
+                <div class="card-body">
+                    <div id="analytics-chart" style="display:flex;align-items:flex-end;gap:4px;height:180px;padding:10px 0;"></div>
+                    <div id="analytics-table" style="margin-top:16px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: ERRORES ═══════ -->
+        <div id="tab-errors" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Errores</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-danger" id="clear-errors-btn">🗑️ Limpiar log</button>
+                </div>
+            </div>
+            <div id="errors-list">
+                <div class="empty-state"><p>Cargando...</p></div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MODAL (reutilizable)
+     ════════════════════════════════════════════════ -->
+<div id="modal-overlay" class="modal-overlay">
+    <div id="modal-content" class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Modal</h3>
+            <button class="modal-close" id="modal-close">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>
