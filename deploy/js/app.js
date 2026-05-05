@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const descEl = section.querySelector('.hof-player-desc');
         if (descEl) descEl.textContent = featured.reason || 'Cada semana reconocemos al guerrero que más ha brillado en los campos de batalla de Exilium.';
 
-        // Rebuild category cards
+        // Rebuild category cards (clickable to filter)
         const catContainer = section.querySelector('.hof-categories');
         if (catContainer) {
             const byCategory = {};
@@ -477,13 +477,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cat = HOF_CAT[catKey];
                 const entry = byCategory[catKey];
                 const playerLabel = entry ? entry.player_name : '—';
-                const sub = entry ? (entry.achievement || entry.reason || cat.label) : cat.label;
-                catHtml += `<div class="hof-cat-card">
+                const sub = entry ? (entry.achievement || entry.reason || '') : '';
+                catHtml += `<div class="hof-cat-card hof-cat-filter" data-cat="${catKey}" style="cursor:pointer;transition:border-color .2s,transform .15s;" onclick="hofFilterCategory('${catKey}')">
                     <div class="hof-cat-icon">${cat.icon}</div>
                     <div class="hof-cat-info">
                         <strong>${cat.label}</strong>
                         <span style="color:var(--accent-color);font-weight:600;">${playerLabel}</span>
-                        <span style="font-size:.8em;opacity:.7;">${sub}</span>
+                        ${sub ? `<span style="font-size:.78em;opacity:.65;">${sub}</span>` : ''}
                     </div>
                 </div>`;
             });
@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else section.appendChild(listContainer);
         }
 
-        let listHtml = '<h3 style="color:var(--accent-color);margin-bottom:1.2rem;font-size:1.1rem;letter-spacing:.05em;text-transform:uppercase;">&#9733; Jugadores Destacados</h3>';
+        let listHtml = '<h3 class="hof-list-title" style="color:var(--accent-color);margin-bottom:1.2rem;font-size:1.1rem;letter-spacing:.05em;text-transform:uppercase;">&#9733; Jugadores Destacados</h3>';
         listHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.2rem;">';
 
         entries.forEach((entry, i) => {
@@ -523,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            listHtml += `<div style="background:var(--card-bg,rgba(255,255,255,.04));border:1px solid ${isFeatured ? 'var(--accent-color)' : 'rgba(255,255,255,.08)'};border-radius:10px;padding:14px;position:relative;">
+            listHtml += `<div data-entry-cat="${entry.category || 'weekly'}" style="background:var(--card-bg,rgba(255,255,255,.04));border:1px solid ${isFeatured ? 'var(--accent-color)' : 'rgba(255,255,255,.08)'};border-radius:10px;padding:14px;position:relative;">
                 ${isFeatured ? '<span style="position:absolute;top:10px;right:10px;background:var(--accent-color);color:#000;font-size:.65em;padding:2px 8px;border-radius:3px;font-weight:800;letter-spacing:.05em;">&#9733; DESTACADO</span>' : ''}
                 ${videoHtml}
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
@@ -542,6 +542,47 @@ document.addEventListener('DOMContentLoaded', () => {
         listHtml += '</div>';
         listContainer.innerHTML = listHtml;
     }
+
+    // --- HOF CATEGORY FILTER ---
+    let _hofActiveFilter = null;
+
+    window.hofFilterCategory = function(catKey) {
+        const section = document.getElementById('hall-of-fame');
+        if (!section) return;
+
+        // Toggle: si ya está activo, mostrar todos
+        if (_hofActiveFilter === catKey) {
+            _hofActiveFilter = null;
+        } else {
+            _hofActiveFilter = catKey;
+        }
+
+        // Actualizar estilo de las tarjetas de categoría
+        section.querySelectorAll('.hof-cat-filter').forEach(function(card) {
+            const isActive = card.dataset.cat === _hofActiveFilter;
+            card.style.borderColor = isActive ? 'var(--accent-color)' : '';
+            card.style.transform = isActive ? 'scale(1.03)' : '';
+            card.style.background = isActive ? 'rgba(240,160,0,.08)' : '';
+        });
+
+        // Filtrar tarjetas de jugadores
+        const listContainer = section.querySelector('.hof-players-list');
+        if (!listContainer) return;
+        listContainer.querySelectorAll('[data-entry-cat]').forEach(function(card) {
+            if (!_hofActiveFilter || card.dataset.entryCat === _hofActiveFilter) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Actualizar título del filtro
+        const HOF_CAT = { weekly: 'Jugador de la Semana', monthly: 'Jugador del Mes', gold: 'Recompensa de Oro' };
+        const titleEl = listContainer.querySelector('.hof-list-title');
+        if (titleEl) {
+            titleEl.textContent = _hofActiveFilter ? '★ ' + HOF_CAT[_hofActiveFilter] : '★ Jugadores Destacados';
+        }
+    };
 
     // --- GUILD RANKING ---
     function renderGuildRanking() {
