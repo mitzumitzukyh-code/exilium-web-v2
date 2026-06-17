@@ -2843,82 +2843,53 @@ function renderNewsTable() {
   }).join('');
 }
 
-function showNewsForm(article) {
-  _newsEditingId = article ? article.id : null;
-  var formCard = $('news-form-card');
-  formCard.style.display = 'block';
-  $('news-form-title').textContent = _newsEditingId ? '✏️ Editar noticia' : '📰 Nueva noticia';
+// ── Importar desde Blizzard ──
+async function importNewsFromBlizzard() {
+  var btn = $('news-import-btn');
+  var resultDiv = $('news-import-result');
+  if (!btn || !resultDiv) return;
 
-  $('news-form-title-input').value = article ? article.title : '';
-  $('news-form-class').value = article ? (article.class || 'general') : 'general';
-  $('news-form-expansion').value = article ? article.expansion : 'The War Within';
-  $('news-form-patch').value = article ? article.patchVersion : '';
-  $('news-form-source').value = article ? article.source : 'blizzard';
-  $('news-form-url').value = article ? article.sourceUrl : '';
-  $('news-form-summary').value = article ? article.summary : '';
-  $('news-form-body').value = article ? article.body : '';
-
-  formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-function cancelNewsForm() {
-  $('news-form-card').style.display = 'none';
-  _newsEditingId = null;
-}
-
-function getNewsFormData() {
-  return {
-    title: $('news-form-title-input').value.trim(),
-    class: $('news-form-class').value,
-    expansion: $('news-form-expansion').value.trim(),
-    patchVersion: $('news-form-patch').value.trim(),
-    source: $('news-form-source').value,
-    sourceUrl: $('news-form-url').value.trim(),
-    summary: $('news-form-summary').value.trim(),
-    body: $('news-form-body').value.trim()
-  };
-}
-
-async function saveNewsArticle() {
-  const data = getNewsFormData();
-  if (!data.title) { toast('El título es obligatorio', 'error'); return; }
-  if (!data.patchVersion) { toast('La versión del parche es obligatoria', 'error'); return; }
+  btn.disabled = true;
+  btn.textContent = '🤖 Importando...';
+  resultDiv.style.display = 'none';
 
   try {
-    if (_newsEditingId) {
-      await apiCall('/admin/news/' + _newsEditingId, 'PATCH', data);
-      toast('✅ Noticia actualizada', 'success');
+    var data = await apiCall('/admin/news/import', 'POST');
+    resultDiv.style.display = 'block';
+    resultDiv.style.background = data.newArticles > 0
+      ? 'rgba(34,197,94,.08)'
+      : 'rgba(234,179,8,.08)';
+    resultDiv.style.borderColor = data.newArticles > 0
+      ? 'rgba(34,197,94,.2)'
+      : 'rgba(234,179,8,.2)';
+
+    if (data.newArticles > 0) {
+      resultDiv.innerHTML = '<strong>✅ Importación completada</strong><br>' +
+        '📡 Artículos analizados: ' + data.fetched + '<br>' +
+        '🎯 Cambios PvP encontrados: ' + data.pvpFound + '<br>' +
+        '📰 Nuevos pendientes: ' + data.newArticles +
+        (data.titles && data.titles.length > 0
+          ? '<br><br><strong>Artículos importados:</strong><br>' + data.titles.map(function(t) { return '• ' + escapeHtml(t); }).join('<br>')
+          : '');
     } else {
-      data.status = 'draft';
-      await apiCall('/admin/news', 'POST', data);
-      toast('✅ Noticia guardada como borrador', 'success');
+      resultDiv.innerHTML = '<strong>ℹ️ Sin novedades</strong><br>' +
+        '📡 Artículos analizados: ' + data.fetched + '<br>' +
+        'No se encontraron nuevos cambios PvP.';
     }
-    cancelNewsForm();
+
+    if (data.errors > 0) {
+      resultDiv.innerHTML += '<br><span style="color:#ef4444;">⚠️ ' + data.errors + ' fuente(s) con error</span>';
+    }
+
     await loadNews();
   } catch (err) {
-    toast('Error: ' + err.message, 'error');
-  }
-}
-
-async function saveAndPublishNews() {
-  const data = getNewsFormData();
-  if (!data.title) { toast('El título es obligatorio', 'error'); return; }
-  if (!data.patchVersion) { toast('La versión del parche es obligatoria', 'error'); return; }
-
-  try {
-    if (_newsEditingId) {
-      data.status = 'published';
-      await apiCall('/admin/news/' + _newsEditingId, 'PATCH', data);
-      toast('✅ Noticia publicada', 'success');
-    } else {
-      data.status = 'published';
-      await apiCall('/admin/news', 'POST', data);
-      toast('✅ Noticia creada y publicada', 'success');
-    }
-    cancelNewsForm();
-    await loadNews();
-  } catch (err) {
-    toast('Error: ' + err.message, 'error');
+    resultDiv.style.display = 'block';
+    resultDiv.style.background = 'rgba(239,68,68,.08)';
+    resultDiv.style.borderColor = 'rgba(239,68,68,.2)';
+    resultDiv.innerHTML = '<strong>❌ Error al importar</strong><br>' + escapeHtml(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🤖 Importar desde Blizzard';
   }
 }
 

@@ -26,6 +26,7 @@ import {
   handleAddProgressNote, handleGetNotifications, handleMarkNotificationsRead,
   handleAdminGetAllOrders, handleAdminGetBoosters,
 } from './boosting-orders.js';import { getArticles, getArticleById, createArticle, updateArticle, deleteArticle } from './news.js';
+import { scheduled as newsCronScheduled, handleImportNews } from './news-cron.js';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -500,7 +501,9 @@ async function handleRequest(request, env, ctx) {
         return jsonResponse({ error: err.message }, 500);
       }
     }
-
+    if (method === 'POST' && path === '/admin/news/import') {
+      return await handleImportNews(request, env);
+    }
     if (method === 'POST' && path === '/admin/news') {
       try {
         const body = await request.json();
@@ -856,5 +859,8 @@ export default {
         }
       })()
     );
+
+    // Ejecutar también el cron de noticias
+    ctx.waitUntil(newsCronScheduled(event, env, ctx));
   },
 };

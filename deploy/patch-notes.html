@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notas de Parche — Exilium</title>
+    <meta name="description" content="Notas de parche oficiales de World of Warcraft — Cambios PvP rastreados desde Blizzard Entertainment">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f0a000">
+    <link rel="canonical" href="https://exilium-battlepass.pages.dev/patch-notes">
+    <link rel="preconnect" href="https://exilium-blizzard.mitzumitzukyhs.workers.dev">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="icon" href="assets/logo.webp" type="image/webp">
+    <style>
+        /* ══════════════════════════════════════════════════
+           PATCH NOTES — Estilo inspirado en Blizzard
+           ══════════════════════════════════════════════════ */
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .pn-header {
+            background: linear-gradient(180deg, rgba(212,160,23,0.08) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .pn-header-back {
+            position: absolute;
+            top: 1.5rem;
+            left: 2rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.2s;
+        }
+        .pn-header-back:hover { color: var(--accent-color); }
+
+        .pn-header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(212,160,23,0.12);
+            border: 1px solid rgba(212,160,23,0.25);
+            border-radius: 20px;
+            padding: 0.4rem 1.2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        .pn-header h1 {
+            font-family: 'Sport Break', sans-serif;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0 0 0.5rem;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pn-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .pn-header-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+
+        .pn-header-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .pn-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Loading state */
+        .pn-loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+        .pn-loading .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: pnSpin 0.8s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes pnSpin { to { transform: rotate(360deg); } }
+
+        /* Empty state */
+        .pn-empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+        .pn-empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .pn-empty h2 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+        .pn-empty p { font-size: 0.9rem; line-height: 1.6; }
+
+        /* Section: changes by class */
+        .pn-section-title {
+            font-family: 'Sport Break', sans-serif;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+            margin: 2.5rem 0 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .pn-class-group {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            transition: border-color 0.2s;
+        }
+        .pn-class-group:hover {
+            border-color: var(--border-glow);
+        }
+
+        .pn-class-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pn-class-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .pn-class-name {
+            font-family: 'Sport Break', sans-serif;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            flex: 1;
+        }
+
+        .pn-class-source {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .pn-change {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .pn-change:last-child { border-bottom: none; }
+
+        .pn-change-bullet {
+            color: var(--accent-color);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .pn-change-text {
+            color: var(--text-color);
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .pn-change-source {
+            display: inline-block;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .pn-change-source a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+        .pn-change-source a:hover { text-decoration: underline; }
+
+        /* Special: General changes section */
+        .pn-general-section {
+            background: linear-gradient(135deg, rgba(212,160,23,0.05) 0%, transparent 100%);
+            border: 1px solid rgba(212,160,23,0.15);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .pn-footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 3rem;
+        }
+        .pn-footer p {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        .pn-footer .source-dot { display: inline-block; }
+
+        .pn-nav {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .pn-nav a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.88rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(212,160,23,0.2);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .pn-nav a:hover {
+            background: rgba(212,160,23,0.1);
+            border-color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .pn-header h1 { font-size: 1.6rem; }
+            .pn-header-back { position: static; margin-bottom: 1rem; display: inline-flex; }
+            .pn-container { padding: 1.25rem; }
+            .pn-class-header { flex-wrap: wrap; }
+            .pn-class-icon { width: 28px; height: 28px; }
+        }
+
+        /* Animations */
+        .pn-class-group, .pn-general-section {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: pnFadeIn 0.5s ease forwards;
+        }
+        .pn-class-group:nth-child(2) { animation-delay: 0.05s; }
+        .pn-class-group:nth-child(3) { animation-delay: 0.1s; }
+        .pn-class-group:nth-child(4) { animation-delay: 0.15s; }
+        .pn-class-group:nth-child(5) { animation-delay: 0.2s; }
+        .pn-class-group:nth-child(6) { animation-delay: 0.25s; }
+        .pn-class-group:nth-child(7) { animation-delay: 0.3s; }
+        .pn-class-group:nth-child(8) { animation-delay: 0.35s; }
+        .pn-class-group:nth-child(9) { animation-delay: 0.4s; }
+        .pn-class-group:nth-child(10) { animation-delay: 0.45s; }
+        .pn-class-group:nth-child(11) { animation-delay: 0.5s; }
+        .pn-class-group:nth-child(12) { animation-delay: 0.55s; }
+        .pn-class-group:nth-child(13) { animation-delay: 0.6s; }
+
+        @keyframes pnFadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="pn-header">
+        <a href="/" class="pn-header-back">← Volver a Exilium</a>
+
+        <div class="pn-header-badge">
+            <span>📜 Notas de Parche</span>
+        </div>
+
+        <h1 id="pn-title">Notas de Parche</h1>
+        <p id="pn-subtitle">Cambios PvP oficiales rastreados desde Blizzard Entertainment y Wowhead</p>
+
+        <div class="pn-header-meta" id="pn-meta">
+            <span id="pn-patch-version">⏳ Cargando...</span>
+            <span id="pn-updated">🔄 —</span>
+            <span id="pn-article-count">📰 —</span>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <div class="pn-container" id="pn-container">
+        <div class="pn-loading" id="pn-loading">
+            <div class="spinner"></div>
+            <p>Obteniendo notas de parche...</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="pn-footer">
+        <p>
+            <span class="source-dot blizzard" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00b4ff;vertical-align:middle;box-shadow:0 0 6px rgba(0,180,255,0.5);"></span>
+            Datos recopilados de <strong>Blizzard Entertainment</strong> y <strong>Wowhead</strong> ·
+            Solo cambios PvP · Verificado por el staff de Exilium
+        </p>
+        <div class="pn-nav">
+            <a href="/">🏠 Inicio</a>
+            <a href="/admin.html" target="_blank">🔐 Admin</a>
+        </div>
+    </div>
+
+    <script>
+    // ══════════════════════════════════════════════════════════
+    //  PATCH NOTES — JavaScript
+    // ══════════════════════════════════════════════════════════
+
+    const API_URL = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev/api';
+
+    const CLASS_ICONS = {
+        warrior:     'assets/class-icons/Ability_warrior_savageblow.webp',
+        paladin:     'assets/class-icons/Ability_paladin_shieldofthetemplar.webp',
+        hunter:      'assets/class-icons/Spell_nature_magicimmunity.webp',
+        rogue:       'assets/class-icons/Ability_rogue_eviscerate.webp',
+        priest:      'assets/class-icons/Spell_holy_guardianspirit.webp',
+        deathknight: 'assets/class-icons/Spell_deathknight_unholypresence.webp',
+        shaman:      'assets/class-icons/Spell_shaman_improvedstormstrike.webp',
+        mage:        'assets/class-icons/Spell_holy_holybolt.webp',
+        warlock:     'assets/class-icons/Spell_shadow_shadowwordpain.webp',
+        monk:        'assets/class-icons/Spell_monk_windwalker_spec.webp',
+        druid:       'assets/class-icons/Ability_druid_catform.webp',
+        demonhunter: 'assets/class-icons/Ability_stealth.webp',
+        evoker:      'assets/class-icons/Spell_nature_lightning.webp'
+    };
+
+    const CLASS_NAMES = {
+        warrior: 'Guerrero', paladin: 'Paladín', hunter: 'Cazador',
+        rogue: 'Pícaro', priest: 'Sacerdote', deathknight: 'Caballero de la Muerte',
+        shaman: 'Chamán', mage: 'Mago', warlock: 'Brujo',
+        monk: 'Monje', druid: 'Druida', demonhunter: 'Cazador de Demonios',
+        evoker: 'Evocador'
+    };
+
+    const CLASS_ORDER = [
+        'warrior', 'paladin', 'hunter', 'rogue', 'priest', 'deathknight',
+        'shaman', 'mage', 'warlock', 'monk', 'druid', 'demonhunter', 'evoker'
+    ];
+
+    function timeAgo(dateStr) {
+        if (!dateStr) return '—';
+        var diff = Date.now() - new Date(dateStr).getTime();
+        var mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'Hace un momento';
+        if (mins < 60) return 'Hace ' + mins + ' min';
+        var hours = Math.floor(mins / 60);
+        if (hours < 24) return 'Hace ' + hours + 'h';
+        var days = Math.floor(hours / 24);
+        if (days < 7) return 'Hace ' + days + 'd';
+        return new Date(dateStr).toLocaleDateString('es');
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatBody(text) {
+        return escapeHtml(text || '')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+    }
+
+    async function loadPatchNotes() {
+        var container = document.getElementById('pn-container');
+        var loading = document.getElementById('pn-loading');
+
+        try {
+            var res = await fetch(API_URL + '/news');
+            var articles = await res.json();
+
+            if (!Array.isArray(articles) || articles.length === 0) {
+                container.innerHTML = 
+                    '<div class="pn-empty">' +
+                    '<div class="pn-empty-icon">📜</div>' +
+                    '<h2>No hay notas de parche disponibles</h2>' +
+                    '<p>Aún no se han publicado cambios PvP. El staff de Exilium está rastreando los últimos parches de Blizzard.</p>' +
+                    '<p style="margin-top:1rem;font-size:0.85rem;">🔄 Los datos se actualizan automáticamente cuando Blizzard publica un nuevo parche.</p>' +
+                    '</div>';
+                return;
+            }
+
+            // Actualizar metadatos del header
+            var patchSet = new Set();
+            var expansionSet = new Set();
+            var latestDate = null;
+
+            articles.forEach(function(a) {
+                if (a.patchVersion) patchSet.add(a.patchVersion);
+                if (a.expansion) expansionSet.add(a.expansion);
+                var d = a.publishedAt || a.createdAt;
+                if (d && (!latestDate || d > latestDate)) latestDate = d;
+            });
+
+            document.getElementById('pn-patch-version').textContent = 
+                '📦 ' + Array.from(expansionSet).join(', ') + ' ' + Array.from(patchSet).join(', ');
+            document.getElementById('pn-updated').textContent = '🔄 ' + (latestDate ? timeAgo(latestDate) : '—');
+            document.getElementById('pn-article-count').textContent = '📰 ' + articles.length + ' cambios';
+
+            // Agrupar artículos por clase
+            var byClass = {};
+            var generalChanges = [];
+
+            articles.forEach(function(a) {
+                var cls = a.class || 'general';
+                if (cls === 'general') {
+                    generalChanges.push(a);
+                } else {
+                    if (!byClass[cls]) byClass[cls] = [];
+                    byClass[cls].push(a);
+                }
+            });
+
+            var html = '';
+
+            // Sección de cambios generales (si hay)
+            if (generalChanges.length > 0) {
+                html += '<h2 class="pn-section-title">⚡ Cambios Generales PvP</h2>';
+                generalChanges.forEach(function(a) {
+                    var sourceDot = a.source === 'wowhead' ? '🟠' : '🔵';
+                    var sourceLabel = a.source === 'wowhead' ? 'Wowhead' : 'Blizzard';
+                    html += '<div class="pn-general-section">' +
+                        '<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;">' +
+                        '<span style="background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.2);border-radius:6px;padding:0.2rem 0.6rem;font-size:0.7rem;font-weight:600;color:var(--accent-color);">' +
+                        escapeHtml(a.expansion || '') + ' ' + escapeHtml(a.patchVersion || '') + '</span>' +
+                        '<span style="font-size:0.78rem;color:var(--text-muted);">' + timeAgo(a.publishedAt || a.createdAt) + '</span>' +
+                        '</div>' +
+                        '<h3 style="font-family:\'Sport Break\',sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:1rem;margin-bottom:0.5rem;">' + escapeHtml(a.title) + '</h3>' +
+                        '<p style="color:var(--text-muted);line-height:1.6;font-size:0.88rem;">' + escapeHtml(a.summary) + '</p>' +
+                        '<div style="margin-top:0.75rem;font-size:0.88rem;color:var(--text-muted);line-height:1.7;">' + formatBody(a.body) + '</div>' +
+                        '<div class="pn-change-source" style="margin-top:0.75rem;">' +
+                        sourceDot + ' ' + sourceLabel +
+                        (a.sourceUrl ? ' · <a href="' + escapeHtml(a.sourceUrl) + '" target="_blank">Fuente original →</a>' : '') +
+                        '</div>' +
+                        '</div>';
+                });
+            }
+
+            // Sección por clase
+            var hasClassChanges = false;
+            CLASS_ORDER.forEach(function(cls) {
+                var changes = byClass[cls];
+                if (!changes || changes.length === 0) return;
+                hasClassChanges = true;
+
+                var icon = CLASS_ICONS[cls] || '';
+                var name = CLASS_NAMES[cls] || cls;
+                var iconHtml = icon ? '<img src="' + icon + '" class="pn-class-icon" alt="' + name + '">' : '';
+                var color = 'var(--text-color)';
+
+                html += '<h2 class="pn-section-title" style="margin-top:2rem;">' + iconHtml + ' ' + name + '</h2>';
+
+                changes.forEach(function(a) {
+                    var sourceDot = a.source === 'wowhead' ? '🟠' : '🔵';
+                    var sourceLabel = a.source === 'wowhead' ? 'Wowhead' : 'Blizzard';
+                    html += '<div class="pn-class-group">' +
+                        '<div class="pn-class-header">' +
+                        iconHtml +
+                        '<span class="pn-class-name" style="color:' + color + ';">' + name + '</span>' +
+                        '<span style="background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.2);border-radius:6px;padding:0.2rem 0.6rem;font-size:0.7rem;font-weight:600;color:var(--accent-color);">' +
+                        escapeHtml(a.patchVersion || '') + '</span>' +
+                        '<span class="pn-class-source">' + timeAgo(a.publishedAt || a.createdAt) + '</span>' +
+                        '</div>' +
+                        '<h4 style="font-size:0.95rem;margin-bottom:0.5rem;">' + escapeHtml(a.title) + '</h4>' +
+                        '<p style="color:var(--text-muted);font-size:0.88rem;line-height:1.5;margin-bottom:0.75rem;">' + escapeHtml(a.summary) + '</p>' +
+                        '<div style="font-size:0.88rem;line-height:1.7;color:var(--text-muted);">' + formatBody(a.body) + '</div>' +
+                        '<div class="pn-change-source" style="margin-top:0.75rem;">' +
+                        sourceDot + ' ' + sourceLabel +
+                        (a.sourceUrl ? ' · <a href="' + escapeHtml(a.sourceUrl) + '" target="_blank">Fuente original →</a>' : '') +
+                        '</div>' +
+                        '</div>';
+                });
+            });
+
+            if (!hasClassChanges && generalChanges.length === 0) {
+                html += '<div class="pn-empty">' +
+                    '<div class="pn-empty-icon">📜</div>' +
+                    '<h2>No hay cambios por clase disponibles</h2>' +
+                    '<p>Los cambios PvP aparecerán aquí agrupados por clase cuando Blizzard publique nuevas notas de parche.</p>' +
+                    '</div>';
+            }
+
+            container.innerHTML = html;
+
+        } catch (err) {
+            container.innerHTML = 
+                '<div class="pn-empty">' +
+                '<div class="pn-empty-icon">⚠️</div>' +
+                '<h2>Error al cargar notas de parche</h2>' +
+                '<p>' + escapeHtml(err.message) + '</p>' +
+                '<p style="margin-top:1rem;">Intenta recargar la página o vuelve más tarde.</p>' +
+                '</div>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadPatchNotes);
+    </script>
+</body>
+</html>
