@@ -3003,14 +3003,23 @@ function previewNews(id) {
     '</div>' +
     (article.sourceUrl ? '<p style="margin-top:8px;"><a href="' + escapeHtml(article.sourceUrl) + '" target="_blank" style="color:var(--accent);font-size:.85rem;">🔗 Fuente original →</a></p>' : '') +
     '<div style="display:flex;gap:8px;margin-top:20px;">' +
-    (article.status !== 'published' ? '<button class="btn btn-success" onclick="this.closest(\'div[style*=\\"fixed\\"]\').remove();approveNews(\'' + article.id + '\');" style="flex:1;">✅ Publicar</button>' : '') +
-    '<button class="btn" onclick="this.closest(\'div[style*=\\"fixed\\"]\').remove()" style="flex:1;">Cerrar</button>' +
+    (article.status !== 'published' ? '<button class="btn btn-success" id="modal-publish-btn" style="flex:1;">✅ Publicar</button>' : '') +
+    '<button class="btn" id="modal-close-btn" style="flex:1;">Cerrar</button>' +
     '</div>' +
     '</div>';
 
+  // Manejar clics con event listeners directamente, no con onclick
   modal.addEventListener('click', function(e) {
-    if (e.target === modal) modal.remove();
+    if (e.target === modal || e.target.id === 'modal-close-btn') modal.remove();
   });
+
+  var publishBtn = modal.querySelector('#modal-publish-btn');
+  if (publishBtn) {
+    publishBtn.addEventListener('click', function() {
+      modal.remove();
+      approveNews(article.id);
+    });
+  }
 
   document.body.appendChild(modal);
 }
