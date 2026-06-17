@@ -14,6 +14,18 @@ import { closeSeason } from './season.js';
 import { getOfficers, getOfficersEnriched, addOfficer, updateOfficer, removeOfficer, lookupCharacter } from './officers.js';
 import { getGuildRanking, buildGuildRanking } from './guild-ranking.js';
 import { createBackup, restoreBackup, getBackupInfo } from './backup.js';
+import { handleRBGMatch, handleRBGHistory, handleRBGStats } from './rbg-tracker.js';
+import {
+  handleBoostRegister, handleBoostLogin, handleBoostLogout, handleBoostMe,
+  handleBoosterApply, handleGetBoosterApplications, handleApproveBooster, handleRejectBooster,
+  verifyBoostingSession,
+} from './boosting-auth.js';
+import {
+  handleCreateOrder, handleGetClientOrders, handleGetOrder, handleGetAvailableOrders,
+  handleClaimOrder, handleStartOrder, handleCompleteOrder, handleCancelOrder,
+  handleAddProgressNote, handleGetNotifications, handleMarkNotificationsRead,
+  handleAdminGetAllOrders, handleAdminGetBoosters,
+} from './boosting-orders.js';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -48,8 +60,12 @@ async function handleRequest(request, env, ctx) {
   if (method === 'GET' && path === '/api/health') return new Response('OK');
 
   if (method === 'GET' && path === '/api/players') {
-    const players = await getPlayersData(env, false);
-    return cachedJsonResponse(players, 60);
+    try {
+      const players = await getPlayersData(env, false);
+      return cachedJsonResponse(players, 60);
+    } catch (err) {
+      return jsonResponse({ error: err.message }, 500);
+    }
   }
 
   if (method === 'GET' && path.startsWith('/api/players/')) {
@@ -59,8 +75,12 @@ async function handleRequest(request, env, ctx) {
   }
 
   if (method === 'GET' && path === '/api/announcement') {
-    const announcement = await getAnnouncement(request, env);
-    return cachedJsonResponse(announcement, 120);
+    try {
+      const announcement = await getAnnouncement(request, env);
+      return cachedJsonResponse(announcement, 120);
+    } catch (err) {
+      return cachedJsonResponse({ message: null }, 120);
+    }
   }
 
   /**
@@ -88,6 +108,16 @@ async function handleRequest(request, env, ctx) {
   if (method === 'GET' && path === '/api/hall-of-fame') {
     const raw = await env.EXILIUM_KV.get('config:hall_of_fame', 'json');
     return cachedJsonResponse(raw || { entries: [] }, 120);
+  }
+
+  if (method === 'GET' && path === '/api/boost-banner') {
+    const val = await env.EXILIUM_KV.get('config:boost_banner_visible');
+    return cachedJsonResponse({ visible: val !== 'false' }, 60);
+  }
+
+  if (method === 'GET' && path === '/api/rbg-strategies') {
+    const raw = await env.EXILIUM_KV.get('config:rbg_strategies', 'json');
+    return cachedJsonResponse(raw || [], 60);
   }
 
   // ── Public Comments ──
@@ -204,6 +234,20 @@ async function handleRequest(request, env, ctx) {
     }
     const ratings = await getRatingsForAddon(request, env);
     return jsonResponse(ratings);
+  }
+
+  // --- RBG Tracker routes ---
+  if (method === 'POST' && path === '/rbg/match') {
+    const result = await handleRBGMatch(request, env);
+    return jsonResponse(result, result.status || (result.error ? 400 : 200));
+  }
+  if (method === 'GET' && path === '/rbg/history') {
+    const result = await handleRBGHistory(request, env);
+    return result.error ? jsonResponse(result, result.status || 500) : cachedJsonResponse(result, 30);
+  }
+  if (method === 'GET' && path === '/rbg/stats') {
+    const result = await handleRBGStats(request, env);
+    return result.error ? jsonResponse(result, result.status || 500) : cachedJsonResponse(result, 60);
   }
 
   // --- Admin routes ---
@@ -462,6 +506,31 @@ async function handleRequest(request, env, ctx) {
       return jsonResponse({ ok: true, config });
     }
 
+    // ── Boost Banner Toggle ──
+    if (method === 'GET' && path === '/admin/boost-banner') {
+      const val = await env.EXILIUM_KV.get('config:boost_banner_visible');
+      return jsonResponse({ visible: val !== 'false' });
+    }
+
+    if (method === 'PUT' && path === '/admin/boost-banner') {
+      const body = await request.json().catch(() => ({}));
+      const visible = body.visible !== false;
+      await env.EXILIUM_KV.put('config:boost_banner_visible', visible ? 'true' : 'false');
+      return jsonResponse({ ok: true, visible });
+    }
+
+    // ── RBG Strategies ──
+    if (method === 'GET' && path === '/admin/rbg-strategies') {
+      const raw = await env.EXILIUM_KV.get('config:rbg_strategies', 'json');
+      return jsonResponse(raw || []);
+    }
+
+    if (method === 'PUT' && path === '/admin/rbg-strategies') {
+      const body = await request.json().catch(() => ([]));
+      await env.EXILIUM_KV.put('config:rbg_strategies', JSON.stringify(body));
+      return jsonResponse({ ok: true });
+    }
+
     // ── N8N Webhook Config ──
     if (method === 'GET' && path === '/admin/n8n-config') {
       const url = await env.EXILIUM_KV.get('config:n8n_webhook_url') || '';
@@ -533,6 +602,132 @@ async function handleRequest(request, env, ctx) {
     if (method === 'POST' && path === '/admin/restore') {
       const result = await restoreBackup(request, env);
       return jsonResponse(result, result.success ? 200 : 400);
+    }
+  }
+
+  // ── Boosting Portal — Public Auth Routes ──
+  if (method === 'POST' && path === '/api/boost/register') {
+    const result = await handleBoostRegister(request, env);
+    return jsonResponse(result, result.error ? 400 : 200);
+  }
+
+  if (method === 'POST' && path === '/api/boost/login') {
+    const result = await handleBoostLogin(request, env);
+    return jsonResponse(result, result.error ? 401 : 200);
+  }
+
+  if (method === 'POST' && path === '/api/boost/logout') {
+    const result = await handleBoostLogout(request, env);
+    return jsonResponse(result);
+  }
+
+  if (method === 'GET' && path === '/api/boost/me') {
+    const result = await handleBoostMe(request, env);
+    return jsonResponse(result, result.status || 200);
+  }
+
+  if (method === 'POST' && path === '/api/boost/booster/apply') {
+    const result = await handleBoosterApply(request, env);
+    return jsonResponse(result, result.error ? 400 : 200);
+  }
+
+  // ── Boosting Portal — Orders (require boost session) ──
+  if (path.startsWith('/api/boost/')) {
+    const session = await verifyBoostingSession(request, env);
+
+    if (method === 'POST' && path === '/api/boost/orders') {
+      const result = await handleCreateOrder(request, env, session);
+      return jsonResponse(result, result.status || (result.error ? 400 : 200));
+    }
+
+    if (method === 'GET' && path === '/api/boost/orders') {
+      const result = await handleGetClientOrders(request, env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'GET' && path === '/api/boost/orders/available') {
+      const result = await handleGetAvailableOrders(env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'GET' && path.startsWith('/api/boost/orders/') && !path.endsWith('/available')) {
+      const orderId = path.split('/')[4];
+      const result = await handleGetOrder(orderId, env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'POST' && path.startsWith('/api/boost/orders/') && path.endsWith('/claim')) {
+      const orderId = path.split('/')[4];
+      const result = await handleClaimOrder(orderId, env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'POST' && path.startsWith('/api/boost/orders/') && path.endsWith('/start')) {
+      const orderId = path.split('/')[4];
+      const result = await handleStartOrder(orderId, env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'POST' && path.startsWith('/api/boost/orders/') && path.endsWith('/complete')) {
+      const orderId = path.split('/')[4];
+      const result = await handleCompleteOrder(orderId, env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'POST' && path.startsWith('/api/boost/orders/') && path.endsWith('/cancel')) {
+      const orderId = path.split('/')[4];
+      const result = await handleCancelOrder(orderId, env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'POST' && path.startsWith('/api/boost/orders/') && path.endsWith('/note')) {
+      const orderId = path.split('/')[4];
+      const result = await handleAddProgressNote(orderId, request, env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'GET' && path === '/api/boost/notifications') {
+      const result = await handleGetNotifications(env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'POST' && path === '/api/boost/notifications/read') {
+      const result = await handleMarkNotificationsRead(env, session);
+      return jsonResponse(result, result.status || 200);
+    }
+  }
+
+  // ── Boosting Portal — Admin Routes ──
+  if (path.startsWith('/admin/boost/')) {
+    if (!(await handleAdminAuth(request, env))) {
+      return jsonResponse({ error: 'Unauthorized' }, 401);
+    }
+
+    if (method === 'GET' && path === '/admin/boost/applications') {
+      const result = await handleGetBoosterApplications(request, env);
+      return jsonResponse(result);
+    }
+
+    if (method === 'POST' && path.startsWith('/admin/boost/applications/') && path.endsWith('/approve')) {
+      const userId = path.split('/')[4];
+      const result = await handleApproveBooster(userId, env);
+      return jsonResponse(result, result.error ? 404 : 200);
+    }
+
+    if (method === 'POST' && path.startsWith('/admin/boost/applications/') && path.endsWith('/reject')) {
+      const userId = path.split('/')[4];
+      const result = await handleRejectBooster(userId, env);
+      return jsonResponse(result, result.error ? 404 : 200);
+    }
+
+    if (method === 'GET' && path === '/admin/boost/orders') {
+      const result = await handleAdminGetAllOrders(env);
+      return jsonResponse(result);
+    }
+
+    if (method === 'GET' && path === '/admin/boost/boosters') {
+      const result = await handleAdminGetBoosters(env);
+      return jsonResponse(result);
     }
   }
 

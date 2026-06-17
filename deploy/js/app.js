@@ -91,24 +91,27 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- DATA FETCHING ---
+    function safeFetch(url, fallback) {
+        return fetch(url).then(res => res.ok ? res.json() : fallback).catch(() => fallback);
+    }
+
     async function fetchData() {
-        try {
-            const [playersRes, announcementRes, officersRes, guildRankingRes, hofRes] = await Promise.all([
-                fetch(`${API_URL}/players`).then(res => res.json()),
-                fetch(`${API_URL}/announcement`).then(res => res.json()),
-                fetch(`${API_URL}/officers`).then(res => res.json()).catch(() => []),
-                fetch(`${API_URL}/guild-ranking`).then(res => res.json()).catch(() => ({ ranking: [] })),
-                fetch(`${API_URL}/hall-of-fame`).then(res => res.json()).catch(() => ({ entries: [] }))
-            ]);
-            state.players = Array.isArray(playersRes) ? playersRes : [];
-            state.announcement = announcementRes;
-            state.officers = Array.isArray(officersRes) ? officersRes : [];
-            state.guildRanking = guildRankingRes;
-            state.hallOfFame = hofRes && Array.isArray(hofRes.entries) ? hofRes : { entries: [] };
-            renderAll();
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
+        const [playersRes, announcementRes, officersRes, guildRankingRes, hofRes, boostBannerRes] = await Promise.all([
+            safeFetch(`${API_URL}/players`, []),
+            safeFetch(`${API_URL}/announcement`, { message: null }),
+            safeFetch(`${API_URL}/officers`, []),
+            safeFetch(`${API_URL}/guild-ranking`, { ranking: [] }),
+            safeFetch(`${API_URL}/hall-of-fame`, { entries: [] }),
+            safeFetch(`${API_URL}/boost-banner`, { visible: true }),
+        ]);
+        state.players = Array.isArray(playersRes) ? playersRes : [];
+        state.announcement = announcementRes;
+        state.officers = Array.isArray(officersRes) ? officersRes : [];
+        state.guildRanking = guildRankingRes;
+        state.hallOfFame = hofRes && Array.isArray(hofRes.entries) ? hofRes : { entries: [] };
+        const boostBanner = document.querySelector('.carries-banner-v2');
+        if (boostBanner) boostBanner.style.display = boostBannerRes.visible ? '' : 'none';
+        renderAll();
     }
 
     // --- RENDER FUNCTIONS ---
@@ -445,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     frame.innerHTML = '<iframe src="' + embedUrl + '" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;" allow="autoplay;encrypted-media" allowfullscreen></iframe><div class="hof-video-overlay"></div>';
                     frame.style.position = 'relative';
                 } else {
-                    frame.innerHTML = '<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;display:block;"><source src="' + videoUrl + '" type="video/mp4"></video><div class="hof-video-overlay"></div>';
+                    frame.innerHTML = '<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:contain;display:block;background:#000;"><source src="' + videoUrl + '" type="video/mp4"></video><div class="hof-video-overlay"></div>';
                 }
             }
         }
@@ -519,7 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <iframe src="${embedUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="autoplay;encrypted-media" allowfullscreen loading="lazy"></iframe>
                     </div>`;
                 } else {
-                    videoHtml = `<video src="${entry.entry_video_url}" style="width:100%;border-radius:6px;margin-bottom:10px;max-height:170px;object-fit:cover;" muted loop playsinline controls></video>`;
+                    videoHtml = `<video src="${entry.entry_video_url}" style="width:100%;border-radius:6px;margin-bottom:10px;max-height:170px;object-fit:contain;background:#000;" muted loop playsinline controls></video>`;
                 }
             }
 

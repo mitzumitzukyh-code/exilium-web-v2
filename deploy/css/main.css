@@ -252,13 +252,16 @@ header.scrolled {
 }
 
 header .logo img {
-    height: 50px;
-    transition: transform var(--transition-fast);
-    filter: drop-shadow(0 0 4px rgba(212,160,23,0.2));
+    height: 56px;
+    width: auto;
+    border-radius: 12px;
+    transition: transform var(--transition-fast), filter var(--transition-fast);
+    filter: drop-shadow(0 0 6px rgba(212,160,23,0.3));
 }
 
 header .logo img:hover {
-    transform: scale(1.08);
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 12px rgba(212,160,23,0.5));
 }
 
 .nav-menu {
@@ -373,8 +376,14 @@ header .logo img:hover {
     text-align: center;
     position: relative;
     overflow: hidden;
-    background: url('../assets/fondo.png') no-repeat center center/cover;
+    background: url('../assets/fondo2.png') no-repeat center center/cover;
     background-attachment: fixed;
+}
+
+@media (max-width: 768px) {
+    #hero {
+        background-attachment: scroll;
+    }
 }
 
 #hero::before {
@@ -1093,6 +1102,7 @@ header .logo img:hover {
 
 .hof-video-wrapper {
     position: relative;
+    margin: 0 auto;
 }
 
 .hof-video-frame {
@@ -1107,8 +1117,9 @@ header .logo img:hover {
 .hof-video-frame video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
+    background: #000;
 }
 
 .hof-video-frame iframe {
@@ -1241,6 +1252,187 @@ header .logo img:hover {
     letter-spacing: 0.5px;
 }
 
+/* ── Banner Carries ── */
+.carries-banner {
+    margin-top: 2.5rem;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, rgba(212,160,23,0.12), rgba(180,120,0,0.06));
+    border: 1px solid var(--border-glow);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: hofGlowPulse 4s ease-in-out infinite;
+}
+
+.carries-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 200%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212,160,23,0.06), transparent);
+    animation: carriesBannerShine 5s linear infinite;
+}
+
+@keyframes carriesBannerShine {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(50%); }
+}
+
+.carries-banner-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.carries-banner-title {
+    color: var(--accent-color);
+    font-size: 1.15rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.carries-banner-text {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* ── Banner Carries v2 ── */
+.carries-banner-v2 {
+    position: relative;
+    margin-top: 2.5rem;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(212,160,23,0.2);
+}
+.cbv2-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url('../assets/boosting/3v3-Arena-Boost.webp');
+    background-size: cover;
+    background-position: center 20%;
+    filter: brightness(0.18) saturate(1.2);
+}
+.cbv2-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(6,6,11,0.82) 0%, rgba(10,10,20,0.75) 100%);
+}
+.cbv2-body {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    padding: 2.5rem 2rem;
+}
+.cbv2-side { padding: 0 1.5rem; }
+.cbv2-divider {
+    width: 1px;
+    background: linear-gradient(180deg, transparent, rgba(212,160,23,0.3), transparent);
+    margin: 0 0.5rem;
+}
+.cbv2-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(212,160,23,0.12);
+    border: 1px solid rgba(212,160,23,0.35);
+    border-radius: 20px;
+    padding: 0.25rem 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.75rem;
+}
+.cbv2-side h3 {
+    font-family: 'Sport Break', 'Impact', sans-serif;
+    font-size: 1.3rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.6rem;
+}
+.cbv2-side p {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    max-width: 340px;
+}
+.cbv2-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+}
+.cbv2-step {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border: 1px solid rgba(212,160,23,0.15);
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    background: rgba(212,160,23,0.04);
+}
+.cbv2-step span {
+    background: rgba(212,160,23,0.18);
+    color: var(--accent-color);
+    font-weight: 800;
+    font-size: 0.72rem;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.cbv2-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 7px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.cbv2-btn-gold {
+    background: linear-gradient(135deg, #d4a017, #f0b90b);
+    color: #06060b;
+}
+.cbv2-btn-gold:hover { opacity: 0.9; transform: translateY(-1px); color: #06060b; }
+.cbv2-btn-blue {
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    color: #fff;
+}
+.cbv2-btn-blue:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; }
+.cbv2-btn-ghost {
+    background: transparent;
+    color: #60a5fa;
+    border: 1px solid rgba(59,130,246,0.3);
+}
+.cbv2-btn-ghost:hover { background: rgba(59,130,246,0.1); color: #60a5fa; }
+@media (max-width: 700px) {
+    .cbv2-body { grid-template-columns: 1fr; }
+    .cbv2-divider { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,160,23,0.3), transparent); margin: 1.5rem 0; }
+    .cbv2-side p { max-width: 100%; }
+}
+
 /* ── Footer ── */
 footer {
     text-align: center;
@@ -1313,6 +1505,7 @@ footer a:hover {
     opacity: 1;
     visibility: visible;
 }
+
 
 .modal-content {
     background: var(--bg-secondary);
@@ -1443,19 +1636,25 @@ footer a:hover {
     }
 
     .nav-menu {
-        display: none;
+        display: flex;
         position: absolute;
         top: 100%;
         left: 0;
         right: 0;
         background: rgba(10, 10, 14, 0.95);
         flex-direction: column;
-        padding: 1rem 0;
+        padding: 0;
         border-bottom: 1px solid var(--border-color);
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.25s ease;
     }
 
     .nav-menu.active {
-        display: flex;
+        max-height: 500px;
+        opacity: 1;
+        padding: 1rem 0;
     }
 
     .nav-menu a {
@@ -1521,6 +1720,12 @@ footer a:hover {
     #leaderboard-table td {
         padding: 0.5rem;
         font-size: 0.85rem;
+    }
+
+    /* Ocultar columna Progreso en tablets */
+    #leaderboard-table th:nth-child(6),
+    #leaderboard-table td:nth-child(6) {
+        display: none;
     }
 
     .container {
@@ -1651,5 +1856,20 @@ footer a:hover {
     .footer-links {
         flex-direction: column;
         gap: 0.75rem;
+    }
+
+    /* Ocultar columna XP Total y Nivel en móvil */
+    #leaderboard-table th:nth-child(3),
+    #leaderboard-table td:nth-child(3),
+    #leaderboard-table th:nth-child(4),
+    #leaderboard-table td:nth-child(4) {
+        display: none;
+    }
+
+    /* Tabla más compacta */
+    #leaderboard-table th,
+    #leaderboard-table td {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
     }
 }

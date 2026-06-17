@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-8194792499117380">
+    <title>Exilium Boosting · Términos de Servicio | Condiciones de Uso</title>
+    <meta name="description" content="Términos y condiciones de uso de los servicios de boosting de Exilium Guild. Lee antes de contratar cualquier carry.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://exilium-battlepass.pages.dev/terms.html">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/portal.css">
+    <style>
+        .terms-layout { max-width: 820px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+        .terms-header { text-align: center; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-color); }
+        .terms-header img { height: 44px; margin-bottom: 0.75rem; }
+        .terms-header h1 { font-family: 'Sport Break', sans-serif; font-size: clamp(1.3rem,4vw,1.9rem); color: var(--accent-color); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.4rem; }
+        .terms-header .updated { font-size: 0.78rem; color: var(--text-muted); }
+        .terms-toc { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2.5rem; }
+        .terms-toc h3 { font-family: 'Sport Break', sans-serif; font-size: 0.82rem; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+        .terms-toc ol { padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem; }
+        .terms-toc li a { color: var(--text-muted); font-size: 0.83rem; transition: color 0.2s; }
+        .terms-toc li a:hover { color: var(--accent-color); }
+        .terms-section { margin-bottom: 3rem; scroll-margin-top: 80px; }
+        .terms-section h2 { font-family: 'Sport Break', sans-serif; font-size: 1rem; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-glow); }
+        .terms-section h3 { font-size: 0.88rem; font-weight: 700; color: var(--text-color); margin: 1.25rem 0 0.5rem; }
+        .terms-section p, .terms-section li { font-size: 0.86rem; color: var(--text-muted); line-height: 1.75; }
+        .terms-section ul, .terms-section ol { padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
+        .terms-section li { list-style: disc; }
+        .terms-section ol li { list-style: decimal; }
+        .highlight-box { background: rgba(212,160,23,0.06); border: 1px solid var(--border-glow); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.84rem; color: var(--text-color); }
+        .danger-box { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.25); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.84rem; color: #ef4444; }
+        .nav-tabs { display: flex; gap: 0.5rem; margin-bottom: 2.5rem; flex-wrap: wrap; }
+        .nav-tab { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 20px; padding: 0.4rem 1rem; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .nav-tab.active, .nav-tab:hover { border-color: var(--border-glow); color: var(--accent-color); background: rgba(212,160,23,0.06); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .back-bar { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 2rem; font-size: 0.82rem; }
+        .back-bar a { color: var(--text-muted); }
+        .back-bar a:hover { color: var(--accent-color); }
+    </style>
+</head>
+<body>
+<header class="portal-header">
+    <div class="portal-header-left">
+        <img src="assets/logo.png" alt="Exilium">
+        <span class="site-name">Exilium Boosting</span>
+        <span class="page-title">Términos y Reglas</span>
+    </div>
+    <div class="portal-header-right">
+        <a href="boosting.html" class="btn btn-sm btn-secondary">&#8592; Servicios</a>
+        <a href="login.html" class="btn btn-sm btn-primary">Mi Cuenta</a>
+    </div>
+</header>
+
+<div class="terms-layout">
+    <div class="back-bar">
+        <a href="boosting.html">&#8592; Volver a Boosting Services</a>
+        <span style="color:var(--border-color)">|</span>
+        <a href="booster-rules.html">Ver Reglamento del Booster &#8594;</a>
+    </div>
+
+    <div class="terms-header">
+        <img src="assets/logo.png" alt="Exilium">
+        <h1>Términos de Servicio</h1>
+        <p style="color:var(--text-muted);font-size:.88rem;max-width:580px;margin:.5rem auto 0;">Lee estos términos antes de realizar cualquier pedido. Al usar nuestros servicios aceptas todas las condiciones aquí descritas.</p>
+        <div class="updated">Última actualización: Mayo 2026</div>
+    </div>
+
+    <!-- TAB NAVIGATION -->
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('client')">&#128100; Para Clientes</button>
+        <button class="nav-tab" onclick="showTab('refund')">&#128176; Reembolsos</button>
+        <button class="nav-tab" onclick="showTab('safety')">&#128274; Seguridad</button>
+        <button class="nav-tab" onclick="showTab('privacy')">&#128065; Privacidad</button>
+    </div>
+
+    <!-- ── TAB: CLIENTE ── -->
+    <div id="tab-client" class="tab-content active">
+
+        <div class="terms-toc">
+            <h3>&#128203; Contenido</h3>
+            <ol>
+                <li><a href="#what-is">¿Qué es Exilium Boosting?</a></li>
+                <li><a href="#order-process">Proceso de pedido</a></li>
+                <li><a href="#delivery-modes">Modalidades: Selfplay vs Piloted</a></li>
+                <li><a href="#client-rules">Reglas del cliente</a></li>
+                <li><a href="#guarantees">Garantías</a></li>
+                <li><a href="#prohibited">Conducta prohibida</a></li>
+                <li><a href="#payments">Pagos y precios</a></li>
+            </ol>
+        </div>
+
+        <div class="terms-section" id="what-is">
+            <h2>1. ¿Qué es Exilium Boosting?</h2>
+            <p>Exilium Boosting es un servicio de carries PvP para World of Warcraft ofrecido por la comunidad Exilium. Conectamos a jugadores que desean mejorar su rating, obtener equipamiento o logros PvP con boosters verificados dentro de nuestra comunidad.</p>
+            <p style="margin-top:.75rem;">Todos nuestros carries son realizados <strong style="color:var(--text-color);">manualmente por jugadores reales</strong>. No usamos bots, hacks ni programas externos que infrinjan los Términos de Servicio de Blizzard Entertainment.</p>
+            <div class="highlight-box">
+                &#9888; Exilium Boosting opera como un servicio comunitario. No somos una empresa formal registrada. Los precios son acordados directamente entre el cliente y el booster, con Exilium actuando como intermediario y garante de calidad.
+            </div>
+        </div>
+
+        <div class="terms-section" id="order-process">
+            <h2>2. Proceso de pedido</h2>
+            <ol style="display:flex;flex-direction:column;gap:.75rem;margin-top:.75rem;">
+                <li><strong style="color:var(--text-color);">Registro:</strong> El cliente crea una cuenta gratuita en el portal de Exilium con su email, nombre de usuario y BattleTag.</li>
+                <li><strong style="color:var(--text-color);">Selección del servicio:</strong> El cliente selecciona el servicio deseado desde la página de Boosting Services y hace click en "Ordenar".</li>
+                <li><strong style="color:var(--text-color);">Detalles del pedido:</strong> El cliente especifica su personaje, reino, modalidad (Selfplay/Piloted), rating objetivo y método de pago (oro de WoW o USD).</li>
+                <li><strong style="color:var(--text-color);">Confirmación:</strong> El pedido queda en estado "Pendiente" y visible para los boosters disponibles.</li>
+                <li><strong style="color:var(--text-color);">Asignación:</strong> Un booster verificado reclama el pedido. El cliente recibe una notificación con el nombre del booster.</li>
+                <li><strong style="color:var(--text-color);">Coordinación:</strong> El booster contacta al cliente vía Discord para coordinar horario y detalles específicos.</li>
+                <li><strong style="color:var(--text-color);">Ejecución:</strong> El carry se realiza según lo acordado. El booster actualiza el progreso en tiempo real.</li>
+                <li><strong style="color:var(--text-color);">Completado:</strong> Una vez finalizado, el cliente verifica en su personaje y confirma la finalización.</li>
+            </ol>
+        </div>
+
+        <div class="terms-section" id="delivery-modes">
+            <h2>3. Modalidades de entrega</h2>
+
+            <h3>&#127918; Selfplay (Juego Propio)</h3>
+            <p>El cliente juega en su propia cuenta junto al equipo booster. El booster(s) completan el contenido mientras el cliente participa activamente en la partida.</p>
+            <ul style="margin-top:.5rem;">
+                <li>El cliente mantiene control total de su cuenta en todo momento</li>
+                <li>Mayor seguridad — no se comparten credenciales</li>
+                <li>El cliente puede ver y disfrutar el proceso</li>
+                <li>Disponible para: Arena 3v3, Solo Shuffle, RBG, Blitz</li>
+                <li>Puede requerir que el cliente esté disponible en horario acordado</li>
+            </ul>
+
+            <h3 style="margin-top:1.25rem;">&#127918; Piloted (Cuenta manejada)</h3>
+            <p>El booster accede a la cuenta del cliente y juega directamente en su personaje. El cliente no necesita estar en línea.</p>
+            <ul style="margin-top:.5rem;">
+                <li>El booster usa VPN de la misma región geográfica del cliente</li>
+                <li>Estado "appear offline" activado durante toda la sesión</li>
+                <li>El booster NO tiene acceso a: email, contraseña, autenticador, datos de pago</li>
+                <li>Solo acceso temporal y limitado al personaje para el servicio contratado</li>
+                <li>Disponible para servicios de gear, honor farm y algunos brackets de arena</li>
+            </ul>
+            <div class="danger-box" style="margin-top:1rem;">
+                &#9888; En servicios Piloted, el cliente debe cambiar su contraseña inmediatamente después de que el servicio sea completado. Exilium no se hace responsable si el cliente no toma esta precaución.
+            </div>
+
+            <div class="highlight-box">
+                &#128274; <strong>Recomendación de seguridad:</strong> Para servicios Piloted, te recomendamos crear una contraseña temporal única que cambiarás después del servicio. Nunca compartas tu contraseña principal de email.
+            </div>
+        </div>
+
+        <div class="terms-section" id="client-rules">
+            <h2>4. Reglas del cliente</h2>
+
+            <h3>Lo que el cliente DEBE hacer:</h3>
+            <ul>
+                <li>Proporcionar datos correctos del personaje (nombre, reino, clase, spec)</li>
+                <li>Estar disponible en Discord para coordinación antes del carry</li>
+                <li>Confirmar el horario con al menos 1 hora de anticipación</li>
+                <li>Verificar que su personaje cumpla los requisitos mínimos del servicio</li>
+                <li>Notificar cualquier problema durante o después del servicio dentro de las 24 horas</li>
+                <li>Dejar una reseña honesta del servicio una vez completado</li>
+            </ul>
+
+            <h3>Lo que el cliente NO PUEDE hacer:</h3>
+            <ul>
+                <li>Proporcionar datos falsos o de un personaje que no le pertenece</li>
+                <li>Solicitar reembolso después de que el servicio haya sido completado correctamente</li>
+                <li>Compartir el acceso dado al booster con terceros</li>
+                <li>Hacer chargeback (contracargo) sin contactar primero al equipo de Exilium</li>
+                <li>Acosar o faltar el respeto a los boosters</li>
+                <li>Revender los servicios de Exilium sin autorización previa</li>
+                <li>Usar los datos del booster para fines distintos al servicio contratado</li>
+            </ul>
+            <div class="danger-box">
+                &#10060; El incumplimiento de estas reglas resultará en la suspensión permanente de la cuenta del cliente y posible prohibición de los servicios de Exilium.
+            </div>
+        </div>
+
+        <div class="terms-section" id="guarantees">
+            <h2>5. Garantías de Exilium</h2>
+            <ul>
+                <li><strong style="color:var(--text-color);">Garantía de resultado:</strong> Si el servicio no se completa según lo especificado, se repite sin costo adicional o se emite un reembolso completo.</li>
+                <li><strong style="color:var(--text-color);">Boosters verificados:</strong> Todos los boosters pasan por un proceso de verificación de rating y un período de prueba antes de tomar pedidos reales.</li>
+                <li><strong style="color:var(--text-color);">Sin bots:</strong> Garantizamos que todos los carries son ejecutados manualmente por jugadores reales.</li>
+                <li><strong style="color:var(--text-color);">Confidencialidad:</strong> Tu información de cuenta no será compartida con terceros fuera del booster asignado.</li>
+                <li><strong style="color:var(--text-color);">Soporte:</strong> Soporte 24/7 vía Discord para cualquier problema con tu pedido.</li>
+                <li><strong style="color:var(--text-color);">Sin penalizaciones garantizadas:</strong> Nuestros métodos están diseñados para minimizar el riesgo de penalizaciones de Blizzard. Sin embargo, no podemos garantizar al 100% la posición de Blizzard sobre este tema.</li>
+            </ul>
+        </div>
+
+        <div class="terms-section" id="prohibited">
+            <h2>6. Conducta prohibida</h2>
+            <p>Las siguientes acciones resultan en <strong style="color:#ef4444;">suspensión inmediata y permanente</strong>:</p>
+            <ul>
+                <li>Intentar hacer chargeback o fraude de pago una vez iniciado el servicio</li>
+                <li>Compartir contraseñas o acceso de cuenta con personas no autorizadas por Exilium</li>
+                <li>Difamación pública falsa del servicio de Exilium</li>
+                <li>Intentar contactar a boosters fuera del sistema para negociar precios más bajos sin pasar por Exilium</li>
+                <li>Uso de la información obtenida del booster para propósitos no relacionados al servicio</li>
+            </ul>
+        </div>
+
+        <div class="terms-section" id="payments">
+            <h2>7. Pagos y precios</h2>
+
+            <h3>Métodos de pago aceptados:</h3>
+            <ul>
+                <li><strong style="color:var(--accent-color);">Oro de WoW:</strong> Pago directo mediante transferencia de oro en el juego. Método preferido y más seguro.</li>
+                <li><strong style="color:var(--text-color);">USD (PayPal/otros):</strong> Coordinado directamente con el admin via Discord. Solo para clientes de confianza.</li>
+            </ul>
+
+            <h3>Sobre los precios:</h3>
+            <ul>
+                <li>Los precios en oro están calculados en base a la ficha de WoW (~265,838 oro = $25 USD)</li>
+                <li>Los precios son de referencia y pueden variar según el rating objetivo, disponibilidad de boosters y temporada actual</li>
+                <li>El precio final se confirma con el booster antes de comenzar el servicio</li>
+                <li>No se cobra hasta que el servicio sea completado satisfactoriamente (en la modalidad oro)</li>
+            </ul>
+
+            <div class="highlight-box">
+                &#128176; El pago en oro de WoW es el método más recomendado ya que no involucra dinero real y elimina riesgos de fraude para ambas partes.
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TAB: REEMBOLSOS ── -->
+    <div id="tab-refund" class="tab-content">
+        <div class="terms-section">
+            <h2>&#128176; Política de Reembolsos</h2>
+
+            <h3>Cuándo aplica el reembolso completo:</h3>
+            <ul>
+                <li>El booster no inicia el servicio dentro de las 48 horas acordadas sin aviso previo</li>
+                <li>El servicio no se completa según las especificaciones acordadas</li>
+                <li>Error en el servicio (por ejemplo: se boost el personaje equivocado)</li>
+                <li>Cancelación antes de que el booster haya iniciado el servicio</li>
+            </ul>
+
+            <h3>Cuándo aplica el reembolso parcial:</h3>
+            <ul>
+                <li>Cancelación después de que el booster haya iniciado pero no completado (se reembolsa la parte proporcional no completada)</li>
+                <li>Cambio de especificaciones a mitad del servicio por solicitud del cliente</li>
+            </ul>
+
+            <h3>Cuándo NO aplica el reembolso:</h3>
+            <ul>
+                <li>El servicio fue completado correctamente según lo especificado</li>
+                <li>El cliente proporcionó información incorrecta del personaje</li>
+                <li>El cliente no estuvo disponible en el horario acordado (en servicios Selfplay)</li>
+                <li>La cuenta del cliente fue suspendida por Blizzard por razones no relacionadas al servicio</li>
+                <li>El cliente viola las reglas de conducta establecidas en estos términos</li>
+            </ul>
+
+            <div class="highlight-box">
+                &#128172; Para solicitar un reembolso, contacta al equipo de Exilium en Discord dentro de las 24 horas siguientes al incidente con: nombre de usuario, ID del pedido y descripción del problema.
+            </div>
+
+            <h3>Tiempo de procesamiento:</h3>
+            <ul>
+                <li>Reembolsos en oro: Inmediato una vez confirmado</li>
+                <li>Reembolsos en USD: 3-7 días hábiles dependiendo del método de pago</li>
+            </ul>
+
+            <div class="danger-box">
+                &#10060; Los chargebacks (contracargos bancarios) iniciados sin contactar primero a Exilium resultarán en suspensión permanente de la cuenta y acción legal si aplica.
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TAB: SEGURIDAD ── -->
+    <div id="tab-safety" class="tab-content">
+        <div class="terms-section">
+            <h2>&#128274; Seguridad de tu cuenta WoW</h2>
+
+            <div class="highlight-box" style="margin-bottom:1.5rem;">
+                &#128274; Tu seguridad es nuestra prioridad #1. Lee estas medidas con atención antes de contratar un servicio Piloted.
+            </div>
+
+            <h3>Medidas que tomamos nosotros:</h3>
+            <ul>
+                <li><strong style="color:var(--text-color);">VPN regional:</strong> Para servicios Piloted, el booster usa una VPN que coincide con tu región geográfica (América, Europa) para que Blizzard vea un login normal</li>
+                <li><strong style="color:var(--text-color);">Appear Offline:</strong> Estado invisible activado durante toda la sesión para que tus amigos y gremio no noten la actividad</li>
+                <li><strong style="color:var(--text-color);">Acceso limitado:</strong> Los boosters tienen instrucciones estrictas de NO acceder a: email de Battle.net, datos de pago, autenticador, ni configuración de cuenta</li>
+                <li><strong style="color:var(--text-color);">Boosters verificados:</strong> Solo boosters con historial limpio y reputación comprobada toman servicios Piloted</li>
+                <li><strong style="color:var(--text-color);">Sin bots:</strong> Todo juego es manual. No usamos herramientas de terceros que puedan comprometer la cuenta</li>
+            </ul>
+
+            <h3>Medidas que DEBES tomar tú:</h3>
+            <ul>
+                <li>&#10003; <strong style="color:var(--text-color);">Crea una contraseña temporal</strong> exclusiva para el período del servicio, distinta a tu contraseña habitual</li>
+                <li>&#10003; <strong style="color:var(--text-color);">Desvincula temporalmente el autenticador</strong> o usa códigos de respaldo, y reactívalo después</li>
+                <li>&#10003; <strong style="color:var(--text-color);">Cambia tu contraseña inmediatamente</strong> después de que el servicio sea completado</li>
+                <li>&#10003; <strong style="color:var(--text-color);">Cierra sesión en dispositivos desconocidos</strong> desde la configuración de Battle.net después del servicio</li>
+                <li>&#10003; <strong style="color:var(--text-color);">Revisa el historial de actividad</strong> de tu cuenta Battle.net después del servicio</li>
+                <li>&#10003; <strong style="color:var(--text-color);">Nunca compartas</strong> tu contraseña de email ni tu número de teléfono con el booster</li>
+            </ul>
+
+            <h3>¿Es seguro frente a Blizzard?</h3>
+            <p>Blizzard no aprueba oficialmente los servicios de carry ni piloting. Sin embargo, la práctica es extremadamente común y los riesgos son mínimos si se siguen los protocolos correctos:</p>
+            <ul>
+                <li>Llevamos años operando sin incidentes graves con cuentas de clientes</li>
+                <li>El uso de VPN regional elimina las alertas por "login desde nueva ubicación"</li>
+                <li>El juego manual evita los patrones de comportamiento que detectan los sistemas anti-trampas</li>
+                <li>En el caso improbable de una suspensión, ofrecemos soporte para el proceso de apelación</li>
+            </ul>
+
+            <div class="highlight-box">
+                &#9878; <strong>Opción más segura:</strong> Elige la modalidad Selfplay siempre que sea posible. Elimina completamente el riesgo de acceso a cuenta y es igualmente efectiva para la mayoría de servicios.
+            </div>
+        </div>
+
+        <div class="terms-section">
+            <h2>&#128274; Seguridad de tus credenciales en el portal</h2>
+            <ul>
+                <li><strong style="color:var(--text-color);">Contraseñas hasheadas:</strong> Tu contraseña del portal nunca se guarda en texto plano. Se almacena como hash SHA-256 con salt único, lo que hace imposible recuperarla incluso para nosotros</li>
+                <li><strong style="color:var(--text-color);">Tokens de sesión:</strong> Las sesiones usan tokens aleatorios de 32 bytes con expiración automática de 7 días</li>
+                <li><strong style="color:var(--text-color);">Rate limiting:</strong> El sistema bloquea automáticamente IPs con más de 5 intentos de login fallidos en 15 minutos</li>
+                <li><strong style="color:var(--text-color);">HTTPS obligatorio:</strong> Toda comunicación entre tu navegador y nuestros servidores está cifrada con TLS</li>
+                <li><strong style="color:var(--text-color);">No almacenamos:</strong> Datos de tarjetas de crédito, contraseñas de Battle.net, ni ningún dato sensible de juego</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ── TAB: PRIVACIDAD ── -->
+    <div id="tab-privacy" class="tab-content">
+        <div class="terms-section">
+            <h2>&#128065; Política de Privacidad</h2>
+
+            <h3>Qué información recopilamos:</h3>
+            <ul>
+                <li><strong style="color:var(--text-color);">Al registrarte:</strong> Nombre de usuario, dirección de email, BattleTag (opcional), contraseña (almacenada como hash)</li>
+                <li><strong style="color:var(--text-color);">Al hacer un pedido:</strong> Nombre del personaje WoW, reino, detalles del servicio solicitado, notas adicionales</li>
+                <li><strong style="color:var(--text-color);">Automáticamente:</strong> Dirección IP (solo para rate limiting, no almacenada permanentemente), horarios de actividad de sesión</li>
+            </ul>
+
+            <h3>Cómo usamos tu información:</h3>
+            <ul>
+                <li>Para gestionar y completar tus pedidos de carries</li>
+                <li>Para enviarte notificaciones sobre el estado de tus pedidos</li>
+                <li>Para verificar tu identidad y prevenir fraude</li>
+                <li>Para mejorar la calidad de nuestros servicios</li>
+            </ul>
+
+            <h3>Con quién compartimos tu información:</h3>
+            <ul>
+                <li><strong style="color:var(--text-color);">Booster asignado:</strong> Solo recibe tu nombre de personaje, reino y detalles del servicio. No recibe tu email ni contraseña</li>
+                <li><strong style="color:var(--text-color);">No vendemos datos:</strong> Nunca vendemos ni cedemos tu información a terceros con fines comerciales</li>
+                <li><strong style="color:var(--text-color);">Administradores:</strong> Solo el equipo admin de Exilium tiene acceso a datos completos de pedidos para soporte</li>
+            </ul>
+
+            <h3>Tus derechos:</h3>
+            <ul>
+                <li>Solicitar la eliminación de tu cuenta y datos asociados en cualquier momento vía Discord</li>
+                <li>Solicitar una copia de tus datos almacenados</li>
+                <li>Corregir información incorrecta en tu perfil</li>
+            </ul>
+
+            <h3>Retención de datos:</h3>
+            <p>Los datos de pedidos se conservan por 12 meses para efectos de garantía y soporte. Las cuentas inactivas por más de 24 meses pueden ser eliminadas con aviso previo.</p>
+
+            <div class="highlight-box">
+                &#128172; Para cualquier solicitud relacionada con tu privacidad, contacta al equipo de Exilium en Discord: <a href="https://discord.gg/gdekyTrv" target="_blank" style="color:var(--accent-color);">discord.gg/gdekyTrv</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER LINKS -->
+    <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
+        <div style="font-size:.78rem;color:var(--text-muted);">
+            ¿Preguntas? <a href="https://discord.gg/gdekyTrv" target="_blank" style="color:var(--accent-color);">Contacta en Discord</a>
+        </div>
+        <div style="display:flex;gap:1rem;font-size:.78rem;">
+            <a href="booster-rules.html" style="color:var(--text-muted);">Reglamento del Booster</a>
+            <a href="boosting.html" style="color:var(--text-muted);">Servicios</a>
+            <a href="login.html" style="color:var(--text-muted);">Portal Cliente</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>

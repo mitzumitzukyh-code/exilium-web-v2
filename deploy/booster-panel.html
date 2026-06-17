@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-8194792499117380">
+    <title>Exilium Boosting · Panel del Booster</title>
+    <meta name="description" content="Panel privado del booster de Exilium. Gestiona tus carries y pedidos activos.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://exilium-battlepass.pages.dev/booster-panel.html">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="portal-header">
+    <div class="portal-header-left">
+        <img src="assets/logo.png" alt="Exilium">
+        <span class="site-name">Exilium</span>
+        <span class="page-title">Panel del Booster</span>
+    </div>
+    <div class="portal-header-right">
+        <button class="portal-notif-btn" onclick="toggleNotifications()" id="notif-btn" title="Notificaciones">
+            &#128276;
+            <span class="notif-count" id="notif-count" style="display:none">0</span>
+        </button>
+        <div class="portal-user-badge">
+            <span class="role-dot booster" id="role-dot"></span>
+            <span id="header-username">...</span>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+</header>
+
+<!-- NOTIFICATION DRAWER -->
+<div class="notif-drawer" id="notif-drawer">
+    <div class="notif-drawer-header">
+        <span>&#128276; Notificaciones</span>
+        <button class="btn btn-sm btn-secondary" onclick="markAllRead()" style="font-size:.7rem;">Marcar leídas</button>
+    </div>
+    <div id="notif-list"><div class="loading-spinner"><div class="spinner"></div></div></div>
+</div>
+
+<!-- LAYOUT -->
+<div class="portal-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="portal-sidebar">
+        <span class="sidebar-section-label">Booster</span>
+        <a class="sidebar-nav-link active" onclick="showSection('available')" href="#">
+            <span class="nav-icon">&#128203;</span> Pedidos Disponibles
+            <span class="nav-badge" id="available-badge" style="display:none">0</span>
+        </a>
+        <a class="sidebar-nav-link" onclick="showSection('active')" href="#">
+            <span class="nav-icon">&#9203;</span> Mis Carries Activos
+            <span class="nav-badge" id="active-badge" style="display:none">0</span>
+        </a>
+        <a class="sidebar-nav-link" onclick="showSection('history')" href="#">
+            <span class="nav-icon">&#10003;</span> Historial
+        </a>
+        <a class="sidebar-nav-link" onclick="showSection('earnings')" href="#">
+            <span class="nav-icon">&#128176;</span> Mis Ganancias
+        </a>
+        <a class="sidebar-nav-link" onclick="showSection('profile')" href="#">
+            <span class="nav-icon">&#128100;</span> Mi Perfil
+        </a>
+        <span class="sidebar-section-label">Info</span>
+        <a class="sidebar-nav-link" href="boosting.html">
+            <span class="nav-icon">&#9876;</span> Ver Servicios
+        </a>
+        <a class="sidebar-nav-link" href="https://discord.gg/gdekyTrv" target="_blank">
+            <span class="nav-icon">&#128172;</span> Discord
+        </a>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="portal-content">
+
+        <!-- ── PENDING STATE (booster_pending) ── -->
+        <div id="section-pending" style="display:none;">
+            <div style="max-width:500px;margin:4rem auto;text-align:center;">
+                <div style="font-size:3rem;margin-bottom:1rem;">&#9203;</div>
+                <h2 style="font-family:'Sport Break',sans-serif;color:var(--accent-color);font-size:1.2rem;margin-bottom:.75rem;">SOLICITUD EN REVISIÓN</h2>
+                <p style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.5rem;">Tu aplicación está siendo revisada por el equipo de administración de Exilium. Recibirás acceso a tu panel cuando sea aprobada (24-48h).</p>
+                <a href="https://discord.gg/gdekyTrv" target="_blank" class="btn btn-discord btn-md" style="display:inline-flex;">
+                    &#128172; Contactar por Discord
+                </a>
+            </div>
+        </div>
+
+        <!-- ── AVAILABLE ORDERS ── -->
+        <div id="section-available">
+            <div class="portal-page-header">
+                <h1>&#128203; Pedidos Disponibles</h1>
+                <p>Reclama un pedido para comenzar el carry. Una vez reclamado, el cliente recibirá una notificación.</p>
+            </div>
+
+            <div style="display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center;">
+                <button class="btn btn-sm btn-secondary" onclick="loadAvailableOrders()">&#8635; Actualizar</button>
+                <span style="font-size:.78rem;color:var(--text-muted);" id="available-updated"></span>
+            </div>
+
+            <div class="orders-list" id="available-list">
+                <div class="loading-spinner"><div class="spinner"></div> Cargando pedidos...</div>
+            </div>
+        </div>
+
+        <!-- ── ACTIVE CARRIES ── -->
+        <div id="section-active" style="display:none;">
+            <div class="portal-page-header">
+                <h1>&#9203; Mis Carries Activos</h1>
+                <p>Pedidos que has reclamado. Marca el progreso y completa los carries.</p>
+            </div>
+
+            <div class="orders-list" id="active-list">
+                <div class="loading-spinner"><div class="spinner"></div> Cargando...</div>
+            </div>
+        </div>
+
+        <!-- ── HISTORY ── -->
+        <div id="section-history" style="display:none;">
+            <div class="portal-page-header">
+                <h1>&#10003; Historial de Carries</h1>
+                <p>Todos los carries completados.</p>
+            </div>
+            <div class="orders-list" id="history-list">
+                <div class="loading-spinner"><div class="spinner"></div> Cargando...</div>
+            </div>
+        </div>
+
+        <!-- ── EARNINGS ── -->
+        <div id="section-earnings" style="display:none;">
+            <div class="portal-page-header">
+                <h1>&#128176; Mis Ganancias</h1>
+                <p>Resumen de los carries completados y ganancias acumuladas.</p>
+            </div>
+            <div class="stats-grid" id="earnings-stats">
+                <div class="stat-card">
+                    <span class="stat-icon">&#10003;</span>
+                    <span class="stat-label">Carries Completados</span>
+                    <span class="stat-value" id="earn-total">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">&#9203;</span>
+                    <span class="stat-label">Carries Activos</span>
+                    <span class="stat-value" id="earn-active">0</span>
+                </div>
+            </div>
+            <div class="alert alert-info" style="max-width:500px;margin-top:1rem;">
+                &#128176; Las ganancias en oro y USD se calculan manualmente con el admin. Contacta por Discord para coordinar el pago de cada carry completado.
+            </div>
+            <a href="https://discord.gg/gdekyTrv" target="_blank" class="btn btn-discord btn-md" style="display:inline-flex;margin-top:1rem;">
+                &#128172; Coordinar pago en Discord
+            </a>
+        </div>
+
+        <!-- ── PROFILE ── -->
+        <div id="section-profile" style="display:none;">
+            <div class="portal-page-header">
+                <h1>&#128100; Mi Perfil de Booster</h1>
+            </div>
+            <div style="max-width:500px;display:flex;flex-direction:column;gap:1rem;">
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:1.5rem;">
+                    <div class="detail-section-title">Información de cuenta</div>
+                    <div class="detail-row"><span class="label">Usuario</span><span class="value" id="p-username">-</span></div>
+                    <div class="detail-row"><span class="label">Email</span><span class="value" id="p-email">-</span></div>
+                    <div class="detail-row"><span class="label">BattleTag</span><span class="value" id="p-battletag">-</span></div>
+                    <div class="detail-row"><span class="label">Discord</span><span class="value" id="p-discord">-</span></div>
+                    <div class="detail-row"><span class="label">Estado</span><span class="value" id="p-status">-</span></div>
+                </div>
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:1.5rem;">
+                    <div class="detail-section-title">Tu personaje principal</div>
+                    <div class="detail-row"><span class="label">Personaje</span><span class="value" id="p-char">-</span></div>
+                    <div class="detail-row"><span class="label">Especialización</span><span class="value" id="p-spec">-</span></div>
+                </div>
+                <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:1.5rem;">
+                    <div class="detail-section-title">&#127942; Ratings PvP</div>
+                    <div class="detail-row"><span class="label">Arena 2v2</span><span class="value" id="p-r2v2">-</span></div>
+                    <div class="detail-row"><span class="label">Arena 3v3</span><span class="value" id="p-r3v3">-</span></div>
+                    <div class="detail-row"><span class="label">Solo Shuffle</span><span class="value" id="p-rshuffle">-</span></div>
+                    <div class="detail-row"><span class="label">RBG</span><span class="value" id="p-rrbg">-</span></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ORDER DETAIL PANEL -->
+<div class="order-detail-overlay" id="order-overlay" onclick="closeOrderPanel(event)">
+    <div class="order-detail-panel" id="order-panel">
+        <div class="order-detail-header">
+            <h3 id="panel-title">Detalle del Pedido</h3>
+            <button class="btn-close-panel" onclick="closeOrderPanel()">&#10005;</button>
+        </div>
+        <div class="order-detail-body" id="panel-body"></div>
+    </div>
+</div>
+
+<script>
+const API = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+let currentUser = null;
+let availableOrders = [];
+let myOrders = [];
+
+function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('boost_token') || '') };
+}
+
+function doLogout() {
+    fetch(API + '/api/boost/logout', { method: 'POST', headers: authHeaders() }).catch(() => {});
+    localStorage.removeItem('boost_token');
+    localStorage.removeItem('boost_user');
+    window.location.href = 'booster-login.html';
+}
+
+async function init() {
+    const token = localStorage.getItem('boost_token');
+    if (!token) { window.location.href = 'booster-login.html'; return; }
+
+    try {
+        const res = await fetch(API + '/api/boost/me', { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok || !data.user) { window.location.href = 'booster-login.html'; return; }
+
+        currentUser = data.user;
+
+        if (currentUser.role === 'client') {
+            window.location.href = 'login.html'; return;
+        }
+
+        if (currentUser.role === 'booster_pending' || currentUser.role === 'booster_rejected') {
+            ['available','active','history','earnings','profile'].forEach(s => {
+                document.getElementById('section-' + s).style.display = 'none';
+            });
+            document.getElementById('section-pending').style.display = '';
+            document.getElementById('header-username').textContent = currentUser.username;
+            return;
+        }
+
+        document.getElementById('header-username').textContent = currentUser.username;
+        localStorage.setItem('boost_user', JSON.stringify(currentUser));
+
+        loadAvailableOrders();
+        loadMyOrders();
+        loadNotifications();
+        loadEarnings();
+        loadProfile();
+
+        setInterval(loadAvailableOrders, 30000);
+        setInterval(loadNotifications, 30000);
+    } catch (_) {
+        window.location.href = 'booster-login.html';
+    }
+}
+
+// ── Sections ──
+function showSection(name) {
+    ['available','active','history','earnings','profile','pending'].forEach(s => {
+        const el = document.getElementById('section-' + s);
+        if (el) el.style.display = s === name ? '' : 'none';
+    });
+    document.querySelectorAll('.sidebar-nav-link').forEach(l => l.classList.remove('active'));
+    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+
+    if (name === 'active') loadMyOrders();
+    if (name === 'history') renderHistoryList();
+}
+
+// ── Available Orders ──
+async function loadAvailableOrders() {
+    try {
+        const res = await fetch(API + '/api/boost/orders/available', { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok) return;
+        availableOrders = data.orders || [];
+        renderAvailableList();
+        const badge = document.getElementById('available-badge');
+        if (availableOrders.length > 0) { badge.textContent = availableOrders.length; badge.style.display = ''; }
+        else badge.style.display = 'none';
+        document.getElementById('available-updated').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es');
+    } catch (_) {}
+}
+
+function renderAvailableList() {
+    const list = document.getElementById('available-list');
+    if (!availableOrders.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128203;</div><p>No hay pedidos disponibles en este momento. Vuelve a comprobar pronto.</p></div>';
+        return;
+    }
+    list.innerHTML = availableOrders.map(o => `
+        <div class="order-card" onclick="openOrderPanel('${o.id}', 'available')">
+            <span class="order-card-icon">${serviceIcon(o.service_key)}</span>
+            <div class="order-card-info">
+                <div class="order-name">${o.service_name}</div>
+                <div class="order-meta">${o.char_name}${o.char_realm ? ' · ' + o.char_realm : ''} · ${timeAgo(o.created_at)} · Pago: ${o.payment_method === 'gold' ? '&#128176; oro' : '&#36; USD'}</div>
+            </div>
+            <div class="order-card-price">
+                <div class="price-main" style="color:var(--accent-color);">${o.payment_method === 'gold' ? o.price_gold + ' oro' : o.price_usd}</div>
+            </div>
+            <span class="status-badge status-pending">Disponible</span>
+        </div>
+    `).join('');
+}
+
+// ── My Orders ──
+async function loadMyOrders() {
+    try {
+        const res = await fetch(API + '/api/boost/orders', { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok) return;
+        // Filter: booster sees only orders assigned to them
+        myOrders = (data.orders || []).filter(o => o.booster_id === currentUser.id || o.client_id === currentUser.id);
+        renderActiveList();
+
+        const activeCnt = myOrders.filter(o => ['claimed','in_progress'].includes(o.status)).length;
+        const badge = document.getElementById('active-badge');
+        if (activeCnt > 0) { badge.textContent = activeCnt; badge.style.display = ''; }
+        else badge.style.display = 'none';
+    } catch (_) {}
+}
+
+function renderActiveList() {
+    const list = document.getElementById('active-list');
+    const active = myOrders.filter(o => ['claimed','in_progress'].includes(o.status));
+    if (!active.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#9203;</div><p>No tienes carries activos. Ve a <a href="#" onclick="showSection(\'available\')" style="color:var(--accent-color)">Pedidos Disponibles</a> para reclamar uno.</p></div>';
+        return;
+    }
+    list.innerHTML = active.map(o => `
+        <div class="order-card" onclick="openOrderPanel('${o.id}', 'active')">
+            <span class="order-card-icon">${serviceIcon(o.service_key)}</span>
+            <div class="order-card-info">
+                <div class="order-name">${o.service_name}</div>
+                <div class="order-meta">Cliente: ${o.client_username || '?'} · ${o.char_name} · ${timeAgo(o.claimed_at || o.created_at)}</div>
+            </div>
+            <div class="order-card-price">
+                <div class="price-main">${o.payment_method === 'gold' ? o.price_gold + ' <span style="color:var(--accent-color)">oro</span>' : o.price_usd}</div>
+            </div>
+            <span class="status-badge status-${o.status}">${statusLabel(o.status)}</span>
+        </div>
+    `).join('');
+}
+
+function renderHistoryList() {
+    const list = document.getElementById('history-list');
+    const done = myOrders.filter(o => ['completed','cancelled'].includes(o.status));
+    if (!done.length) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">&#10003;</div><p>Aún no tienes carries completados.</p></div>';
+        return;
+    }
+    list.innerHTML = done.map(o => `
+        <div class="order-card" onclick="openOrderPanel('${o.id}', 'history')">
+            <span class="order-card-icon">${serviceIcon(o.service_key)}</span>
+            <div class="order-card-info">
+                <div class="order-name">${o.service_name}</div>
+                <div class="order-meta">${o.char_name} · ${o.completed_at ? new Date(o.completed_at).toLocaleDateString('es') : timeAgo(o.created_at)}</div>
+            </div>
+            <div class="order-card-price">
+                <div class="price-main">${o.payment_method === 'gold' ? o.price_gold + ' oro' : o.price_usd}</div>
+            </div>
+            <span class="status-badge status-${o.status}">${statusLabel(o.status)}</span>
+        </div>
+    `).join('');
+}
+
+// ── Order Panel ──
+async function openOrderPanel(orderId, context) {
+    const overlay = document.getElementById('order-overlay');
+    const body = document.getElementById('panel-body');
+    overlay.classList.add('active');
+    body.innerHTML = '<div class="loading-spinner"><div class="spinner"></div> Cargando...</div>';
+
+    try {
+        const res = await fetch(API + '/api/boost/orders/' + orderId, { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok) { body.innerHTML = '<div class="alert alert-error">Error cargando pedido.</div>'; return; }
+        renderOrderDetail(data.order, body, context);
+    } catch (_) {
+        body.innerHTML = '<div class="alert alert-error">Error de conexión.</div>';
+    }
+}
+
+function renderOrderDetail(o, container, context) {
+    document.getElementById('panel-title').textContent = o.service_name;
+
+    const notes = (o.progress_notes || []).map(n => `
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div>
+                <div class="tl-time">${new Date(n.ts).toLocaleString('es')}</div>
+                <div class="tl-note">${n.note}</div>
+            </div>
+        </div>
+    `).join('') || '<div style="color:var(--text-muted);font-size:.8rem;">Sin actualizaciones.</div>';
+
+    let actionButtons = '';
+    if (context === 'available' && o.status === 'pending') {
+        actionButtons = `<button class="btn btn-primary btn-md btn-full" onclick="claimOrder('${o.id}')">&#9876; Reclamar este carry</button>`;
+    } else if (['claimed','in_progress'].includes(o.status) && (o.booster_id === currentUser?.id)) {
+        if (o.status === 'claimed') {
+            actionButtons = `
+                <button class="btn btn-blue btn-md btn-full" onclick="startOrder('${o.id}')">&#9203; Marcar como En Progreso</button>
+                <button class="btn btn-success btn-md btn-full" onclick="completeOrder('${o.id}')">&#10003; Marcar como Completado</button>
+            `;
+        } else {
+            actionButtons = `<button class="btn btn-success btn-md btn-full" onclick="completeOrder('${o.id}')">&#10003; Marcar como Completado</button>`;
+        }
+        actionButtons += `
+            <div id="note-area" style="display:flex;flex-direction:column;gap:.5rem;">
+                <input type="text" class="form-input" id="note-input" placeholder="Añadir nota de progreso..." maxlength="200">
+                <button class="btn btn-secondary btn-sm" onclick="addNote('${o.id}')">&#128203; Añadir nota</button>
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div>
+            <div class="detail-section-title">Estado</div>
+            <span class="status-badge status-${o.status}" style="font-size:.8rem;">${statusLabel(o.status)}</span>
+        </div>
+        <div>
+            <div class="detail-section-title">Detalles del pedido</div>
+            <div class="detail-row"><span class="label">Servicio</span><span class="value">${o.service_name}</span></div>
+            <div class="detail-row"><span class="label">Personaje</span><span class="value">${o.char_name}${o.char_realm ? '-' + o.char_realm : ''}</span></div>
+            <div class="detail-row"><span class="label">Pago</span><span class="value" style="color:var(--accent-color);">${o.payment_method === 'gold' ? '&#128176; ' + o.price_gold + ' oro' : '&#36; ' + o.price_usd}</span></div>
+            <div class="detail-row"><span class="label">Cliente</span><span class="value">${o.client_username || '-'}</span></div>
+            <div class="detail-row"><span class="label">Creado</span><span class="value">${new Date(o.created_at).toLocaleString('es')}</span></div>
+            ${o.notes ? `<div class="detail-row"><span class="label">Notas cliente</span><span class="value" style="max-width:240px;text-align:right;font-size:.8rem;">${o.notes}</span></div>` : ''}
+        </div>
+        <div>
+            <div class="detail-section-title">&#128202; Progreso</div>
+            <div class="progress-timeline">${notes}</div>
+        </div>
+        <div class="order-actions">
+            ${actionButtons}
+            <a href="https://discord.gg/gdekyTrv" target="_blank" class="btn btn-discord btn-md btn-full">&#128172; Coordinar en Discord</a>
+        </div>
+    `;
+}
+
+async function claimOrder(orderId) {
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = '...';
+    try {
+        const res = await fetch(API + '/api/boost/orders/' + orderId + '/claim', { method: 'POST', headers: authHeaders() });
+        const data = await res.json();
+        if (data.ok) {
+            closeOrderPanel();
+            loadAvailableOrders();
+            loadMyOrders();
+            showSection('active');
+        } else {
+            alert(data.error || 'Error al reclamar el pedido.');
+            btn.disabled = false; btn.textContent = '⚔ Reclamar este carry';
+        }
+    } catch (_) { btn.disabled = false; btn.textContent = '⚔ Reclamar este carry'; }
+}
+
+async function startOrder(orderId) {
+    try {
+        await fetch(API + '/api/boost/orders/' + orderId + '/start', { method: 'POST', headers: authHeaders() });
+        openOrderPanel(orderId, 'active');
+        loadMyOrders();
+    } catch (_) {}
+}
+
+async function completeOrder(orderId) {
+    if (!confirm('¿Confirmar que este carry ha sido completado?')) return;
+    try {
+        const res = await fetch(API + '/api/boost/orders/' + orderId + '/complete', { method: 'POST', headers: authHeaders() });
+        const data = await res.json();
+        if (data.ok) {
+            closeOrderPanel();
+            loadMyOrders();
+            loadEarnings();
+        } else {
+            alert(data.error || 'Error.');
+        }
+    } catch (_) {}
+}
+
+async function addNote(orderId) {
+    const input = document.getElementById('note-input');
+    const note = input.value.trim();
+    if (!note) return;
+    try {
+        await fetch(API + '/api/boost/orders/' + orderId + '/note', {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ note }),
+        });
+        input.value = '';
+        openOrderPanel(orderId, 'active');
+    } catch (_) {}
+}
+
+function closeOrderPanel(e) {
+    if (e && e.target !== document.getElementById('order-overlay')) return;
+    document.getElementById('order-overlay').classList.remove('active');
+}
+
+// ── Earnings ──
+async function loadEarnings() {
+    try {
+        const res = await fetch(API + '/api/boost/me', { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok) return;
+        const u = data.user;
+        document.getElementById('earn-total').textContent = u.completed_orders || 0;
+        document.getElementById('earn-active').textContent = (u.active_orders || []).length;
+    } catch (_) {}
+}
+
+// ── Profile ──
+async function loadProfile() {
+    try {
+        const res = await fetch(API + '/api/boost/me', { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok) return;
+        const u = data.user;
+        document.getElementById('p-username').textContent = u.username || '-';
+        document.getElementById('p-email').textContent = u.email || '-';
+        document.getElementById('p-battletag').textContent = u.battle_tag || '-';
+        document.getElementById('p-discord').textContent = u.discord_tag || '-';
+        document.getElementById('p-status').textContent = u.role === 'booster' ? '✓ Aprobado' : u.role === 'booster_pending' ? '⏳ Pendiente' : u.role;
+        document.getElementById('p-char').textContent = u.main_char || '-';
+        document.getElementById('p-spec').textContent = u.main_spec || '-';
+        const r = u.ratings || {};
+        document.getElementById('p-r2v2').textContent = r['2v2'] || 0;
+        document.getElementById('p-r3v3').textContent = r['3v3'] || 0;
+        document.getElementById('p-rshuffle').textContent = r.shuffle || 0;
+        document.getElementById('p-rrbg').textContent = r.rbg || 0;
+    } catch (_) {}
+}
+
+// ── Notifications ──
+async function loadNotifications() {
+    try {
+        const res = await fetch(API + '/api/boost/notifications', { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.ok) return;
+        const notifs = data.notifications || [];
+        const unread = notifs.filter(n => !n.read).length;
+        const countEl = document.getElementById('notif-count');
+        if (unread > 0) { countEl.textContent = unread; countEl.style.display = ''; }
+        else countEl.style.display = 'none';
+
+        const list = document.getElementById('notif-list');
+        if (!notifs.length) {
+            list.innerHTML = '<div class="empty-state" style="padding:1.5rem;"><p>Sin notificaciones</p></div>';
+            return;
+        }
+        list.innerHTML = notifs.map(n => `
+            <div class="notif-item ${n.read ? '' : 'unread'}">
+                <div class="notif-msg">${n.message}</div>
+                <div class="notif-time">${timeAgo(n.ts)}</div>
+            </div>
+        `).join('');
+    } catch (_) {}
+}
+
+function toggleNotifications() {
+    document.getElementById('notif-drawer').classList.toggle('open');
+}
+
+async function markAllRead() {
+    await fetch(API + '/api/boost/notifications/read', { method: 'POST', headers: authHeaders() }).catch(() => {});
+    loadNotifications();
+}
+
+// ── Helpers ──
+function serviceIcon(key) {
+    const icons = { gladiator:'&#129351;', '3v3':'&#9876;', '2v2':'&#9876;', shuffle:'&#9876;', rbg:'&#127937;', blitz:'&#127937;', honor:'&#128176;', gear:'&#9881;', elite:'&#9881;', saddle:'&#129462;', legend:'&#127942;', gladbundle:'&#127942;', coaching:'&#127891;' };
+    return icons[key] || '&#9876;';
+}
+
+function statusLabel(s) {
+    const l = { pending:'Pendiente', claimed:'Reclamado', in_progress:'En Progreso', completed:'Completado', cancelled:'Cancelado' };
+    return l[s] || s;
+}
+
+function timeAgo(ts) {
+    if (!ts) return '';
+    const diff = Date.now() - new Date(ts).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'ahora';
+    if (m < 60) return `hace ${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `hace ${h}h`;
+    return `hace ${Math.floor(h/24)}d`;
+}
+
+document.addEventListener('click', e => {
+    const drawer = document.getElementById('notif-drawer');
+    const btn = document.getElementById('notif-btn');
+    if (!drawer.contains(e.target) && !btn.contains(e.target)) drawer.classList.remove('open');
+});
+
+init();
+</script>
+</body>
+</html>

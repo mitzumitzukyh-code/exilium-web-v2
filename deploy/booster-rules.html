@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-8194792499117380">
+    <title>Exilium Boosting · Reglamento del Booster WoW | Normas y Condiciones</title>
+    <meta name="description" content="Reglamento oficial del programa de boosters de Exilium. Lee las normas, condiciones y código de conducta antes de aplicar.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://exilium-battlepass.pages.dev/booster-rules.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://exilium-battlepass.pages.dev/booster-rules.html">
+    <meta property="og:title" content="Exilium Boosting · Reglamento del Booster WoW">
+    <meta property="og:description" content="Reglamento oficial del programa de boosters de Exilium. Normas, condiciones y código de conducta.">
+    <meta property="og:image" content="https://exilium-battlepass.pages.dev/assets/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Exilium">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:image" content="https://exilium-battlepass.pages.dev/assets/og-image.jpg">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/portal.css">
+    <style>
+        .rules-layout { max-width: 820px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+        .rules-header { text-align: center; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(59,130,246,0.2); }
+        .rules-header img { height: 44px; margin-bottom: 0.75rem; }
+        .rules-header h1 { font-family: 'Sport Break', sans-serif; font-size: clamp(1.3rem,4vw,1.9rem); color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.4rem; }
+        .rules-section { margin-bottom: 3rem; scroll-margin-top: 80px; }
+        .rules-section h2 { font-family: 'Sport Break', sans-serif; font-size: 1rem; color: #3b82f6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(59,130,246,0.2); }
+        .rules-section h3 { font-size: 0.88rem; font-weight: 700; color: var(--text-color); margin: 1.25rem 0 0.5rem; }
+        .rules-section p, .rules-section li { font-size: 0.86rem; color: var(--text-muted); line-height: 1.75; }
+        .rules-section ul, .rules-section ol { padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
+        .rules-section li { list-style: disc; }
+        .rules-section ol li { list-style: decimal; }
+        .info-box { background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.25); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.84rem; color: #93c5fd; }
+        .danger-box { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.25); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.84rem; color: #ef4444; }
+        .success-box { background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.25); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin: 1rem 0; font-size: 0.84rem; color: #10b981; }
+        .tier-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 1rem; margin: 1rem 0; }
+        .tier-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; text-align: center; }
+        .tier-card .tier-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .tier-card .tier-name { font-family: 'Sport Break', sans-serif; font-size: 0.82rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.4rem; }
+        .tier-card .tier-req { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+        .tier-bronze .tier-name { color: #cd7f32; }
+        .tier-silver .tier-name { color: #c0c0c0; }
+        .tier-gold .tier-name { color: var(--accent-color); }
+        .tier-elite .tier-name { color: #8b5cf6; }
+        .sanction-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 0.75rem; }
+        .sanction-table th { background: var(--bg-tertiary); padding: 0.6rem 0.85rem; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+        .sanction-table td { padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        .sanction-table tr:last-child td { border-bottom: none; }
+        .sanction-light { color: #f59e0b; }
+        .sanction-medium { color: #ef4444; }
+        .sanction-severe { color: #7f1d1d; background: rgba(239,68,68,0.08); }
+        .toc-box { background: var(--bg-secondary); border: 1px solid rgba(59,130,246,0.2); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 2.5rem; }
+        .toc-box h3 { font-family: 'Sport Break', sans-serif; font-size: 0.82rem; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+        .toc-box ol { padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.4rem; }
+        .toc-box li a { color: var(--text-muted); font-size: 0.83rem; }
+        .toc-box li a:hover { color: #3b82f6; }
+        .back-bar { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 2rem; font-size: 0.82rem; }
+        .back-bar a { color: var(--text-muted); }
+        .back-bar a:hover { color: #3b82f6; }
+    </style>
+</head>
+<body>
+<header class="portal-header" style="border-bottom-color:rgba(59,130,246,0.25);">
+    <div class="portal-header-left">
+        <img src="assets/logo.png" alt="Exilium">
+        <span class="site-name" style="color:#3b82f6;">Exilium Boosting</span>
+        <span class="page-title">Reglamento del Booster</span>
+    </div>
+    <div class="portal-header-right">
+        <a href="booster-apply.html" class="btn btn-sm" style="background:rgba(59,130,246,.15);color:#3b82f6;border:1px solid rgba(59,130,246,.3);">Aplicar como Booster</a>
+        <a href="booster-login.html" class="btn btn-sm" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;">Portal Booster</a>
+    </div>
+</header>
+
+<div class="rules-layout">
+    <div class="back-bar">
+        <a href="boosting.html">&#8592; Volver a Boosting Services</a>
+        <span style="color:var(--border-color)">|</span>
+        <a href="terms.html">Ver Términos del Cliente &#8594;</a>
+    </div>
+
+    <div class="rules-header">
+        <img src="assets/logo.png" alt="Exilium">
+        <h1>&#9876; Reglamento del Booster</h1>
+        <p style="color:var(--text-muted);font-size:.88rem;max-width:580px;margin:.5rem auto 0;">Este documento es de lectura y aceptación OBLIGATORIA para todos los boosters de Exilium. Su incumplimiento tiene consecuencias directas sobre tu acceso al sistema.</p>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-top:.5rem;">Versión 2.0 — Mayo 2026</div>
+    </div>
+
+    <div class="toc-box">
+        <h3>&#128203; Contenido del Reglamento</h3>
+        <ol>
+            <li><a href="#process">Proceso de reclutamiento y trial</a></li>
+            <li><a href="#tiers">Sistema de niveles del booster</a></li>
+            <li><a href="#obligations">Obligaciones del booster</a></li>
+            <li><a href="#prohibited">Conducta estrictamente prohibida</a></li>
+            <li><a href="#orders">Cómo gestionar pedidos</a></li>
+            <li><a href="#payments-booster">Pagos y ganancias</a></li>
+            <li><a href="#client-conduct">Conducta con el cliente</a></li>
+            <li><a href="#sanctions">Tabla de sanciones</a></li>
+            <li><a href="#nda">Confidencialidad (NDA)</a></li>
+            <li><a href="#appeal">Proceso de apelación</a></li>
+        </ol>
+    </div>
+
+    <!-- 1. RECLUTAMIENTO -->
+    <div class="rules-section" id="process">
+        <h2>1. Proceso de Reclutamiento y Trial</h2>
+
+        <h3>Paso 1 — Aplicación</h3>
+        <p>El candidato completa el formulario de aplicación en <a href="booster-apply.html" style="color:#3b82f6;">booster-apply.html</a> con:</p>
+        <ul>
+            <li>Datos de cuenta: email, usuario, BattleTag, Discord</li>
+            <li>Personaje principal: nombre, especialización</li>
+            <li>Ratings actuales en todos los brackets PvP relevantes</li>
+            <li>Screenshot verificable del UI de WoW mostrando el rating</li>
+            <li>Experiencia previa como booster (si aplica)</li>
+        </ul>
+        <div class="info-box">&#9432; Requisito mínimo de entrada: <strong>1400 de rating en al menos 1 bracket PvP</strong>. Aplicaciones por debajo de este umbral son rechazadas automáticamente.</div>
+
+        <h3>Paso 2 — Revisión por el Admin</h3>
+        <p>El equipo administrador de Exilium revisa la aplicación en un plazo de 24-48 horas. Se verifica:</p>
+        <ul>
+            <li>Autenticidad del screenshot de rating</li>
+            <li>Historial de la cuenta Battle.net si es posible</li>
+            <li>Reputación en la comunidad Exilium (si es miembro previo)</li>
+            <li>Ausencia de historial de trampas o comportamiento tóxico</li>
+        </ul>
+
+        <h3>Paso 3 — Período de Trial (2 semanas)</h3>
+        <p>Los boosters aprobados entran en un <strong style="color:var(--text-color);">período de prueba de 2 semanas</strong> con las siguientes condiciones:</p>
+        <ul>
+            <li>Acceso limitado a pedidos de bajo valor (máximo 3 pedidos simultáneos)</li>
+            <li>Supervisión directa: el admin revisa las notas de progreso de cada carry</li>
+            <li>Calificación mínima de 4.0/5.0 en las primeras 5 reseñas de clientes</li>
+            <li>Tiempo de respuesta máximo de 2 horas a mensajes del cliente</li>
+            <li>Cero incidencias disciplinarias durante el período</li>
+        </ul>
+        <div class="success-box">&#10003; Al superar el trial, el booster obtiene acceso completo al sistema y su nivel sube automáticamente a Bronce.</div>
+        <div class="danger-box">&#10060; No superar el trial resultará en revocación del acceso. Se puede volver a aplicar después de 30 días.</div>
+    </div>
+
+    <!-- 2. SISTEMA DE TIERS -->
+    <div class="rules-section" id="tiers">
+        <h2>2. Sistema de Niveles del Booster</h2>
+        <p>Exilium usa un sistema de niveles para reconocer y compensar mejor a los mejores boosters:</p>
+
+        <div class="tier-grid">
+            <div class="tier-card tier-bronze">
+                <div class="tier-icon">🥉</div>
+                <div class="tier-name">Bronce</div>
+                <div class="tier-req">
+                    Trial superado<br>
+                    Rating 1400+<br>
+                    0–20 carries completados
+                </div>
+            </div>
+            <div class="tier-card tier-silver">
+                <div class="tier-icon">🥈</div>
+                <div class="tier-name">Plata</div>
+                <div class="tier-req">
+                    Rating 1800+<br>
+                    21–75 carries completados<br>
+                    Calificación media ≥ 4.2/5
+                </div>
+            </div>
+            <div class="tier-card tier-gold">
+                <div class="tier-icon">🥇</div>
+                <div class="tier-name">Oro</div>
+                <div class="tier-req">
+                    Rating 2100+<br>
+                    76–200 carries completados<br>
+                    Calificación media ≥ 4.5/5
+                </div>
+            </div>
+            <div class="tier-card tier-elite">
+                <div class="tier-icon">💎</div>
+                <div class="tier-name">Élite</div>
+                <div class="tier-req">
+                    Rating 2400+ / Gladiator<br>
+                    200+ carries completados<br>
+                    Calificación media ≥ 4.8/5
+                </div>
+            </div>
+        </div>
+
+        <h3>Beneficios por nivel:</h3>
+        <ul>
+            <li><strong style="color:#cd7f32;">Bronce:</strong> Acceso básico al panel, máximo 3 pedidos activos simultáneos</li>
+            <li><strong style="color:#c0c0c0;">Plata:</strong> Hasta 6 pedidos activos, acceso a pedidos de mayor valor, badge en el panel</li>
+            <li><strong style="color:var(--accent-color);">Oro:</strong> Hasta 10 pedidos activos, prioridad en pedidos premium, comisión mejorada</li>
+            <li><strong style="color:#8b5cf6;">Élite:</strong> Sin límite de pedidos activos, pedidos exclusivos de Gladiator y Legend, máxima comisión, badge especial visible por clientes</li>
+        </ul>
+    </div>
+
+    <!-- 3. OBLIGACIONES -->
+    <div class="rules-section" id="obligations">
+        <h2>3. Obligaciones del Booster</h2>
+
+        <h3>Disponibilidad y comunicación:</h3>
+        <ul>
+            <li><strong style="color:var(--text-color);">Tiempo de respuesta:</strong> Máximo 2 horas para responder al cliente después de reclamar un pedido</li>
+            <li><strong style="color:var(--text-color);">Puntualidad:</strong> Si acordaste un horario, debes presentarte a tiempo. Máximo 15 minutos de retraso sin aviso previo</li>
+            <li><strong style="color:var(--text-color);">Notificación de ausencia:</strong> Si no puedes realizar un pedido que ya reclamaste, debes notificarlo con mínimo 2 horas de anticipación</li>
+            <li><strong style="color:var(--text-color);">Actividad mínima:</strong> Al menos 1 carry completado cada 30 días para mantener el acceso activo al panel</li>
+        </ul>
+
+        <h3>Ejecución del servicio:</h3>
+        <ul>
+            <li>Realizar el carry exactamente según las especificaciones del pedido (bracket, rating objetivo, modalidad)</li>
+            <li>Actualizar el estado del pedido en tiempo real mediante notas de progreso</li>
+            <li>No compartir la cuenta del cliente con otros boosters sin autorización expresa del admin</li>
+            <li>Completar el servicio en el tiempo estimado acordado con el cliente</li>
+            <li>Informar al admin si encuentras problemas técnicos o de cuenta durante el carry</li>
+        </ul>
+
+        <h3>Para servicios Piloted:</h3>
+        <ul>
+            <li><strong style="color:var(--text-color);">VPN obligatoria:</strong> Usar siempre una VPN que coincida con la región del cliente</li>
+            <li><strong style="color:var(--text-color);">Appear Offline:</strong> Activar estado invisible en Battle.net durante toda la sesión</li>
+            <li><strong style="color:var(--text-color);">Acceso limitado:</strong> Solo jugar el personaje para el servicio contratado. Prohibido revisar email, configuración de cuenta, datos de pago</li>
+            <li><strong style="color:var(--text-color);">Cerrar sesión:</strong> Cerrar sesión inmediatamente al completar el servicio, sin dejar cuentas abiertas</li>
+            <li><strong style="color:var(--text-color);">Sin screenshots:</strong> Prohibido capturar pantalla de datos de la cuenta del cliente</li>
+        </ul>
+    </div>
+
+    <!-- 4. CONDUCTA PROHIBIDA -->
+    <div class="rules-section" id="prohibited">
+        <h2>4. Conducta Estrictamente Prohibida</h2>
+
+        <div class="danger-box" style="margin-bottom:1.25rem;">
+            &#10060; Las siguientes infracciones resultan en <strong>expulsión inmediata y permanente</strong> del sistema de boosters de Exilium, sin posibilidad de reingreso.
+        </div>
+
+        <h3>Prohibiciones absolutas (expulsión inmediata):</h3>
+        <ul>
+            <li>Robar, transferir o vender ítems/oro de la cuenta del cliente sin autorización</li>
+            <li>Usar programas externos prohibidos (bots, hacks, exploits) durante cualquier carry</li>
+            <li>Compartir las credenciales del cliente con terceros</li>
+            <li>Intentar extorsionar al cliente o al equipo de Exilium</li>
+            <li>Acordar servicios fuera del sistema de Exilium para evadir comisiones (poaching)</li>
+            <li>Hacer servicios de carries para competidores directos de Exilium mientras eres booster activo</li>
+            <li>Filtrar información confidencial de clientes, pedidos o procesos internos de Exilium</li>
+            <li>Crear cuentas falsas para manipular el sistema de reseñas</li>
+        </ul>
+
+        <h3>Prohibiciones con sanción graduada:</h3>
+        <ul>
+            <li>No presentarse a un carry sin previo aviso (no-show)</li>
+            <li>Abandonar un carry a mitad sin justificación válida</li>
+            <li>Comportamiento irrespetuoso o tóxico con el cliente</li>
+            <li>Dar información falsa sobre el progreso del carry</li>
+            <li>Reclamar pedidos que no puedes completar en el tiempo acordado</li>
+            <li>Incumplir el protocolo de VPN en servicios Piloted</li>
+        </ul>
+    </div>
+
+    <!-- 5. GESTIÓN DE PEDIDOS -->
+    <div class="rules-section" id="orders">
+        <h2>5. Cómo Gestionar Pedidos</h2>
+
+        <ol style="display:flex;flex-direction:column;gap:.85rem;margin-top:.75rem;">
+            <li>
+                <strong style="color:var(--text-color);">Ver pedidos disponibles:</strong>
+                <p>En tu panel de booster, la sección "Pedidos Disponibles" muestra todos los pedidos pendientes. Solo aparecen pedidos dentro de tus brackets especializados.</p>
+            </li>
+            <li>
+                <strong style="color:var(--text-color);">Reclamar un pedido:</strong>
+                <p>Al hacer click en "Reclamar", el pedido queda asignado a ti. El cliente recibe una notificación automática. Una vez reclamado, tienes 2 horas para contactar al cliente por Discord.</p>
+            </li>
+            <li>
+                <strong style="color:var(--text-color);">Coordinación con el cliente:</strong>
+                <p>Contacta al cliente vía Discord para acordar: horario, modalidad (Selfplay/Piloted), cualquier requisito técnico específico, y el método de pago definitivo.</p>
+            </li>
+            <li>
+                <strong style="color:var(--text-color);">Marcar "En Progreso":</strong>
+                <p>Cuando inicies el carry, cambia el estado a "En Progreso" en tu panel. Añade notas de progreso regularmente para que el cliente vea las actualizaciones en tiempo real.</p>
+            </li>
+            <li>
+                <strong style="color:var(--text-color);">Completar el pedido:</strong>
+                <p>Una vez finalizado el carry, marca el pedido como "Completado" en el panel. El cliente recibirá una notificación y deberá verificar el resultado en su personaje.</p>
+            </li>
+            <li>
+                <strong style="color:var(--text-color);">Cobrar:</strong>
+                <p>El pago se coordina con el admin de Exilium. Para pagos en oro, el cliente te transfiere directamente en el juego después de confirmar el servicio. Para pagos en USD, el admin coordina el pago.</p>
+            </li>
+        </ol>
+
+        <div class="info-box" style="margin-top:1.25rem;">
+            &#9432; <strong>Regla importante:</strong> No reclames más pedidos de los que puedas manejar simultáneamente según tu nivel. Reclamar pedidos y abandonarlos afecta tu puntuación y puede resultar en sanciones.
+        </div>
+    </div>
+
+    <!-- 6. PAGOS -->
+    <div class="rules-section" id="payments-booster">
+        <h2>6. Pagos y Ganancias</h2>
+
+        <h3>Distribución de ingresos:</h3>
+        <ul>
+            <li><strong style="color:#cd7f32;">Bronce:</strong> 70% del valor del pedido para el booster, 30% para Exilium</li>
+            <li><strong style="color:#c0c0c0;">Plata:</strong> 75% para el booster, 25% para Exilium</li>
+            <li><strong style="color:var(--accent-color);">Oro:</strong> 80% para el booster, 20% para Exilium</li>
+            <li><strong style="color:#8b5cf6;">Élite:</strong> 85% para el booster, 15% para Exilium</li>
+        </ul>
+
+        <h3>Modalidades de cobro:</h3>
+        <ul>
+            <li><strong style="color:var(--text-color);">Oro de WoW:</strong> El cliente te transfiere el oro directamente en el juego al completar el servicio. Debes confirmar la recepción al admin.</li>
+            <li><strong style="color:var(--text-color);">USD:</strong> El admin recibe el pago del cliente y te transfiere tu parte dentro de 3-5 días hábiles vía el método acordado (PayPal, transferencia, etc.).</li>
+        </ul>
+
+        <div class="info-box">
+            &#9432; Las ganancias de cada carry completado quedan registradas en tu historial del panel. Para cualquier discrepancia en pagos, contacta al admin con el ID del pedido dentro de las 48 horas.
+        </div>
+
+        <h3>Penalizaciones económicas:</h3>
+        <ul>
+            <li><strong style="color:#ef4444;">No-show sin aviso:</strong> Pérdida del 50% de la comisión del siguiente pedido completado</li>
+            <li><strong style="color:#ef4444;">Abandono de carry a mitad:</strong> Sin pago por ese carry más penalización del 25% en el siguiente</li>
+            <li><strong style="color:#ef4444;">Reseña negativa por mal servicio:</strong> Revisión del caso, posible reducción temporal de nivel</li>
+        </ul>
+    </div>
+
+    <!-- 7. CONDUCTA CON EL CLIENTE -->
+    <div class="rules-section" id="client-conduct">
+        <h2>7. Conducta con el Cliente</h2>
+
+        <h3>Estándares de comunicación:</h3>
+        <ul>
+            <li>Comunicación siempre respetuosa y profesional, tanto en Discord como en el juego</li>
+            <li>Responder mensajes del cliente en un máximo de 2 horas durante el horario activo</li>
+            <li>Informar proactivamente de cualquier retraso o problema antes de que el cliente lo reporte</li>
+            <li>No compartir datos personales del cliente con terceros bajo ninguna circunstancia</li>
+        </ul>
+
+        <h3>Durante el carry:</h3>
+        <ul>
+            <li>No revelar que el personaje está siendo manejado por un booster a otros jugadores (en servicios Piloted)</li>
+            <li>Mantener un comportamiento deportivo — no hacer trash talk ni comportamiento tóxico usando la cuenta del cliente</li>
+            <li>No realizar compras, ventas o transacciones de ítems no relacionadas al servicio contratado</li>
+            <li>No modificar la configuración del personaje, keybinds o UI del cliente sin su consentimiento explícito</li>
+        </ul>
+
+        <div class="success-box">
+            &#10003; Los boosters con mejor historial de atención al cliente reciben pedidos prioritarios y aumentan su nivel más rápido. La satisfacción del cliente es la métrica más importante.
+        </div>
+    </div>
+
+    <!-- 8. TABLA DE SANCIONES -->
+    <div class="rules-section" id="sanctions">
+        <h2>8. Tabla de Sanciones</h2>
+
+        <table class="sanction-table">
+            <thead>
+                <tr>
+                    <th>Infracción</th>
+                    <th>1ª vez</th>
+                    <th>2ª vez</th>
+                    <th>3ª vez</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>No-show sin previo aviso</td>
+                    <td class="sanction-light">Advertencia + penalización económica</td>
+                    <td class="sanction-medium">Suspensión 7 días</td>
+                    <td class="sanction-severe">Expulsión permanente</td>
+                </tr>
+                <tr>
+                    <td>Abandono de carry sin justificación</td>
+                    <td class="sanction-light">Advertencia + penalización económica</td>
+                    <td class="sanction-medium">Suspensión 14 días + bajada de nivel</td>
+                    <td class="sanction-severe">Expulsión permanente</td>
+                </tr>
+                <tr>
+                    <td>Comportamiento tóxico con cliente</td>
+                    <td class="sanction-light">Advertencia formal + revisión</td>
+                    <td class="sanction-medium">Suspensión 30 días</td>
+                    <td class="sanction-severe">Expulsión permanente</td>
+                </tr>
+                <tr>
+                    <td>Incumplir protocolo VPN en Piloted</td>
+                    <td class="sanction-light">Advertencia + formación obligatoria</td>
+                    <td class="sanction-medium">Suspensión de servicios Piloted</td>
+                    <td class="sanction-severe">Expulsión permanente</td>
+                </tr>
+                <tr>
+                    <td>Dar información falsa de progreso</td>
+                    <td class="sanction-medium">Suspensión 14 días</td>
+                    <td class="sanction-severe">Expulsión permanente</td>
+                    <td>—</td>
+                </tr>
+                <tr>
+                    <td>Poaching (contacto directo fuera del sistema)</td>
+                    <td class="sanction-severe" colspan="3">Expulsión inmediata y permanente</td>
+                </tr>
+                <tr>
+                    <td>Robo/uso indebido de cuenta cliente</td>
+                    <td class="sanction-severe" colspan="3">Expulsión inmediata, reporte a Blizzard, posible acción legal</td>
+                </tr>
+                <tr>
+                    <td>Uso de bots/hacks en cualquier carry</td>
+                    <td class="sanction-severe" colspan="3">Expulsión inmediata y permanente</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 9. NDA -->
+    <div class="rules-section" id="nda">
+        <h2>9. Acuerdo de Confidencialidad (NDA)</h2>
+
+        <p>Al aceptar convertirte en booster de Exilium, aceptas mantener confidencialidad sobre:</p>
+        <ul>
+            <li><strong style="color:var(--text-color);">Datos de clientes:</strong> Nombres de usuario, emails, BattleTags, nombres de personajes, información de pedidos y cualquier dato personal de los clientes</li>
+            <li><strong style="color:var(--text-color);">Información interna:</strong> Procesos de verificación de boosters, estructura de comisiones, lista de clientes, volumen de pedidos</li>
+            <li><strong style="color:var(--text-color);">Comunicaciones internas:</strong> Conversaciones en canales privados del Discord de Exilium, decisiones administrativas</li>
+            <li><strong style="color:var(--text-color);">Credenciales de acceso:</strong> Cualquier contraseña temporal de clientes usada en servicios Piloted</li>
+        </ul>
+
+        <div class="danger-box">
+            &#10060; La violación del NDA, incluyendo la divulgación de datos de clientes en cualquier foro público o privado fuera de Exilium, resultará en expulsión inmediata y puede constituir una infracción legal de protección de datos.
+        </div>
+
+        <p style="margin-top:.75rem;">Esta obligación de confidencialidad permanece activa incluso <strong style="color:var(--text-color);">después de dejar de ser booster de Exilium</strong>.</p>
+    </div>
+
+    <!-- 10. APELACIONES -->
+    <div class="rules-section" id="appeal">
+        <h2>10. Proceso de Apelación</h2>
+
+        <p>Si recibes una sanción con la que no estás de acuerdo, tienes derecho a apelar siguiendo este proceso:</p>
+
+        <ol style="display:flex;flex-direction:column;gap:.75rem;margin-top:.75rem;">
+            <li><strong style="color:var(--text-color);">Plazo:</strong> La apelación debe presentarse dentro de las 48 horas siguientes a la notificación de la sanción.</li>
+            <li><strong style="color:var(--text-color);">Canal:</strong> Contacta directamente al admin de Exilium en Discord con el asunto "APELACIÓN - [tu usuario]".</li>
+            <li><strong style="color:var(--text-color);">Información requerida:</strong> ID del pedido relacionado, descripción de tu versión de los hechos, cualquier evidencia de apoyo (capturas, logs de Discord).</li>
+            <li><strong style="color:var(--text-color);">Revisión:</strong> El equipo admin revisará el caso en un plazo de 72 horas y emitirá una resolución definitiva.</li>
+            <li><strong style="color:var(--text-color);">Resolución:</strong> La decisión del equipo admin es final. Si la apelación es aceptada, la sanción se revoca o reduce. Si se rechaza, la sanción original se mantiene.</li>
+        </ol>
+
+        <div class="info-box" style="margin-top:1rem;">
+            &#128172; Para cualquier duda sobre este reglamento antes de aplicar, contáctanos en <a href="https://discord.gg/gdekyTrv" target="_blank" style="color:#3b82f6;">discord.gg/gdekyTrv</a>
+        </div>
+    </div>
+
+    <!-- ACCEPTANCE BUTTON -->
+    <div style="margin-top:3rem;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.25);border-radius:var(--radius-lg);padding:2rem;text-align:center;">
+        <div style="font-size:1.5rem;margin-bottom:.75rem;">&#9876;</div>
+        <h3 style="font-family:'Sport Break',sans-serif;color:#3b82f6;font-size:1rem;letter-spacing:1px;margin-bottom:.5rem;">¿LISTO PARA UNIRTE?</h3>
+        <p style="font-size:.84rem;color:var(--text-muted);margin-bottom:1.5rem;">Al aplicar confirmas haber leído y aceptado completamente este reglamento.</p>
+        <a href="booster-apply.html" class="btn btn-lg" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;display:inline-flex;font-family:'Sport Break',sans-serif;letter-spacing:.5px;">
+            &#9876; Aplicar como Booster
+        </a>
+    </div>
+
+    <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border-color);display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;">
+        <div style="font-size:.78rem;color:var(--text-muted);">&#169; 2026 Exilium Boosting — Todos los derechos reservados</div>
+        <div style="display:flex;gap:1rem;font-size:.78rem;">
+            <a href="terms.html" style="color:var(--text-muted);">Términos del Cliente</a>
+            <a href="boosting.html" style="color:var(--text-muted);">Servicios</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

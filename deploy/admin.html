@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-8194792499117380">
     <title>Exilium Admin</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="stylesheet" href="css/admin.css">
@@ -59,6 +60,11 @@
             <button data-tab="analytics"><span class="nav-icon">📈</span> Analíticas</button>
             <button data-tab="n8n"><span class="nav-icon">⚡</span> N8N / Discord</button>
             <button data-tab="errors"><span class="nav-icon">🔬</span> Errores</button>
+            <div style="height:1px;background:var(--border);margin:8px 12px;"></div>
+            <button data-tab="boost-orders"><span class="nav-icon">⚔️</span> Pedidos Carry</button>
+            <button data-tab="boost-boosters"><span class="nav-icon">🛡️</span> Boosters</button>
+            <button data-tab="boost-clients"><span class="nav-icon">👥</span> Clientes Portal</button>
+            <button data-tab="rbg-strategies"><span class="nav-icon">🗺️</span> RBG Strategies</button>
         </nav>
         <div class="sidebar-footer">
             <button class="btn-logout" id="logout-btn">Cerrar sesión</button>
@@ -740,6 +746,207 @@
                 <div class="card-body">
                     <div id="analytics-chart" style="display:flex;align-items:flex-end;gap:4px;height:180px;padding:10px 0;"></div>
                     <div id="analytics-table" style="margin-top:16px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: PEDIDOS CARRY ═══════ -->
+        <div id="tab-boost-orders" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">⚔️ Pedidos de Carry</h2>
+                <div class="tab-actions">
+                    <select class="input" id="boost-orders-filter" style="font-size:.82rem;padding:.35rem .7rem;" onchange="filterBoostOrders(this.value)">
+                        <option value="all">Todos los estados</option>
+                        <option value="pending">⏳ Pendiente</option>
+                        <option value="claimed">🔒 Reclamado</option>
+                        <option value="in_progress">▶️ En progreso</option>
+                        <option value="completed">✅ Completado</option>
+                        <option value="cancelled">❌ Cancelado</option>
+                    </select>
+                    <button class="btn" id="refresh-boost-orders-btn">🔄 Refresh</button>
+                </div>
+            </div>
+            <!-- Banner toggle -->
+            <div class="card" style="margin-bottom:1rem;border-left:3px solid var(--accent);">
+                <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div>
+                        <div style="font-weight:700;color:var(--text-bright);margin-bottom:2px;">&#128247; Banner de Boosting <span id="boost-banner-status-badge" style="font-size:.72rem;font-weight:700;border-radius:12px;padding:.15rem .65rem;margin-left:6px;"></span></div>
+                        <div style="font-size:.8rem;color:var(--text-muted);">Controla si el banner de reclutamiento/carries aparece en la página principal (index.html).</div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-success" id="boost-banner-show-btn" style="font-size:.82rem;">&#128994; Mostrar banner</button>
+                        <button class="btn btn-danger"  id="boost-banner-hide-btn" style="font-size:.82rem;">&#128308; Ocultar banner</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats row -->
+            <div class="stat-grid" id="boost-orders-stats" style="margin-bottom:1rem;">
+                <div class="stat-card"><div class="stat-val" id="bos-total">—</div><div class="stat-label">Total pedidos</div></div>
+                <div class="stat-card"><div class="stat-val" id="bos-pending">—</div><div class="stat-label">Pendientes</div></div>
+                <div class="stat-card"><div class="stat-val" id="bos-active">—</div><div class="stat-label">En curso</div></div>
+                <div class="stat-card"><div class="stat-val" id="bos-completed">—</div><div class="stat-label">Completados</div></div>
+            </div>
+            <div class="card">
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrap">
+                        <table class="data-table" id="boost-orders-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Servicio</th>
+                                    <th>Cliente</th>
+                                    <th>Personaje</th>
+                                    <th>Modo</th>
+                                    <th>Pago</th>
+                                    <th>Estado</th>
+                                    <th>Booster</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boost-orders-tbody">
+                                <tr><td colspan="10" class="empty-state"><p>Cargando...</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: BOOSTERS ═══════ -->
+        <div id="tab-boost-boosters" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">🛡️ Boosters</h2>
+                <div class="tab-actions">
+                    <button class="btn" id="refresh-boosters-btn">🔄 Refresh</button>
+                </div>
+            </div>
+            <!-- Aplicaciones pendientes -->
+            <div class="card" style="margin-bottom:1rem;border-left:3px solid var(--warning);">
+                <div class="card-header">
+                    <span class="card-title">⏳ Aplicaciones Pendientes</span>
+                    <span class="badge" id="pending-apps-count" style="background:rgba(234,179,8,.15);color:#eab308;border:1px solid rgba(234,179,8,.3);border-radius:12px;padding:.15rem .6rem;font-size:.75rem;font-weight:700;">0</span>
+                </div>
+                <div class="card-body" id="boost-applications-list">
+                    <div class="empty-state"><p>Cargando...</p></div>
+                </div>
+            </div>
+            <!-- Boosters activos -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">✅ Boosters Aprobados</span>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrap">
+                        <table class="data-table" id="boost-boosters-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>BattleTag</th>
+                                    <th>Rating PvP</th>
+                                    <th>Tier</th>
+                                    <th>Carries</th>
+                                    <th>Ganancias (USD)</th>
+                                    <th>Registro</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boost-boosters-tbody">
+                                <tr><td colspan="8" class="empty-state"><p>Cargando...</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: CLIENTES PORTAL ═══════ -->
+        <div id="tab-boost-clients" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">👥 Clientes del Portal</h2>
+                <div class="tab-actions">
+                    <button class="btn" id="refresh-boost-clients-btn">🔄 Refresh</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrap">
+                        <table class="data-table" id="boost-clients-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Pedidos</th>
+                                    <th>Gastado (USD est.)</th>
+                                    <th>Registro</th>
+                                    <th>Último acceso</th>
+                                </tr>
+                            </thead>
+                            <tbody id="boost-clients-tbody">
+                                <tr><td colspan="6" class="empty-state"><p>Cargando...</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: RBG STRATEGIES ═══════ -->
+        <div id="tab-rbg-strategies" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">🗺️ RBG Strategy Hub</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-primary" id="rbg-save-btn" onclick="saveRbgStrategy()">💾 Guardar estrategia</button>
+                    <a href="rbg-strategy.html" target="_blank" class="btn">👁️ Ver página pública</a>
+                </div>
+            </div>
+
+            <!-- Map selector -->
+            <div class="card" style="margin-bottom:1rem;">
+                <div class="card-body">
+                    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                        <label style="font-size:.82rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;">Mapa:</label>
+                        <select id="rbg-map-select" class="input" style="max-width:280px;" onchange="loadRbgMapEditor()">
+                            <option value="warsong_gulch">Warsong Gulch</option>
+                            <option value="arathi_basin">Arathi Basin</option>
+                            <option value="eye_of_the_storm">Eye of the Storm</option>
+                            <option value="alterac_valley">Alterac Valley</option>
+                            <option value="isle_of_conquest">Isle of Conquest</option>
+                            <option value="battle_for_gilneas">Battle for Gilneas</option>
+                            <option value="twin_peaks">Twin Peaks</option>
+                            <option value="temple_of_kotmogu">Temple of Kotmogu</option>
+                            <option value="deepwind_gorge">Deepwind Gorge</option>
+                            <option value="silvershard_mines">Silvershard Mines</option>
+                        </select>
+                        <select id="rbg-status-select" class="input" style="max-width:160px;">
+                            <option value="empty">Sin estrategia</option>
+                            <option value="review">En revisión</option>
+                            <option value="confirmed">Confirmada ✓</option>
+                        </select>
+                        <span id="rbg-save-status" style="font-size:.8rem;color:var(--text-muted);"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes editor -->
+            <div class="card" style="margin-bottom:1rem;">
+                <div class="card-header"><h3 class="card-title">📋 Notas de estrategia</h3></div>
+                <div class="card-body">
+                    <textarea id="rbg-notes-input" class="input" rows="6"
+                        style="width:100%;resize:vertical;font-family:'Inter',sans-serif;font-size:.88rem;line-height:1.7;"
+                        placeholder="Escribe aquí las notas tácticas para este mapa: objetivos, rotaciones, puntos clave, flancos, FC ideal..."></textarea>
+                </div>
+            </div>
+
+            <!-- Composition editor -->
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">⚔️ Composición del equipo (10 jugadores)</h3></div>
+                <div class="card-body">
+                    <div id="rbg-comp-editor" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:.75rem;">
+                        <!-- Populated by JS -->
+                        <div style="color:var(--text-muted);font-size:.85rem;">Cargando...</div>
+                    </div>
                 </div>
             </div>
         </div>

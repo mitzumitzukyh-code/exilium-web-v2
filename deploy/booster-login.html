@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-8194792499117380">
+    <title>Exilium Boosting · Portal del Booster</title>
+    <meta name="description" content="Acceso privado al portal de boosters de Exilium.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://exilium-battlepass.pages.dev/booster-login.html">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/portal.css">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg-color); }
+        .login-bg {
+            position: fixed; inset: 0;
+            background: url('assets/boosting/banner.webp') center/cover no-repeat;
+            filter: brightness(0.12) hue-rotate(200deg);
+            z-index: 0;
+        }
+        .login-wrapper {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 440px;
+            padding: 1rem;
+        }
+        .login-card {
+            background: rgba(10,10,20,0.97);
+            border: 1px solid rgba(59,130,246,0.35);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            backdrop-filter: blur(16px);
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+        .login-logo img { height: 48px; margin-bottom: 0.5rem; }
+        .login-logo .brand {
+            display: block;
+            font-family: 'Sport Break', sans-serif;
+            color: #3b82f6;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .login-logo .sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .portal-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.35);
+            border-radius: 20px;
+            padding: 0.3rem 0.9rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #3b82f6;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+        }
+        .form-input:focus {
+            border-color: rgba(59,130,246,0.5) !important;
+        }
+        .btn-booster-primary {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: #fff;
+            font-family: 'Sport Break', sans-serif;
+            letter-spacing: 0.5px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.92rem;
+            padding: 0.75rem 1.5rem;
+            width: 100%;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .btn-booster-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 0 16px rgba(59,130,246,0.3); }
+        .btn-booster-primary:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+        .client-link-box {
+            margin-top: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .client-link-box a { color: #3b82f6; font-weight: 600; }
+        .back-link { text-align: center; margin-top: 1.25rem; font-size: 0.78rem; color: var(--text-muted); }
+        .back-link a { color: #3b82f6; }
+        .pending-box {
+            display: none;
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+        .pending-box .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .pending-box h3 {
+            font-family: 'Sport Break', sans-serif;
+            color: #3b82f6;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .pending-box p { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+        .rejected-box {
+            display: none;
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+        .rejected-box .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .rejected-box h3 {
+            font-family: 'Sport Break', sans-serif;
+            color: #ef4444;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .rejected-box p { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+    </style>
+</head>
+<body>
+<div class="login-bg"></div>
+<div class="login-wrapper">
+    <div class="login-card">
+
+        <div class="login-logo">
+            <img src="assets/logo.png" alt="Exilium">
+            <span class="brand">Exilium Boosting</span>
+            <span class="sub">Portal del Booster</span>
+        </div>
+        <div style="text-align:center;">
+            <span class="portal-type-badge">&#9876; Área de Boosters</span>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="login-form">
+            <div id="login-alert" style="margin-bottom:.75rem;"></div>
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+                <div class="form-group">
+                    <label class="form-label">Email de tu cuenta booster</label>
+                    <input type="email" class="form-input" id="login-email" placeholder="tu@email.com" autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" class="form-input" id="login-password" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <button class="btn-booster-primary" onclick="doLogin()" id="login-btn">
+                    &#9876; Acceder al Panel
+                </button>
+            </div>
+            <div class="client-link-box" style="margin-top:1rem;">
+                ¿Quieres aplicar como booster? <a href="booster-apply.html">Envía tu solicitud &#8594;</a>
+            </div>
+        </div>
+
+        <!-- PENDING STATE -->
+        <div class="pending-box" id="pending-box">
+            <div class="icon">&#9203;</div>
+            <h3>SOLICITUD EN REVISIÓN</h3>
+            <p>Tu aplicación como booster está siendo revisada por el equipo de Exilium. Recibirás acceso cuando sea aprobada (24-48h).</p>
+            <a href="https://discord.gg/gdekyTrv" target="_blank" class="btn btn-discord btn-md" style="display:inline-flex;">
+                &#128172; Contactar en Discord
+            </a>
+            <br><br>
+            <button onclick="doLogout()" style="background:none;border:none;color:var(--text-muted);font-size:.78rem;cursor:pointer;font-family:'Inter',sans-serif;">Cerrar sesión</button>
+        </div>
+
+        <!-- REJECTED STATE -->
+        <div class="rejected-box" id="rejected-box">
+            <div class="icon">&#10060;</div>
+            <h3>SOLICITUD RECHAZADA</h3>
+            <p>Tu aplicación no fue aprobada en este momento. Puedes contactar al equipo para más información o volver a aplicar en el futuro.</p>
+            <a href="https://discord.gg/gdekyTrv" target="_blank" class="btn btn-discord btn-md" style="display:inline-flex;">
+                &#128172; Contactar en Discord
+            </a>
+            <br><br>
+            <button onclick="doLogout()" style="background:none;border:none;color:var(--text-muted);font-size:.78rem;cursor:pointer;font-family:'Inter',sans-serif;">Cerrar sesión</button>
+        </div>
+
+        <div class="back-link">
+            <a href="boosting.html">&#8592; Volver a Boosting Services</a>
+            &nbsp;·&nbsp;
+            <a href="login.html">Portal del Cliente</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+
+function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('boost_token') || '') };
+}
+
+function doLogout() {
+    fetch(API + '/api/boost/logout', { method: 'POST', headers: authHeaders() }).catch(() => {});
+    localStorage.removeItem('boost_token');
+    localStorage.removeItem('boost_user');
+    location.reload();
+}
+
+function setAlert(msg, type = 'error') {
+    const el = document.getElementById('login-alert');
+    if (!msg) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    setAlert('');
+    if (!email || !password) return setAlert('Rellena todos los campos.');
+
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = '...';
+
+    try {
+        const res = await fetch(API + '/api/boost/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (data.error) {
+            setAlert(data.error);
+            btn.disabled = false; btn.textContent = '⚔ Acceder al Panel';
+            return;
+        }
+
+        localStorage.setItem('boost_token', data.token);
+        localStorage.setItem('boost_user', JSON.stringify(data.user));
+
+        handleUserRole(data.user);
+    } catch (_) {
+        setAlert('Error de conexión. Inténtalo más tarde.');
+        btn.disabled = false; btn.textContent = '⚔ Acceder al Panel';
+    }
+}
+
+function handleUserRole(user) {
+    // Clientes no pueden entrar aquí
+    if (user.role === 'client') {
+        window.location.href = 'login.html';
+        return;
+    }
+    if (user.role === 'booster_pending') {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('pending-box').style.display = '';
+        return;
+    }
+    if (user.role === 'booster_rejected') {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('rejected-box').style.display = '';
+        return;
+    }
+    if (user.role === 'booster' || user.role === 'admin') {
+        window.location.href = 'booster-panel.html';
+        return;
+    }
+    setAlert('Rol desconocido. Contacta al administrador.');
+}
+
+// Enter key
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+});
+
+// Already logged in?
+const existing = localStorage.getItem('boost_token');
+if (existing) {
+    const u = JSON.parse(localStorage.getItem('boost_user') || '{}');
+    if (u.role) handleUserRole(u);
+}
+</script>
+</body>
+</html>

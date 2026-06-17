@@ -8,5 +8,8 @@
   },
   "devDependencies": {
     "vitest": "^3.1.1"
+  },
+  "dependencies": {
+    "sharp": "^0.35.1"
   }
 }

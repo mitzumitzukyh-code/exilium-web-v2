@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exilium App — Mockup Completo</title>
+<style>
+/* ── RESET ── */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:     #050810;
+  --card:   #0A0F1E;
+  --surf:   #0F1629;
+  --raise:  #162040;
+  --raise2: #1C2A50;
+  --blue:   #1E6FFF;
+  --blight: #4D8FFF;
+  --bdim:   #0A3A8A;
+  --bglow:  rgba(30,111,255,0.12);
+  --tbright:#F0F4FF;
+  --tmuted: #7A8AAA;
+  --tdim:   #3A4A6A;
+  --border: rgba(30,111,255,0.18);
+  --border2:rgba(30,111,255,0.35);
+  --red:    #FF3355;
+  --green:  #00C97A;
+  --gold:   #E8C042;
+  --r:      10px;
+}
+body{background:#111827;font-family:'Segoe UI',system-ui,sans-serif;color:#eee;}
+
+/* ── LAYOUT ── */
+.page-title{text-align:center;padding:32px 20px 12px;font-size:28px;font-weight:700;letter-spacing:4px;color:#1E6FFF;text-transform:uppercase;}
+.page-sub{text-align:center;padding:0 20px 24px;color:#7A8AAA;font-size:13px;}
+.nav-bar{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:16px 20px 24px;position:sticky;top:0;background:#111827;z-index:100;border-bottom:1px solid #1a2540;}
+.nav-btn{padding:7px 14px;border:1px solid #1E6FFF;border-radius:20px;font-size:11px;color:#4D8FFF;background:transparent;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.nav-btn:hover,.nav-btn.active{background:#1E6FFF;color:#fff;}
+.screens-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:40px;padding:20px 40px 60px;}
+.screen-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.screen-id{font-size:10px;letter-spacing:3px;color:#1E6FFF;text-transform:uppercase;font-weight:600;}
+.screen-name{font-size:12px;color:#7A8AAA;margin-top:-6px;}
+
+/* ── PHONE SHELL ── */
+.phone{
+  width:360px;
+  background:var(--bg);
+  border-radius:32px;
+  border:1.5px solid #1a2545;
+  overflow:hidden;
+  box-shadow:0 0 60px rgba(30,111,255,0.1),0 0 0 1px rgba(30,111,255,0.05);
+  display:flex;
+  flex-direction:column;
+}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px 5px;background:#03060F;}
+.status-bar span{font-size:11px;color:#4A5A7A;}
+.status-icons{display:flex;gap:5px;align-items:center;}
+.status-icons i{font-size:13px;color:#4A5A7A;}
+
+/* ── SCREEN BODY ── */
+.scr{background:var(--bg);flex:1;min-height:640px;overflow:hidden;position:relative;}
+
+/* ── SHARED COMPONENTS ── */
+.app-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:#03060F;border-bottom:1px solid var(--border);}
+.hdr-logo{font-size:17px;font-weight:800;letter-spacing:4px;color:var(--blue);text-transform:uppercase;}
+.hdr-sub{font-size:8px;color:var(--tdim);letter-spacing:2px;text-transform:uppercase;margin-top:-2px;}
+.hdr-icons{display:flex;gap:14px;align-items:center;}
+.hdr-icons i{font-size:19px;color:var(--tmuted);}
+.bot-nav{display:flex;background:#03060F;border-top:1px solid var(--border);padding:9px 0 13px;}
+.nav-it{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;}
+.nav-it i{font-size:20px;color:var(--tdim);}
+.nav-it span{font-size:9px;color:var(--tdim);letter-spacing:.5px;}
+.nav-it.on i{color:var(--blue);}
+.nav-it.on span{color:var(--blue);}
+.sec-lbl{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--bdim);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-lbl::after{content:'';flex:1;height:.5px;background:var(--border);}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;letter-spacing:.5px;}
+.badge-blue{background:var(--bglow);border:1px solid var(--border2);color:var(--blight);}
+.badge-red{background:rgba(255,51,85,.1);border:1px solid rgba(255,51,85,.3);color:var(--red);}
+.badge-green{background:rgba(0,201,122,.1);border:1px solid rgba(0,201,122,.3);color:var(--green);}
+.badge-gold{background:rgba(232,192,66,.1);border:1px solid rgba(232,192,66,.3);color:var(--gold);}
+.divider{display:flex;align-items:center;gap:10px;padding:4px 0;}
+.divider span{font-size:10px;color:var(--tdim);white-space:nowrap;}
+.divider::before,.divider::after{content:'';flex:1;height:.5px;background:var(--border);}
+
+/* ── AD BANNER ── */
+.ad-strip{margin:0 14px 8px;background:var(--surf);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;}
+.ad-strip i{font-size:14px;color:var(--tdim);}
+.ad-strip span{font-size:10px;color:var(--tdim);flex:1;}
+.ad-strip a{font-size:10px;color:var(--blue);white-space:nowrap;}
+
+/* ━━━ S01: SPLASH ━━━ */
+.splash{min-height:640px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;}
+.splash-crest{width:80px;height:80px;border:2px solid var(--blue);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;background:var(--surf);}
+.splash-crest i{font-size:40px;color:var(--blue);}
+.splash-title{font-size:32px;font-weight:800;letter-spacing:6px;color:var(--tbright);text-transform:uppercase;text-align:center;}
+.splash-sub{font-size:11px;color:var(--tmuted);letter-spacing:3px;text-align:center;margin:6px 0 36px;text-transform:uppercase;}
+.splash-ring{width:200px;height:200px;position:absolute;border-radius:50%;border:1px solid var(--border);opacity:.3;}
+.btn-main{width:100%;padding:14px;background:var(--blue);border-radius:12px;text-align:center;font-size:14px;font-weight:700;color:#fff;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;cursor:pointer;}
+.btn-ghost{width:100%;padding:13px;background:transparent;border:1px solid var(--border2);border-radius:12px;text-align:center;font-size:13px;color:var(--blight);letter-spacing:1px;cursor:pointer;}
+.splash-step{display:flex;gap:8px;margin-bottom:32px;}
+.splash-dot{width:30px;height:4px;border-radius:2px;background:var(--blue);opacity:.3;}
+.splash-dot.on{opacity:1;}
+.onboard-txt{font-size:20px;font-weight:700;color:var(--tbright);text-align:center;margin-bottom:8px;}
+.onboard-desc{font-size:12px;color:var(--tmuted);text-align:center;line-height:1.7;}
+
+/* ━━━ S02-S05: AUTH ━━━ */
+.auth-hero{padding:24px 18px 18px;text-align:center;border-bottom:1px solid var(--border);background:var(--card);}
+.auth-icon{width:52px;height:52px;border-radius:14px;border:2px solid var(--border2);background:var(--surf);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+.auth-icon i{font-size:24px;color:var(--blue);}
+.auth-title{font-size:18px;font-weight:700;color:var(--tbright);letter-spacing:2px;text-transform:uppercase;}
+.auth-sub{font-size:11px;color:var(--tmuted);margin-top:4px;}
+.auth-body{padding:18px;}
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.fld-lbl{font-size:9px;color:var(--bdim);letter-spacing:2px;text-transform:uppercase;}
+.fld-in{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:9px;}
+.fld-in.active{border-color:var(--border2);}
+.fld-in i{font-size:15px;color:var(--tdim);flex-shrink:0;}
+.fld-in span{font-size:13px;color:var(--tmuted);}
+.fld-in span.v{color:var(--tbright);}
+.fld-in i.end{margin-left:auto;}
+.fld-hint{font-size:10px;color:var(--tdim);}
+.fld-ok{font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px;}
+.fld-ok i{font-size:11px;}
+.step-row{display:flex;align-items:center;gap:8px;margin-bottom:18px;}
+.step-pip{height:4px;flex:1;border-radius:2px;background:var(--surf);}
+.step-pip.done{background:var(--bdim);}
+.step-pip.on{background:var(--blue);}
+.step-lbl{font-size:9px;color:var(--tdim);white-space:nowrap;}
+.otp-row{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
+.otp-box{width:44px;height:52px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--tbright);}
+.otp-box.filled{border-color:var(--border2);color:var(--blue);}
+.otp-box.cursor{border-color:var(--blue);box-shadow:0 0 0 2px var(--bglow);}
+.class-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.cls-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:9px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.cls-card.sel{border-color:var(--blue);background:var(--bglow);}
+.cls-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.cls-name{font-size:12px;color:var(--tbright);font-weight:500;}
+.cls-role{font-size:10px;color:var(--tmuted);}
+.chk{width:16px;height:16px;border-radius:50%;border:1px solid var(--border);margin-left:auto;flex-shrink:0;}
+.chk.on{background:var(--blue);border-color:var(--blue);display:flex;align-items:center;justify-content:center;}
+.chk.on i{font-size:10px;color:#fff;}
+.role-row{display:flex;gap:8px;margin-bottom:14px;}
+.role-btn{flex:1;padding:8px;border:1px solid var(--border);border-radius:var(--r);text-align:center;font-size:11px;color:var(--tmuted);cursor:pointer;}
+.role-btn.sel{border-color:var(--border2);color:var(--blue);background:var(--bglow);}
+.discord-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;background:var(--surf);border:1px solid var(--border);border-radius:12px;font-size:12px;color:var(--tmuted);cursor:pointer;margin-bottom:14px;}
+.discord-btn i{font-size:16px;color:#5865F2;}
+.auth-link{text-align:center;font-size:11px;color:var(--tmuted);}
+.auth-link a{color:var(--blue);}
+.verify-info{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;gap:8px;align-items:flex-start;margin-bottom:14px;}
+.verify-info i{font-size:14px;color:var(--blight);flex-shrink:0;margin-top:1px;}
+.verify-info span{font-size:11px;color:var(--tmuted);line-height:1.6;}
+
+/* ━━━ S06: HOME ━━━ */
+.banner-hero{position:relative;padding:16px 18px;background:var(--card);border-bottom:1px solid var(--border);overflow:hidden;}
+.banner-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,rgba(30,111,255,.12) 0%,transparent 70%);}
+.bnr-crest{position:absolute;right:18px;top:50%;transform:translateY(-50%);width:56px;height:56px;border:2px solid var(--border2);border-radius:14px;background:var(--surf);display:flex;align-items:center;justify-content:center;}
+.bnr-crest i{font-size:26px;color:var(--blue);}
+.bnr-name{font-size:20px;font-weight:800;color:var(--tbright);letter-spacing:2px;position:relative;}
+.bnr-tag{font-size:10px;color:var(--tmuted);position:relative;margin-top:2px;letter-spacing:1px;}
+.bnr-status{display:inline-flex;align-items:center;gap:5px;margin-top:6px;position:relative;}
+.bnr-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);}
+.bnr-status span{font-size:10px;color:var(--tmuted);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 18px;}
+.stat-c{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px;}
+.stat-c.hi{border-color:var(--border2);}
+.s-lbl{font-size:9px;color:var(--tdim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.s-val{font-size:24px;font-weight:800;color:var(--tbright);}
+.s-val.blue{color:var(--blight);}
+.s-delta{font-size:10px;color:var(--green);margin-top:2px;}
+.activity-list{padding:0 18px 12px;}
+.act-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(30,111,255,.08);}
+.act-row:last-child{border-bottom:none;}
+.act-av{width:34px;height:34px;border-radius:8px;background:var(--surf);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--blue);flex-shrink:0;}
+.act-info{flex:1;}
+.act-info .n{font-size:13px;color:var(--tbright);font-weight:500;}
+.act-info .d{font-size:10px;color:var(--tmuted);margin-top:1px;}
+.act-result{font-size:11px;font-weight:600;}
+.act-result.w{color:var(--green);}
+.act-result.l{color:var(--red);}
+.announce-card{margin:0 18px 14px;background:var(--surf);border:1px solid var(--border2);border-radius:var(--r);padding:12px;display:flex;gap:10px;}
+.announce-card i{font-size:18px;color:var(--blue);flex-shrink:0;}
+.announce-card .atitle{font-size:12px;color:var(--blight);font-weight:600;margin-bottom:3px;}
+.announce-card .abody{font-size:11px;color:var(--tmuted);line-height:1.5;}
+
+/* ━━━ S07: RANKING ━━━ */
+.filter-bar{background:var(--card);border-bottom:1px solid var(--border);padding:0;}
+.filter-scroll{display:flex;overflow-x:auto;scrollbar-width:none;padding:10px 14px;}
+.f-tab{flex-shrink:0;padding:5px 13px;border-radius:20px;font-size:11px;color:var(--tdim);border:1px solid transparent;cursor:pointer;margin-right:6px;}
+.f-tab.on{background:var(--bglow);border-color:var(--border2);color:var(--blight);}
+.rank-list{padding:0 0 6px;}
+.r-row{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(30,111,255,.06);position:relative;}
+.r-row.r1{background:rgba(30,111,255,.05);}
+.r-row.r1::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--blue);}
+.r-row.r2::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:#8A9AB0;}
+.r-row.r3::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:#8A5A30;}
+.r-pos{width:24px;text-align:center;font-size:13px;font-weight:700;color:var(--tdim);}
+.r-pos.g{color:var(--blue);}
+.r-av{width:36px;height:36px;border-radius:8px;background:var(--surf);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--blue);flex-shrink:0;position:relative;}
+.r-cls{position:absolute;bottom:-2px;right:-2px;width:11px;height:11px;border-radius:3px;border:1px solid var(--bg);}
+.r-info{flex:1;}
+.r-name{font-size:13px;color:var(--tbright);font-weight:600;}
+.r-class{font-size:10px;color:var(--tmuted);margin-top:1px;}
+.r-rating{text-align:right;}
+.r-val{font-size:16px;font-weight:800;color:var(--tbright);}
+.r-val.hi{color:var(--blight);}
+.r-brkt{font-size:9px;color:var(--tdim);text-transform:uppercase;letter-spacing:1px;}
+.r-delta{font-size:10px;}
+.up{color:var(--green);}
+.dn{color:var(--red);}
+
+/* ━━━ S08: BATTLE PASS ━━━ */
+.bp-hero{background:var(--card);border-bottom:1px solid var(--border);padding:16px 18px;}
+.bp-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.bp-ring{width:52px;height:52px;border-radius:50%;border:2px solid var(--blue);background:var(--surf);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.bp-ring .lvn{font-size:18px;font-weight:800;color:var(--blight);}
+.bp-ring .lvl{font-size:7px;color:var(--bdim);letter-spacing:1px;text-transform:uppercase;}
+.bp-info{flex:1;}
+.bp-rank{font-size:15px;font-weight:700;color:var(--tbright);letter-spacing:1px;}
+.bp-xp{font-size:10px;color:var(--tmuted);margin-top:2px;}
+.bp-tier-badge{background:var(--surf);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:9px;color:var(--blight);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+.xp-bar{height:5px;background:var(--surf);border-radius:3px;overflow:hidden;margin-top:6px;}
+.xp-fill{height:100%;background:var(--blue);border-radius:3px;}
+.xp-lbls{display:flex;justify-content:space-between;margin-top:3px;}
+.xp-lbls span{font-size:9px;color:var(--tdim);}
+.bp-track{padding:14px 18px;display:flex;overflow-x:hidden;gap:0;}
+.bp-node{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative;}
+.bp-node::before{content:'';position:absolute;top:14px;left:55%;right:-45%;height:1px;background:var(--border);z-index:0;}
+.bp-node:last-child::before{display:none;}
+.bp-ico{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surf);display:flex;align-items:center;justify-content:center;position:relative;z-index:1;}
+.bp-ico i{font-size:13px;color:var(--tdim);}
+.bp-ico.done{border-color:var(--bdim);background:var(--raise);}
+.bp-ico.done i{color:var(--bdim);}
+.bp-ico.now{border-color:var(--blue);box-shadow:0 0 0 3px var(--bglow);}
+.bp-ico.now i{color:var(--blue);}
+.bp-ico.lock{opacity:.35;}
+.bp-lv{font-size:8px;color:var(--tdim);}
+.bp-lv.now{color:var(--blue);font-weight:700;}
+.rewards-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 18px 14px;}
+.rw-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px;display:flex;align-items:center;gap:8px;}
+.rw-card.pro{border-color:var(--border2);}
+.rw-card i{font-size:20px;color:var(--tdim);}
+.rw-card.pro i{color:var(--blue);}
+.rw-info{flex:1;min-width:0;}
+.rw-name{font-size:11px;color:var(--tbright);font-weight:500;}
+.rw-lv{font-size:9px;color:var(--tdim);margin-top:2px;}
+.rw-tag{font-size:8px;color:var(--blight);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;}
+
+/* ━━━ S09: PERFIL + WARDROBE ━━━ */
+.prf-hero{background:var(--card);border-bottom:1px solid var(--border);padding:16px 18px;display:flex;gap:14px;}
+.prf-av{width:64px;height:64px;border-radius:14px;border:2px solid var(--border2);background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--blue);flex-shrink:0;position:relative;}
+.prf-av .spec{position:absolute;bottom:-6px;right:-6px;width:20px;height:20px;border-radius:5px;border:1px solid var(--border);background:var(--card);display:flex;align-items:center;justify-content:center;}
+.prf-av .spec i{font-size:11px;color:var(--green);}
+.prf-meta{flex:1;}
+.prf-name{font-size:18px;font-weight:800;color:var(--tbright);}
+.prf-cls{font-size:11px;color:var(--tmuted);margin-top:2px;}
+.prf-actions{display:flex;gap:7px;padding:12px 18px;background:var(--card);border-bottom:1px solid var(--border);}
+.btn-arm{flex:1;padding:8px;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);font-size:11px;color:var(--tmuted);display:flex;align-items:center;justify-content:center;gap:5px;}
+.btn-arm i{font-size:13px;}
+.btn-boost-p{flex:2;padding:8px;background:var(--bglow);border:1px solid var(--border2);border-radius:var(--r);font-size:11px;color:var(--blight);font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;letter-spacing:.5px;}
+.brackets-sec{padding:14px 18px;}
+.brkt-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(30,111,255,.07);}
+.brkt-row:last-child{border-bottom:none;}
+.brkt-ico{width:32px;height:32px;border-radius:7px;background:var(--surf);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.brkt-ico i{font-size:15px;color:var(--tdim);}
+.brkt-lbl{flex:1;}
+.brkt-lbl .bn{font-size:12px;color:var(--tbright);font-weight:500;}
+.brkt-lbl .bw{font-size:10px;color:var(--tmuted);margin-top:1px;}
+.brkt-val{font-size:18px;font-weight:800;color:var(--tbright);}
+.brkt-val.hi{color:var(--blight);}
+.brkt-peak{font-size:9px;color:var(--tdim);}
+/* WARDROBE */
+.wardrobe-drawer{background:var(--surf);border-top:1px solid var(--border2);padding:14px 18px;}
+.drawer-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 14px;}
+.wardrobe-title{font-size:11px;color:var(--blight);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.wardrobe-title i{font-size:15px;}
+.plan-perks{display:flex;flex-direction:column;gap:6px;}
+.perk-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;background:var(--raise);}
+.perk-row i{font-size:15px;flex-shrink:0;}
+.perk-row .pt{font-size:12px;color:var(--tbright);font-weight:500;}
+.perk-row .pd{font-size:10px;color:var(--tmuted);margin-top:1px;}
+.perk-row.locked{opacity:.45;}
+.perk-row.free i{color:var(--green);}
+.perk-row.premium i{color:var(--blue);}
+.perk-row.plus i{color:var(--gold);}
+
+/* ━━━ S10: CHAT ━━━ */
+.chat-scr{display:flex;flex-direction:column;min-height:640px;}
+.ch-bar{background:var(--card);border-bottom:1px solid var(--border);}
+.ch-scroll{display:flex;overflow-x:auto;scrollbar-width:none;padding:10px 14px;}
+.ch-tab{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;color:var(--tdim);cursor:pointer;margin-right:5px;border:1px solid transparent;}
+.ch-tab.on{background:var(--bglow);border-color:var(--border2);color:var(--blight);}
+.online-pill{padding:7px 18px;background:var(--card);border-bottom:1px solid rgba(30,111,255,.1);display:flex;align-items:center;gap:6px;}
+.on-dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.online-pill span{font-size:10px;color:var(--tmuted);}
+.online-pill strong{color:var(--green);}
+/* LIVE STREAM MINI */
+.stream-strip{padding:10px 14px 6px;background:var(--card);border-bottom:1px solid var(--border);}
+.stream-lbl{font-size:9px;color:var(--tdim);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.stream-lbl i{font-size:13px;color:var(--red);}
+.streams-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.stream-card{flex-shrink:0;width:110px;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;background:var(--surf);}
+.stream-thumb{height:60px;background:var(--raise);display:flex;align-items:center;justify-content:center;position:relative;}
+.stream-thumb i{font-size:22px;color:rgba(255,255,255,.2);}
+.live-badge{position:absolute;top:4px;left:4px;background:var(--red);border-radius:4px;padding:1px 5px;font-size:8px;color:#fff;font-weight:700;letter-spacing:1px;}
+.viewer-count{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.6);border-radius:4px;padding:1px 5px;font-size:8px;color:#fff;display:flex;align-items:center;gap:3px;}
+.stream-info{padding:5px 6px;}
+.stream-info .sn{font-size:10px;color:var(--tbright);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stream-info .sp{font-size:9px;color:var(--tmuted);}
+.platform-icon{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:3px;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;}
+.platform-icon i{font-size:10px;color:#9147ff;}
+.twitch{color:#9147ff;}
+.youtube{color:#FF0000;}
+.msgs{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.msg{display:flex;gap:8px;}
+.msg.me{flex-direction:row-reverse;}
+.m-av{width:30px;height:30px;border-radius:7px;background:var(--surf);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--blue);flex-shrink:0;}
+.m-body{max-width:75%;}
+.m-meta{display:flex;align-items:baseline;gap:5px;margin-bottom:3px;}
+.msg.me .m-meta{flex-direction:row-reverse;}
+.m-name{font-size:10px;font-weight:700;color:var(--blue);}
+.m-rank{font-size:9px;color:var(--tdim);background:var(--surf);border-radius:3px;padding:1px 4px;}
+.m-rank.off{color:var(--blight);border:1px solid var(--border);}
+.m-time{font-size:9px;color:var(--tdim);}
+.m-bubble{background:var(--surf);border:1px solid var(--border);border-radius:2px 8px 8px 8px;padding:8px 10px;font-size:12px;color:var(--tbright);line-height:1.5;}
+.msg.me .m-bubble{background:var(--raise);border-color:var(--border2);border-radius:8px 2px 8px 8px;}
+.m-sys{text-align:center;font-size:10px;color:var(--tdim);padding:2px 0;}
+.m-sys span{background:var(--surf);border-radius:10px;padding:2px 10px;}
+.chat-in{background:var(--card);border-top:1px solid var(--border);padding:9px 12px;display:flex;align-items:center;gap:8px;}
+.chat-in-box{flex:1;background:var(--surf);border:1px solid var(--border);border-radius:20px;padding:8px 14px;font-size:12px;color:var(--tmuted);}
+.chat-icons{display:flex;gap:8px;align-items:center;}
+.chat-icons i{font-size:17px;color:var(--tdim);}
+.send-b{width:32px;height:32px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.send-b i{font-size:15px;color:#fff;}
+.premium-lock{display:flex;align-items:center;gap:7px;padding:7px 14px;background:var(--card);border-top:1px solid rgba(232,192,66,.2);}
+.premium-lock i{font-size:13px;color:var(--gold);}
+.premium-lock span{font-size:10px;color:var(--tdim);flex:1;}
+.premium-lock a{font-size:10px;color:var(--gold);}
+
+/* ━━━ S11: APUESTAS ━━━ */
+.bets-hero{background:var(--card);border-bottom:1px solid var(--border);padding:14px 18px;}
+.bets-stats{display:flex;gap:10px;}
+.bet-stat{flex:1;background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center;}
+.bet-stat .bsv{font-size:18px;font-weight:800;color:var(--blight);}
+.bet-stat .bsl{font-size:9px;color:var(--tdim);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.bets-list{padding:14px 18px;display:flex;flex-direction:column;gap:10px;}
+.bet-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.bet-header{padding:11px 14px;border-bottom:1px solid rgba(30,111,255,.1);display:flex;align-items:center;gap:8px;}
+.bet-header i{font-size:16px;color:var(--blue);}
+.bet-q{font-size:12px;color:var(--tbright);font-weight:600;flex:1;}
+.bet-time{font-size:10px;color:var(--tdim);white-space:nowrap;}
+.bet-options{padding:10px 14px;display:flex;gap:8px;}
+.bet-opt{flex:1;padding:8px;border:1px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;}
+.bet-opt.a{border-color:rgba(0,201,122,.3);background:rgba(0,201,122,.07);}
+.bet-opt.b{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.07);}
+.bet-opt .bo-lbl{font-size:11px;color:var(--tbright);font-weight:600;margin-bottom:2px;}
+.bet-opt .bo-odds{font-size:10px;}
+.bet-opt.a .bo-odds{color:var(--green);}
+.bet-opt.b .bo-odds{color:var(--red);}
+.bet-opt .bo-pool{font-size:9px;color:var(--tdim);margin-top:2px;}
+.bet-footer{padding:8px 14px;background:var(--surf);display:flex;justify-content:space-between;align-items:center;}
+.bet-footer span{font-size:10px;color:var(--tmuted);}
+.bet-footer .players-ct{font-size:10px;color:var(--blight);}
+.lock-overlay{position:relative;}
+.lock-overlay::after{content:'🔒 Solo Premium';position:absolute;inset:0;background:rgba(5,8,16,.88);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gold);border-radius:12px;border:1px solid rgba(232,192,66,.3);}
+
+/* ━━━ S12: PREMIUM ━━━ */
+.prem-hero{background:var(--card);border-bottom:1px solid var(--border);padding:24px 18px 20px;text-align:center;}
+.prem-icon{font-size:40px;color:var(--blue);display:block;margin-bottom:12px;}
+.prem-title{font-size:22px;font-weight:800;color:var(--tbright);letter-spacing:3px;text-transform:uppercase;}
+.prem-sub{font-size:11px;color:var(--tmuted);margin-top:5px;line-height:1.6;}
+.plans-area{padding:14px 18px;display:flex;flex-direction:column;gap:10px;}
+.plan{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;position:relative;}
+.plan.feat{border-color:var(--blue);box-shadow:0 0 0 1px var(--bglow);}
+.plan.plus{border-color:rgba(232,192,66,.4);}
+.plan-badge-tag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:2px 12px;border-radius:20px;white-space:nowrap;}
+.plan-badge-tag.best{background:var(--blue);color:#fff;}
+.plan-badge-tag.top{background:var(--gold);color:#0A0F1E;}
+.plan-name{font-size:14px;font-weight:700;color:var(--tbright);}
+.plan-price{display:flex;align-items:baseline;gap:4px;margin:6px 0;}
+.plan-price .amt{font-size:28px;font-weight:800;color:var(--tbright);}
+.plan-price .per{font-size:11px;color:var(--tdim);}
+.plan-price .save{font-size:10px;color:var(--green);margin-left:4px;}
+.plan-feats{display:flex;flex-direction:column;gap:5px;margin-top:10px;}
+.pf-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--tmuted);}
+.pf-row i{font-size:13px;flex-shrink:0;}
+.pf-row i.ok{color:var(--green);}
+.pf-row i.no{color:var(--tdim);}
+.pf-row i.st{color:var(--gold);}
+.btn-plan{width:100%;margin-top:12px;padding:11px;border-radius:10px;text-align:center;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+.btn-plan.free-p{background:var(--surf);border:1px solid var(--border);color:var(--tmuted);}
+.btn-plan.prem-p{background:var(--blue);color:#fff;border:none;}
+.btn-plan.plus-p{background:linear-gradient(135deg,#8A6A00,#E8C042);color:#0A0F1E;border:none;}
+
+/* hide scrollbars */
+::-webkit-scrollbar{display:none;}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+
+<div class="page-title">EXILIUM APP</div>
+<div class="page-sub">Mockup interactivo completo — 12 pantallas · Negro + Azul</div>
+
+<div class="nav-bar">
+  <button class="nav-btn active" onclick="scrollTo('s01')">01 Splash</button>
+  <button class="nav-btn" onclick="scrollTo('s02')">02 Login</button>
+  <button class="nav-btn" onclick="scrollTo('s03')">03 Reg.1</button>
+  <button class="nav-btn" onclick="scrollTo('s04')">04 Reg.2</button>
+  <button class="nav-btn" onclick="scrollTo('s05')">05 Reg.3</button>
+  <button class="nav-btn" onclick="scrollTo('s06')">06 Home</button>
+  <button class="nav-btn" onclick="scrollTo('s07')">07 Ranking</button>
+  <button class="nav-btn" onclick="scrollTo('s08')">08 Battle Pass</button>
+  <button class="nav-btn" onclick="scrollTo('s09')">09 Perfil</button>
+  <button class="nav-btn" onclick="scrollTo('s10')">10 Chat</button>
+  <button class="nav-btn" onclick="scrollTo('s11')">11 Apuestas</button>
+  <button class="nav-btn" onclick="scrollTo('s12')">12 Premium</button>
+</div>
+
+<div class="screens-grid">
+
+<!-- ━━━━━━ S01 SPLASH ━━━━━━ -->
+<div class="screen-wrap" id="s01">
+  <div class="screen-id">01</div>
+  <div class="screen-name">Splash / Onboarding</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="splash" style="position:relative;min-height:640px;">
+        <div class="splash-crest"><i class="ti ti-shield-bolt" aria-hidden="true"></i></div>
+        <div style="font-size:34px;font-weight:800;letter-spacing:6px;color:var(--tbright);text-align:center;text-transform:uppercase;">EXILIUM</div>
+        <div style="font-size:10px;color:var(--tmuted);letter-spacing:4px;text-align:center;margin:4px 0 32px;text-transform:uppercase;">PvP · Quel'Thalas US</div>
+        <div class="splash-step">
+          <div class="splash-dot on"></div>
+          <div class="splash-dot"></div>
+          <div class="splash-dot"></div>
+        </div>
+        <div class="onboard-txt">Domina el campo de batalla</div>
+        <div class="onboard-desc" style="margin-bottom:32px;">Sigue tus ratings PvP, compite en el ranking de la hermandad y sube de nivel en el Battle Pass.</div>
+        <div class="btn-main">Comenzar</div>
+        <div class="btn-ghost">Ya tengo cuenta</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S02 LOGIN ━━━━━━ -->
+<div class="screen-wrap" id="s02">
+  <div class="screen-id">02</div>
+  <div class="screen-name">Inicio de sesión</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="auth-hero">
+        <div class="auth-icon"><i class="ti ti-shield-bolt" aria-hidden="true"></i></div>
+        <div class="auth-title">Exilium</div>
+        <div class="auth-sub">Inicia sesión para acceder</div>
+      </div>
+      <div class="auth-body">
+        <div class="fld">
+          <div class="fld-lbl">BattleTag o correo</div>
+          <div class="fld-in active"><i class="ti ti-user" aria-hidden="true"></i><span class="v">Mutzuki#1234</span></div>
+        </div>
+        <div class="fld">
+          <div class="fld-lbl">Contraseña</div>
+          <div class="fld-in"><i class="ti ti-lock" aria-hidden="true"></i><span>••••••••</span><i class="ti ti-eye end" aria-hidden="true"></i></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px;"><a style="font-size:11px;color:var(--blue);">¿Olvidaste tu contraseña?</a></div>
+        <div class="btn-main" style="margin-bottom:14px;">Entrar al salón</div>
+        <div class="divider"><span>o continúa con</span></div>
+        <div style="margin-top:14px;">
+          <div class="discord-btn"><i class="ti ti-brand-discord" aria-hidden="true"></i>Conectar con Discord</div>
+        </div>
+        <div class="auth-link"><span>¿No tienes cuenta? </span><a>Regístrate gratis</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S03 REGISTRO 1 ━━━━━━ -->
+<div class="screen-wrap" id="s03">
+  <div class="screen-id">03</div>
+  <div class="screen-name">Registro · Paso 1 · Cuenta</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="auth-hero">
+        <div class="auth-icon"><i class="ti ti-user-plus" aria-hidden="true"></i></div>
+        <div class="auth-title">Crear cuenta</div>
+        <div class="auth-sub">Únete a la hermandad</div>
+      </div>
+      <div class="auth-body">
+        <div class="step-row">
+          <div class="step-pip on"></div>
+          <div class="step-pip"></div>
+          <div class="step-pip"></div>
+          <div class="step-lbl">1 / 3</div>
+        </div>
+        <div class="fld">
+          <div class="fld-lbl">BattleTag</div>
+          <div style="display:flex;gap:6px;">
+            <div style="background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:10px;font-size:10px;color:var(--tdim);white-space:nowrap;">Nombre#</div>
+            <div class="fld-in active" style="flex:1;"><i class="ti ti-user" aria-hidden="true"></i><span class="v">Mutzuki#1234</span></div>
+          </div>
+          <div class="fld-hint">Debe coincidir con tu BattleTag de Blizzard</div>
+        </div>
+        <div class="fld">
+          <div class="fld-lbl">Correo electrónico</div>
+          <div class="fld-in"><i class="ti ti-mail" aria-hidden="true"></i><span class="v">mutzuki@correo.com</span></div>
+        </div>
+        <div class="fld">
+          <div class="fld-lbl">Contraseña</div>
+          <div class="fld-in"><i class="ti ti-lock" aria-hidden="true"></i><span>••••••••••</span><i class="ti ti-eye end" aria-hidden="true"></i></div>
+          <div class="fld-ok"><i class="ti ti-check" aria-hidden="true"></i> Mínimo 8 caracteres — OK</div>
+        </div>
+        <div class="btn-main" style="margin-top:4px;">Continuar</div>
+        <div class="auth-link" style="margin-top:12px;"><span>¿Ya tienes cuenta? </span><a>Iniciar sesión</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S04 REGISTRO 2 ━━━━━━ -->
+<div class="screen-wrap" id="s04">
+  <div class="screen-id">04</div>
+  <div class="screen-name">Registro · Paso 2 · Personaje</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="auth-hero" style="padding-bottom:14px;">
+        <div class="auth-icon"><i class="ti ti-sword" aria-hidden="true"></i></div>
+        <div class="auth-title">Tu personaje</div>
+        <div class="auth-sub">Vincula tu main en Quel'Thalas</div>
+      </div>
+      <div class="auth-body">
+        <div class="step-row">
+          <div class="step-pip done"></div>
+          <div class="step-pip on"></div>
+          <div class="step-pip"></div>
+          <div class="step-lbl">2 / 3</div>
+        </div>
+        <div class="fld">
+          <div class="fld-lbl">Nombre del personaje</div>
+          <div class="fld-in active"><i class="ti ti-helmet" aria-hidden="true"></i><span class="v">Mutzukimitz</span></div>
+        </div>
+        <div class="fld">
+          <div class="fld-lbl">Clase</div>
+          <div class="class-grid">
+            <div class="cls-card"><div class="cls-dot" style="background:#C41F3B;"></div><div><div class="cls-name">Warrior</div><div class="cls-role">DPS · Tank</div></div><div class="chk"></div></div>
+            <div class="cls-card"><div class="cls-dot" style="background:#F58CBA;"></div><div><div class="cls-name">Paladin</div><div class="cls-role">Heal · DPS</div></div><div class="chk"></div></div>
+            <div class="cls-card sel"><div class="cls-dot" style="background:#7EB9FF;"></div><div><div class="cls-name">Evoker</div><div class="cls-role">Heal · DPS</div></div><div class="chk on"><i class="ti ti-check" aria-hidden="true"></i></div></div>
+            <div class="cls-card"><div class="cls-dot" style="background:#9482C9;"></div><div><div class="cls-name">Warlock</div><div class="cls-role">DPS</div></div><div class="chk"></div></div>
+          </div>
+        </div>
+        <div class="fld">
+          <div class="fld-lbl">Rol principal</div>
+          <div class="role-row">
+            <div class="role-btn sel">Healer</div>
+            <div class="role-btn">DPS</div>
+            <div class="role-btn">Tank</div>
+          </div>
+        </div>
+        <div class="btn-main">Continuar</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S05 REGISTRO 3 ━━━━━━ -->
+<div class="screen-wrap" id="s05">
+  <div class="screen-id">05</div>
+  <div class="screen-name">Registro · Paso 3 · Verificación</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="auth-hero">
+        <div class="auth-icon"><i class="ti ti-mail-check" aria-hidden="true"></i></div>
+        <div class="auth-title">Verificación</div>
+        <div class="auth-sub">Código enviado a mutzuki@correo.com</div>
+      </div>
+      <div class="auth-body">
+        <div class="step-row">
+          <div class="step-pip done"></div>
+          <div class="step-pip done"></div>
+          <div class="step-pip on"></div>
+          <div class="step-lbl">3 / 3</div>
+        </div>
+        <div class="fld">
+          <div class="fld-lbl">Código de 6 dígitos</div>
+          <div class="otp-row">
+            <div class="otp-box filled">4</div>
+            <div class="otp-box filled">7</div>
+            <div class="otp-box filled">3</div>
+            <div class="otp-box cursor"></div>
+            <div class="otp-box"></div>
+            <div class="otp-box"></div>
+          </div>
+        </div>
+        <div class="verify-info"><i class="ti ti-info-circle" aria-hidden="true"></i><span>Solo los miembros verificados de Exilium pueden acceder. Tu personaje será validado contra el roster de la hermandad en Quel'Thalas US.</span></div>
+        <div class="btn-main" style="margin-bottom:10px;">Verificar y entrar</div>
+        <div style="text-align:center;"><span style="font-size:11px;color:var(--tdim);">¿No llegó? </span><a style="font-size:11px;color:var(--blue);">Reenviar en 0:47</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S06 HOME ━━━━━━ -->
+<div class="screen-wrap" id="s06">
+  <div class="screen-id">06</div>
+  <div class="screen-name">Home · Dashboard</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="app-hdr">
+        <div><div class="hdr-logo">EXILIUM</div><div class="hdr-sub">Quel'Thalas US</div></div>
+        <div class="hdr-icons"><i class="ti ti-bell" aria-hidden="true"></i><i class="ti ti-settings" aria-hidden="true"></i></div>
+      </div>
+      <div class="banner-hero">
+        <div class="bnr-crest"><i class="ti ti-shield-bolt" aria-hidden="true"></i></div>
+        <div class="bnr-name">Exilium</div>
+        <div class="bnr-tag">PvP Guild · Season Midnight</div>
+        <div class="bnr-status"><span>Quel'Thalas US · 12 online</span></div>
+      </div>
+      <div class="announce-card">
+        <i class="ti ti-megaphone" aria-hidden="true"></i>
+        <div><div class="atitle">RBG esta noche · 9:00 PM</div><div class="abody">Formación completa. Healer = Mutzukimitz. Se necesita 1 DPS más.</div></div>
+      </div>
+      <div style="padding:0 18px 6px;"><div class="sec-lbl">Esta semana</div></div>
+      <div class="stat-grid">
+        <div class="stat-c hi"><div class="s-lbl">Top Rating</div><div class="s-val blue">2647</div><div class="s-delta">↑ +43 hoy</div></div>
+        <div class="stat-c"><div class="s-lbl">Miembros activos</div><div class="s-val">18</div><div class="s-delta" style="color:var(--tmuted);">En RBGs</div></div>
+        <div class="stat-c"><div class="s-lbl">Win Rate</div><div class="s-val">71%</div><div class="s-delta">15/21 partidas</div></div>
+        <div class="stat-c"><div class="s-lbl">Tu Battle Pass</div><div class="s-val blue">Nv.23</div><div class="s-delta" style="color:var(--tmuted);">APÓSTATA</div></div>
+      </div>
+      <div class="activity-list">
+        <div class="sec-lbl">Actividad reciente</div>
+        <div class="act-row"><div class="act-av">MZ</div><div class="act-info"><div class="n">Mutzukimitz</div><div class="d">Solo Shuffle · Silvershard</div></div><div class="act-result w">V 2647</div></div>
+        <div class="act-row"><div class="act-av">AX</div><div class="act-info"><div class="n">Axellum</div><div class="d">2v2 · Subió a Rival II</div></div><div class="act-result" style="color:var(--blight);">1834</div></div>
+        <div class="act-row"><div class="act-av">VR</div><div class="act-info"><div class="n">Varix</div><div class="d">Solo Shuffle · Fire Mage</div></div><div class="act-result l">D 1590</div></div>
+      </div>
+      <div class="ad-strip"><i class="ti ti-ad-2" aria-hidden="true"></i><span>Publicidad — Actualiza a Exilium Premium para eliminarla</span><a>Pro →</a></div>
+    </div>
+    <div class="bot-nav">
+      <div class="nav-it on"><i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span></div>
+      <div class="nav-it"><i class="ti ti-trophy" aria-hidden="true"></i><span>Ranking</span></div>
+      <div class="nav-it"><i class="ti ti-shield" aria-hidden="true"></i><span>Battle Pass</span></div>
+      <div class="nav-it"><i class="ti ti-message-circle" aria-hidden="true"></i><span>Chat</span></div>
+      <div class="nav-it"><i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S07 RANKING ━━━━━━ -->
+<div class="screen-wrap" id="s07">
+  <div class="screen-id">07</div>
+  <div class="screen-name">Ranking Hermandad</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="app-hdr"><div><div class="hdr-logo">Ranking</div><div class="hdr-sub">Top 20 Exilium</div></div><div class="hdr-icons"><i class="ti ti-refresh" aria-hidden="true"></i></div></div>
+      <div class="filter-bar"><div class="filter-scroll">
+        <div class="f-tab on">General</div>
+        <div class="f-tab">Solo Shuffle</div>
+        <div class="f-tab">RBG</div>
+        <div class="f-tab">2v2</div>
+        <div class="f-tab">3v3</div>
+        <div class="f-tab">Blitz BG</div>
+      </div></div>
+      <div class="rank-list">
+        <div class="r-row r1"><div class="r-pos g">🥇</div><div class="r-av">MZ<div class="r-cls" style="background:#7EB9FF;"></div></div><div class="r-info"><div class="r-name">Mutzukimitz</div><div class="r-class">Evoker · Preservation</div></div><div class="r-rating"><div class="r-val hi">2647</div><div class="r-brkt">Shuffle</div><div class="r-delta up">↑ +43</div></div></div>
+        <div class="r-row r2"><div class="r-pos">🥈</div><div class="r-av">AX<div class="r-cls" style="background:#69CCF0;"></div></div><div class="r-info"><div class="r-name">Axellum</div><div class="r-class">Mage · Frost</div></div><div class="r-rating"><div class="r-val hi">2401</div><div class="r-brkt">3v3</div><div class="r-delta up">↑ +12</div></div></div>
+        <div class="r-row r3"><div class="r-pos">🥉</div><div class="r-av">VR<div class="r-cls" style="background:#FF7D0A;"></div></div><div class="r-info"><div class="r-name">Varix</div><div class="r-class">Shaman · Enh.</div></div><div class="r-rating"><div class="r-val">2198</div><div class="r-brkt">RBG</div><div class="r-delta dn">↓ -8</div></div></div>
+        <div class="r-row"><div class="r-pos">4</div><div class="r-av">SK<div class="r-cls" style="background:#C41F3B;"></div></div><div class="r-info"><div class="r-name">Skallyx</div><div class="r-class">Warrior · Arms</div></div><div class="r-rating"><div class="r-val">1987</div><div class="r-brkt">2v2</div><div class="r-delta up">↑ +55</div></div></div>
+        <div class="r-row"><div class="r-pos">5</div><div class="r-av">NX<div class="r-cls" style="background:#9482C9;"></div></div><div class="r-info"><div class="r-name">Noxveil</div><div class="r-class">Warlock · Afflic.</div></div><div class="r-rating"><div class="r-val">1834</div><div class="r-brkt">Shuffle</div><div class="r-delta" style="color:var(--tdim);">— 0</div></div></div>
+        <div class="r-row"><div class="r-pos">6</div><div class="r-av">TH<div class="r-cls" style="background:#A9D271;"></div></div><div class="r-info"><div class="r-name">Thornash</div><div class="r-class">Druid · Feral</div></div><div class="r-rating"><div class="r-val">1712</div><div class="r-brkt">Blitz</div><div class="r-delta dn">↓ -21</div></div></div>
+      </div>
+      <div class="ad-strip" style="margin-top:4px;"><i class="ti ti-ad-2" aria-hidden="true"></i><span>Publicidad</span><a>Obtén Premium</a></div>
+    </div>
+    <div class="bot-nav">
+      <div class="nav-it"><i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span></div>
+      <div class="nav-it on"><i class="ti ti-trophy" aria-hidden="true"></i><span>Ranking</span></div>
+      <div class="nav-it"><i class="ti ti-shield" aria-hidden="true"></i><span>Battle Pass</span></div>
+      <div class="nav-it"><i class="ti ti-message-circle" aria-hidden="true"></i><span>Chat</span></div>
+      <div class="nav-it"><i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S08 BATTLE PASS ━━━━━━ -->
+<div class="screen-wrap" id="s08">
+  <div class="screen-id">08</div>
+  <div class="screen-name">Battle Pass</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="app-hdr"><div><div class="hdr-logo">Battle Pass</div><div class="hdr-sub">Temporada Midnight</div></div><div class="hdr-icons"><i class="ti ti-crown" aria-hidden="true"></i></div></div>
+      <div class="bp-hero">
+        <div class="bp-top">
+          <div class="bp-ring"><div class="lvn">23</div><div class="lvl">Nivel</div></div>
+          <div class="bp-info">
+            <div class="bp-rank">APÓSTATA</div>
+            <div class="bp-xp">5.720 / 6.210 XP → Nv.24</div>
+            <div class="xp-bar" style="margin-top:6px;"><div class="xp-fill" style="width:67%"></div></div>
+            <div class="xp-lbls"><span>5.720</span><span>6.210</span></div>
+          </div>
+          <div class="bp-tier-badge">GRATIS</div>
+        </div>
+      </div>
+      <div style="padding:14px 18px 6px;"><div class="sec-lbl">Progreso de temporada</div></div>
+      <div class="bp-track">
+        <div class="bp-node"><div class="bp-ico done"><i class="ti ti-star" aria-hidden="true"></i></div><div class="bp-lv">21</div></div>
+        <div class="bp-node"><div class="bp-ico done"><i class="ti ti-bolt" aria-hidden="true"></i></div><div class="bp-lv">22</div></div>
+        <div class="bp-node"><div class="bp-ico now"><i class="ti ti-shield" aria-hidden="true"></i></div><div class="bp-lv now">23</div></div>
+        <div class="bp-node"><div class="bp-ico lock"><i class="ti ti-crown" aria-hidden="true"></i></div><div class="bp-lv">24</div></div>
+        <div class="bp-node"><div class="bp-ico lock"><i class="ti ti-swords" aria-hidden="true"></i></div><div class="bp-lv">25</div></div>
+      </div>
+      <div style="padding:0 18px 8px;"><div class="sec-lbl">Próximas recompensas</div></div>
+      <div class="rewards-grid">
+        <div class="rw-card"><i class="ti ti-tag" aria-hidden="true"></i><div class="rw-info"><div class="rw-name">Título Apóstata</div><div class="rw-lv">Nv.23 · Gratis</div></div></div>
+        <div class="rw-card pro"><i class="ti ti-crown" aria-hidden="true"></i><div class="rw-info"><div class="rw-name">Marco Azul</div><div class="rw-lv">Nv.24</div></div><div class="rw-tag">PRO</div></div>
+        <div class="rw-card"><i class="ti ti-bolt" aria-hidden="true"></i><div class="rw-info"><div class="rw-name">XP Boost x2</div><div class="rw-lv">Nv.25 · Gratis</div></div></div>
+        <div class="rw-card pro"><i class="ti ti-palette" aria-hidden="true"></i><div class="rw-info"><div class="rw-name">Skin Exclusiva</div><div class="rw-lv">Nv.30</div></div><div class="rw-tag">PLUS</div></div>
+      </div>
+    </div>
+    <div class="bot-nav">
+      <div class="nav-it"><i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span></div>
+      <div class="nav-it"><i class="ti ti-trophy" aria-hidden="true"></i><span>Ranking</span></div>
+      <div class="nav-it on"><i class="ti ti-shield" aria-hidden="true"></i><span>Battle Pass</span></div>
+      <div class="nav-it"><i class="ti ti-message-circle" aria-hidden="true"></i><span>Chat</span></div>
+      <div class="nav-it"><i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S09 PERFIL + WARDROBE ━━━━━━ -->
+<div class="screen-wrap" id="s09">
+  <div class="screen-id">09</div>
+  <div class="screen-name">Perfil + Armario</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="app-hdr"><div><div class="hdr-logo">Perfil</div><div class="hdr-sub">Mutzukimitz</div></div><div class="hdr-icons"><i class="ti ti-share" aria-hidden="true"></i></div></div>
+      <div class="prf-hero">
+        <div class="prf-av">MZ<div class="spec"><i class="ti ti-heart" aria-hidden="true"></i></div></div>
+        <div class="prf-meta">
+          <div class="prf-name">Mutzukimitz</div>
+          <div class="prf-cls">Evoker Preservation · Quel'Thalas</div>
+          <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="badge badge-blue"><i class="ti ti-shield-bolt" aria-hidden="true"></i> APÓSTATA Nv.23</span>
+          </div>
+        </div>
+      </div>
+      <div class="prf-actions">
+        <div class="btn-arm"><i class="ti ti-external-link" aria-hidden="true"></i> Armory</div>
+        <div class="btn-boost-p"><i class="ti ti-sword" aria-hidden="true"></i> Contratar Boost</div>
+      </div>
+      <div class="brackets-sec">
+        <div class="sec-lbl">Ratings PvP</div>
+        <div class="brkt-row"><div class="brkt-ico"><i class="ti ti-arrows-shuffle" aria-hidden="true"></i></div><div class="brkt-lbl"><div class="bn">Solo Shuffle</div><div class="bw">71W/32L · Gladiador</div></div><div><div class="brkt-val hi">2647</div><div class="brkt-peak">Max 2701</div></div></div>
+        <div class="brkt-row"><div class="brkt-ico"><i class="ti ti-users" aria-hidden="true"></i></div><div class="brkt-lbl"><div class="bn">RBG</div><div class="bw">15W/6L · Héroe</div></div><div><div class="brkt-val hi">2150</div><div class="brkt-peak">Max 2150</div></div></div>
+        <div class="brkt-row"><div class="brkt-ico"><i class="ti ti-bolt" aria-hidden="true"></i></div><div class="brkt-lbl"><div class="bn">Blitz BG</div><div class="bw">28W/19L · Rival</div></div><div><div class="brkt-val">1720</div><div class="brkt-peak">Max 1804</div></div></div>
+      </div>
+      <!-- WARDROBE DRAWER -->
+      <div class="wardrobe-drawer">
+        <div class="drawer-handle"></div>
+        <div class="wardrobe-title"><i class="ti ti-hanger" aria-hidden="true"></i> Armario de beneficios</div>
+        <div class="plan-perks">
+          <div class="perk-row free"><i class="ti ti-check" aria-hidden="true"></i><div><div class="pt">Perfil público + Ratings</div><div class="pd">Tier Gratis</div></div></div>
+          <div class="perk-row free"><i class="ti ti-check" aria-hidden="true"></i><div><div class="pt">Chat general · Battle Pass</div><div class="pd">Tier Gratis</div></div></div>
+          <div class="perk-row premium"><i class="ti ti-crown" aria-hidden="true"></i><div><div class="pt">Sin anuncios · Estadísticas avanzadas</div><div class="pd">Premium $2.99/mes</div></div></div>
+          <div class="perk-row locked"><i class="ti ti-crown" aria-hidden="true"></i><div><div class="pt">Canales privados · Historial ilimitado</div><div class="pd" style="color:var(--blue);">Premium — desbloquear</div></div></div>
+          <div class="perk-row locked"><i class="ti ti-star" aria-hidden="true"></i><div><div class="pt">Apuestas avanzadas · Streams en app</div><div class="pd" style="color:var(--gold);">Premium Plus $4.99/mes</div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="bot-nav">
+      <div class="nav-it"><i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span></div>
+      <div class="nav-it"><i class="ti ti-trophy" aria-hidden="true"></i><span>Ranking</span></div>
+      <div class="nav-it"><i class="ti ti-shield" aria-hidden="true"></i><span>Battle Pass</span></div>
+      <div class="nav-it"><i class="ti ti-message-circle" aria-hidden="true"></i><span>Chat</span></div>
+      <div class="nav-it on"><i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S10 CHAT ━━━━━━ -->
+<div class="screen-wrap" id="s10">
+  <div class="screen-id">10</div>
+  <div class="screen-name">Chat en Vivo + Streams</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="chat-scr">
+        <div class="app-hdr"><div><div class="hdr-logo">Chat</div><div class="hdr-sub">Exilium · Tiempo real</div></div><div class="hdr-icons"><i class="ti ti-users" aria-hidden="true"></i><i class="ti ti-search" aria-hidden="true"></i></div></div>
+        <div class="ch-bar"><div class="ch-scroll">
+          <div class="ch-tab on"># general</div>
+          <div class="ch-tab"># rbg-callouts</div>
+          <div class="ch-tab"># estrategia</div>
+          <div class="ch-tab"># reclutamiento</div>
+          <div class="ch-tab"># off-topic</div>
+        </div></div>
+        <div class="online-pill"><div class="on-dot"></div><span><strong>12 jugadores</strong> en línea</span><i class="ti ti-chevron-right" aria-hidden="true" style="margin-left:auto;font-size:12px;color:var(--tdim);"></i></div>
+        <!-- LIVE STREAMS STRIP -->
+        <div class="stream-strip">
+          <div class="stream-lbl"><i class="ti ti-live-photo" aria-hidden="true"></i>Jugadores en directo</div>
+          <div class="streams-row">
+            <div class="stream-card">
+              <div class="stream-thumb">
+                <i class="ti ti-player-play" aria-hidden="true"></i>
+                <div class="live-badge">EN VIVO</div>
+                <div class="viewer-count"><i class="ti ti-eye" aria-hidden="true" style="font-size:8px;"></i>1.2k</div>
+                <div class="platform-icon"><i class="ti ti-brand-twitch" aria-hidden="true" style="font-size:9px;color:#9147ff;"></i></div>
+              </div>
+              <div class="stream-info"><div class="sn">Mutzukimitz</div><div class="sp">Solo Shuffle 2600+</div></div>
+            </div>
+            <div class="stream-card">
+              <div class="stream-thumb" style="background:#1a1a2e;">
+                <i class="ti ti-player-play" aria-hidden="true"></i>
+                <div class="live-badge">EN VIVO</div>
+                <div class="viewer-count"><i class="ti ti-eye" aria-hidden="true" style="font-size:8px;"></i>340</div>
+                <div class="platform-icon"><i class="ti ti-brand-youtube" aria-hidden="true" style="font-size:9px;color:#FF0000;"></i></div>
+              </div>
+              <div class="stream-info"><div class="sn">Axellum</div><div class="sp">RBG Ranked 2400</div></div>
+            </div>
+            <div class="stream-card" style="border-color:rgba(232,192,66,.2);position:relative;">
+              <div style="position:absolute;inset:0;background:rgba(5,8,16,.85);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">
+                <i class="ti ti-crown" aria-hidden="true" style="font-size:16px;color:var(--gold);"></i>
+                <span style="font-size:9px;color:var(--gold);text-align:center;line-height:1.4;">Stream privado<br>Plus</span>
+              </div>
+              <div class="stream-thumb"></div>
+              <div class="stream-info"><div class="sn">VIP Stream</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="msgs">
+          <div class="m-sys"><span>Hoy · #general</span></div>
+          <div class="msg"><div class="m-av">AX</div><div class="m-body"><div class="m-meta"><span class="m-name">Axellum</span><span class="m-rank">HEREJE</span><span class="m-time">9:21</span></div><div class="m-bubble">¿Alguien para RBG esta noche? Necesitamos healer</div></div></div>
+          <div class="msg"><div class="m-av">NX</div><div class="m-body"><div class="m-meta"><span class="m-name">Noxveil</span><span class="m-rank off">OFICIAL</span><span class="m-time">9:30</span></div><div class="m-bubble">Formamos a las 9:15. Mutzuki de healer confirmado</div></div></div>
+          <div class="msg me"><div class="m-av">MZ</div><div class="m-body"><div class="m-meta"><span class="m-name">Mutzukimitz</span><span class="m-time">9:38</span></div><div class="m-bubble">Aquí estoy, Pres Evoker listo 🐉</div></div></div>
+          <div class="m-sys"><span>Skallyx se unió al canal</span></div>
+        </div>
+        <div class="chat-in">
+          <div class="chat-icons"><i class="ti ti-mood-smile" aria-hidden="true"></i></div>
+          <div class="chat-in-box">Escribe un mensaje...</div>
+          <div class="chat-icons"><i class="ti ti-paperclip" aria-hidden="true"></i></div>
+          <div class="send-b"><i class="ti ti-send" aria-hidden="true"></i></div>
+        </div>
+        <div class="premium-lock"><i class="ti ti-crown" aria-hidden="true"></i><span>Canales privados de estrategia exclusivos para Premium</span><a>Obtener Pro</a></div>
+      </div>
+    </div>
+    <div class="bot-nav">
+      <div class="nav-it"><i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span></div>
+      <div class="nav-it"><i class="ti ti-trophy" aria-hidden="true"></i><span>Ranking</span></div>
+      <div class="nav-it"><i class="ti ti-shield" aria-hidden="true"></i><span>Battle Pass</span></div>
+      <div class="nav-it on"><i class="ti ti-message-circle" aria-hidden="true"></i><span>Chat</span></div>
+      <div class="nav-it"><i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S11 APUESTAS ━━━━━━ -->
+<div class="screen-wrap" id="s11">
+  <div class="screen-id">11</div>
+  <div class="screen-name">Apuestas PvP</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="app-hdr"><div><div class="hdr-logo">Apuestas</div><div class="hdr-sub">Monedas del clan</div></div><div class="hdr-icons"><i class="ti ti-coin" aria-hidden="true"></i></div></div>
+      <div class="bets-hero">
+        <div class="sec-lbl" style="margin-bottom:10px;">Tu balance</div>
+        <div class="bets-stats">
+          <div class="bet-stat"><div class="bsv">1,240</div><div class="bsl">Monedas</div></div>
+          <div class="bet-stat"><div class="bsv" style="color:var(--green);">+320</div><div class="bsl">Ganadas</div></div>
+          <div class="bet-stat"><div class="bsv" style="color:var(--red);">3/8</div><div class="bsl">Aciertos</div></div>
+        </div>
+      </div>
+      <div class="bets-list">
+        <div class="sec-lbl">Apuestas activas</div>
+        <!-- BET 1 -->
+        <div class="bet-card">
+          <div class="bet-header"><i class="ti ti-users" aria-hidden="true"></i><div class="bet-q">¿Cuántas RBGs ganará Exilium hoy?</div><div class="bet-time">Cierra 11pm</div></div>
+          <div class="bet-options">
+            <div class="bet-opt a"><div class="bo-lbl">3 o más</div><div class="bo-odds">+180</div><div class="bo-pool">320 en juego</div></div>
+            <div class="bet-opt b"><div class="bo-lbl">Menos de 3</div><div class="bo-odds">-140</div><div class="bo-pool">580 en juego</div></div>
+          </div>
+          <div class="bet-footer"><span>9 jugadores apostando</span><span class="players-ct">Tu apuesta: 100 monedas ✓</span></div>
+        </div>
+        <!-- BET 2 -->
+        <div class="bet-card">
+          <div class="bet-header"><i class="ti ti-trophy" aria-hidden="true"></i><div class="bet-q">¿Mutzuki llega a 2700 esta semana?</div><div class="bet-time">Cierra 7 días</div></div>
+          <div class="bet-options">
+            <div class="bet-opt a"><div class="bo-lbl">Sí llegará</div><div class="bo-odds">+220</div><div class="bo-pool">450 en juego</div></div>
+            <div class="bet-opt b"><div class="bo-lbl">No llegará</div><div class="bo-odds">-200</div><div class="bo-pool">900 en juego</div></div>
+          </div>
+          <div class="bet-footer"><span>14 jugadores apostando</span><span class="players-ct">Sin apostar</span></div>
+        </div>
+        <!-- BET 3 PREMIUM LOCK -->
+        <div class="bet-card lock-overlay">
+          <div class="bet-header"><i class="ti ti-sword" aria-hidden="true"></i><div class="bet-q">Carrera: ¿Quién llega primero a Gladiador?</div><div class="bet-time">Abierta</div></div>
+          <div class="bet-options">
+            <div class="bet-opt a"><div class="bo-lbl">Axellum</div><div class="bo-odds">+300</div></div>
+            <div class="bet-opt b"><div class="bo-lbl">Varix</div><div class="bo-odds">+160</div></div>
+          </div>
+          <div class="bet-footer"><span>Carrera PvP · Premium Plus</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="bot-nav">
+      <div class="nav-it"><i class="ti ti-home" aria-hidden="true"></i><span>Inicio</span></div>
+      <div class="nav-it"><i class="ti ti-trophy" aria-hidden="true"></i><span>Ranking</span></div>
+      <div class="nav-it on"><i class="ti ti-coin" aria-hidden="true"></i><span>Apuestas</span></div>
+      <div class="nav-it"><i class="ti ti-message-circle" aria-hidden="true"></i><span>Chat</span></div>
+      <div class="nav-it"><i class="ti ti-user" aria-hidden="true"></i><span>Perfil</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━ S12 PREMIUM ━━━━━━ -->
+<div class="screen-wrap" id="s12">
+  <div class="screen-id">12</div>
+  <div class="screen-name">Planes Premium</div>
+  <div class="phone">
+    <div class="status-bar"><span>9:41</span><div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div></div>
+    <div class="scr">
+      <div class="app-hdr"><div><div class="hdr-logo">Premium</div><div class="hdr-sub">Elige tu plan</div></div><div class="hdr-icons"><i class="ti ti-x" aria-hidden="true"></i></div></div>
+      <div class="prem-hero">
+        <i class="ti ti-shield-bolt prem-icon" aria-hidden="true"></i>
+        <div class="prem-title">Exilium Pro</div>
+        <div class="prem-sub">Elimina anuncios, desbloquea funciones exclusivas<br>y domina el campo de batalla sin límites.</div>
+      </div>
+      <div class="plans-area">
+        <!-- FREE -->
+        <div class="plan">
+          <div class="plan-name">Gratis</div>
+          <div class="plan-price"><span class="amt">$0</span><span class="per">/ siempre</span></div>
+          <div class="plan-feats">
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Perfil y ratings PvP</div>
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Ranking hermandad</div>
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Chat general · Battle Pass</div>
+            <div class="pf-row"><i class="ti ti-x no" aria-hidden="true"></i>Anuncios incluidos</div>
+            <div class="pf-row"><i class="ti ti-x no" aria-hidden="true"></i>Sin apuestas avanzadas</div>
+          </div>
+          <div class="btn-plan free-p">Plan actual</div>
+        </div>
+        <!-- PREMIUM -->
+        <div class="plan feat" style="margin-top:14px;">
+          <div class="plan-badge-tag best">Más popular</div>
+          <div class="plan-name">Premium</div>
+          <div class="plan-price"><span class="amt">$2.99</span><span class="per">/ mes</span></div>
+          <div class="plan-feats">
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Sin publicidad</div>
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Estadísticas avanzadas de ratings</div>
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Historial RBG ilimitado</div>
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Canales privados de chat</div>
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Recompensas Battle Pass PRO</div>
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Apuestas básicas</div>
+            <div class="pf-row"><i class="ti ti-x no" aria-hidden="true"></i>Sin streams en app</div>
+          </div>
+          <div class="btn-plan prem-p">Obtener Premium</div>
+        </div>
+        <!-- PREMIUM PLUS -->
+        <div class="plan plus" style="margin-top:14px;">
+          <div class="plan-badge-tag top">⭐ Premium Plus</div>
+          <div class="plan-name">Premium Plus</div>
+          <div class="plan-price"><span class="amt">$4.99</span><span class="per">/ mes</span><span class="save">Ahorra 2 meses al año</span></div>
+          <div class="plan-feats">
+            <div class="pf-row"><i class="ti ti-check ok" aria-hidden="true"></i>Todo lo de Premium</div>
+            <div class="pf-row"><i class="ti ti-star st" aria-hidden="true"></i>Streams Twitch/YouTube en app</div>
+            <div class="pf-row"><i class="ti ti-star st" aria-hidden="true"></i>Apuestas avanzadas · Carreras PvP</div>
+            <div class="pf-row"><i class="ti ti-star st" aria-hidden="true"></i>Marco de perfil dorado · Acceso VIP</div>
+            <div class="pf-row"><i class="ti ti-star st" aria-hidden="true"></i>Streamer badge en perfil público</div>
+            <div class="pf-row"><i class="ti ti-star st" aria-hidden="true"></i>Análisis IA de tu gameplay</div>
+          </div>
+          <div class="btn-plan plus-p">Obtener Plus</div>
+        </div>
+        <div style="text-align:center;padding:8px 0 4px;font-size:10px;color:var(--tdim);">Cancela cuando quieras · Google Play / App Store</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /screens-grid -->
+
+<script>
+function scrollTo(id){
+  const el=document.getElementById(id);
+  if(el){el.scrollIntoView({behavior:'smooth',block:'start'});}
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const idx=['s01','s02','s03','s04','s05','s06','s07','s08','s09','s10','s11','s12'].indexOf(id);
+  if(idx>-1)document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+}
+</script>
+</body>
+</html>

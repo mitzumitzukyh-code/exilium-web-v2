@@ -226,6 +226,10 @@ function switchTab(tabName) {
     case 'analytics': loadAnalytics(); break;
     case 'n8n': loadN8nConfig(); break;
     case 'errors': loadErrors(); break;
+    case 'boost-orders': loadBoostOrders(); break;
+    case 'boost-boosters': loadBoostBoosters(); break;
+    case 'boost-clients': loadBoostClients(); break;
+    case 'rbg-strategies': loadRbgTab(); break;
   }
 }
 
@@ -2179,6 +2183,17 @@ document.addEventListener('DOMContentLoaded', function() {
   // Tab: Errors
   $('clear-errors-btn').addEventListener('click', clearErrors);
 
+  // Tab: Boost Orders
+  $('refresh-boost-orders-btn').addEventListener('click', loadBoostOrders);
+  $('boost-banner-show-btn').addEventListener('click', () => setBoostBannerVisible(true));
+  $('boost-banner-hide-btn').addEventListener('click', () => setBoostBannerVisible(false));
+
+  // Tab: Boost Boosters
+  $('refresh-boosters-btn').addEventListener('click', loadBoostBoosters);
+
+  // Tab: Boost Clients
+  $('refresh-boost-clients-btn').addEventListener('click', loadBoostClients);
+
   // Check existing session
   checkSession();
 });
@@ -2318,3 +2333,424 @@ window.copyN8nWorkflow = function() {
   document.execCommand('copy');
   toast('JSON del workflow copiado al portapapeles', 'success');
 };
+
+// ══════════════════════════════════════════════════════════
+//  BOOSTING ECOSYSTEM — PEDIDOS CARRY
+// ══════════════════════════════════════════════════════════
+
+let _boostOrders = [];
+
+const ORDER_STATUS_LABELS = {
+  pending:     { label: '⏳ Pendiente',   color: '#eab308' },
+  claimed:     { label: '🔒 Reclamado',   color: '#3b82f6' },
+  in_progress: { label: '▶️ En progreso', color: '#8b5cf6' },
+  completed:   { label: '✅ Completado',  color: '#22c55e' },
+  cancelled:   { label: '❌ Cancelado',   color: '#ef4444' },
+};
+
+async function loadBoostBannerStatus() {
+  try {
+    const data = await apiCall('/admin/boost-banner');
+    const badge = $('boost-banner-status-badge');
+    if (data.visible) {
+      badge.textContent = 'VISIBLE';
+      badge.style.background = 'rgba(34,197,94,.15)';
+      badge.style.color = '#22c55e';
+      badge.style.border = '1px solid rgba(34,197,94,.3)';
+    } else {
+      badge.textContent = 'OCULTO';
+      badge.style.background = 'rgba(239,68,68,.15)';
+      badge.style.color = '#ef4444';
+      badge.style.border = '1px solid rgba(239,68,68,.3)';
+    }
+  } catch (_) {}
+}
+
+async function setBoostBannerVisible(visible) {
+  try {
+    await apiCall('/admin/boost-banner', 'PUT', { visible });
+    toast(visible ? '✅ Banner de boosting activado' : '🔴 Banner de boosting ocultado', visible ? 'success' : 'info');
+    loadBoostBannerStatus();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function loadBoostOrders() {
+  const tbody = $('boost-orders-tbody');
+  tbody.innerHTML = '<tr><td colspan="10" class="empty-state"><p>Cargando...</p></td></tr>';
+  loadBoostBannerStatus();
+  try {
+    const data = await apiCall('/admin/boost/orders');
+    _boostOrders = Array.isArray(data) ? data : (data.orders || []);
+    renderBoostOrders(_boostOrders);
+    // Stats
+    $('bos-total').textContent     = _boostOrders.length;
+    $('bos-pending').textContent   = _boostOrders.filter(o => o.status === 'pending').length;
+    $('bos-active').textContent    = _boostOrders.filter(o => o.status === 'claimed' || o.status === 'in_progress').length;
+    $('bos-completed').textContent = _boostOrders.filter(o => o.status === 'completed').length;
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><p>Error: ${escapeHtml(err.message)}</p></td></tr>`;
+  }
+}
+
+function filterBoostOrders(status) {
+  const filtered = status === 'all' ? _boostOrders : _boostOrders.filter(o => o.status === status);
+  renderBoostOrders(filtered);
+}
+
+function renderBoostOrders(orders) {
+  const tbody = $('boost-orders-tbody');
+  if (!orders.length) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state"><p>No hay pedidos.</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = orders.map((o, i) => {
+    const st = ORDER_STATUS_LABELS[o.status] || { label: o.status, color: '#7a7a8e' };
+    const mode = o.delivery_mode === 'piloted' ? '🎮 Piloted' : '🧍 Selfplay';
+    const pay  = o.payment_method === 'usd' ? `$${o.price_usd}` : `${o.price_gold} oro`;
+    return `<tr>
+      <td style="color:var(--text-muted);font-size:.78rem;">${i + 1}</td>
+      <td><strong style="font-size:.85rem;">${escapeHtml(o.service_name)}</strong></td>
+      <td style="font-size:.82rem;">${escapeHtml(o.client_username || '—')}</td>
+      <td style="font-size:.82rem;">${escapeHtml(o.char_name)}${o.char_realm ? `<br><span style="color:var(--text-muted);font-size:.72rem;">${escapeHtml(o.char_realm)}</span>` : ''}</td>
+      <td style="font-size:.78rem;">${mode}</td>
+      <td style="font-size:.82rem;">${pay}</td>
+      <td><span style="color:${st.color};font-size:.8rem;font-weight:700;">${st.label}</span></td>
+      <td style="font-size:.82rem;">${escapeHtml(o.booster_username || '—')}</td>
+      <td style="font-size:.75rem;color:var(--text-muted);">${timeAgo(o.created_at)}</td>
+      <td>
+        <button class="btn" style="font-size:.72rem;padding:.25rem .55rem;" onclick="openBoostOrderDetail('${escapeForJsString(o.id)}')">👁️ Ver</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.openBoostOrderDetail = function(orderId) {
+  const o = _boostOrders.find(x => x.id === orderId);
+  if (!o) return;
+  const st = ORDER_STATUS_LABELS[o.status] || { label: o.status, color: '#7a7a8e' };
+  const notes = (o.progress_notes || []).map(n =>
+    `<li style="margin-bottom:6px;font-size:.82rem;color:var(--text-muted);">[${n.at ? new Date(n.at).toLocaleString('es') : '—'}] ${escapeHtml(n.text)}</li>`
+  ).join('') || '<li style="color:var(--text-muted);">Sin notas</li>';
+
+  openModal('📋 Pedido: ' + o.service_name, `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Estado</label>
+        <div style="color:${st.color};font-weight:700;">${st.label}</div></div>
+      <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Pedido</label>
+        <div style="font-size:.75rem;font-family:monospace;">${escapeHtml(o.id)}</div></div>
+      <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Cliente</label>
+        <div>${escapeHtml(o.client_username || '—')}</div></div>
+      <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Booster</label>
+        <div>${escapeHtml(o.booster_username || '—')}</div></div>
+      <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Personaje</label>
+        <div>${escapeHtml(o.char_name)} — ${escapeHtml(o.char_realm || '?')}</div></div>
+      <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Modo</label>
+        <div>${o.delivery_mode === 'piloted' ? '🎮 Piloted' : '🧍 Selfplay'}</div></div>
+      <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Pago</label>
+        <div>${o.payment_method === 'usd' ? '$' + o.price_usd + ' USD' : o.price_gold + ' oro'}</div></div>
+      <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Rating objetivo</label>
+        <div>${escapeHtml(o.target_rating || '—')}</div></div>
+    </div>
+    ${o.notes ? `<div style="margin-bottom:12px;"><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Notas del cliente</label><div style="background:var(--bg-secondary);border-radius:6px;padding:8px;font-size:.82rem;margin-top:4px;">${escapeHtml(o.notes)}</div></div>` : ''}
+    <div><label style="font-size:.7rem;color:var(--text-muted);text-transform:uppercase;">Notas de progreso</label>
+      <ul style="list-style:none;padding:0;margin-top:6px;">${notes}</ul>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:16px;flex-wrap:wrap;">
+      <span style="font-size:.75rem;color:var(--text-muted);">Creado: ${o.created_at ? new Date(o.created_at).toLocaleString('es') : '—'}</span>
+      ${o.completed_at ? `<span style="font-size:.75rem;color:var(--text-muted);">Completado: ${new Date(o.completed_at).toLocaleString('es')}</span>` : ''}
+    </div>
+  `);
+};
+
+// ══════════════════════════════════════════════════════════
+//  BOOSTING ECOSYSTEM — BOOSTERS
+// ══════════════════════════════════════════════════════════
+
+const BOOSTER_TIER_COLORS = {
+  bronze: '#cd7f32', silver: '#9ca3af', gold: '#d4a017', elite: '#8b5cf6',
+};
+
+async function loadBoostBoosters() {
+  $('boost-applications-list').innerHTML = '<div class="empty-state"><p>Cargando...</p></div>';
+  $('boost-boosters-tbody').innerHTML = '<tr><td colspan="8" class="empty-state"><p>Cargando...</p></td></tr>';
+  try {
+    const [appsData, boostersData] = await Promise.all([
+      apiCall('/admin/boost/applications'),
+      apiCall('/admin/boost/boosters'),
+    ]);
+    renderBoostApplications(Array.isArray(appsData) ? appsData : (appsData.applications || []));
+    renderBoostBoosters(Array.isArray(boostersData) ? boostersData : (boostersData.boosters || []));
+  } catch (err) {
+    $('boost-applications-list').innerHTML = `<div class="empty-state"><p>Error: ${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+function renderBoostApplications(apps) {
+  $('pending-apps-count').textContent = apps.length;
+  if (!apps.length) {
+    $('boost-applications-list').innerHTML = '<div class="empty-state"><p>No hay aplicaciones pendientes.</p></div>';
+    return;
+  }
+  $('boost-applications-list').innerHTML = apps.map(a => `
+    <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <strong style="color:var(--text-bright);">${escapeHtml(a.username || a.battletag || '?')}</strong>
+          <span style="font-size:.72rem;color:var(--text-muted);">${escapeHtml(a.battletag || '')}</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:.78rem;color:var(--text-muted);">
+          <span>⚔️ Rating 2v2: <strong style="color:var(--text-main);">${a.rating_2v2 || '—'}</strong></span>
+          <span>⚔️ Rating 3v3: <strong style="color:var(--text-main);">${a.rating_3v3 || '—'}</strong></span>
+          <span>🏆 Logro máximo: <strong style="color:var(--text-main);">${escapeHtml(a.highest_achievement || '—')}</strong></span>
+        </div>
+        ${a.experience ? `<div style="margin-top:6px;font-size:.78rem;color:var(--text-muted);">Experiencia: ${escapeHtml(a.experience.slice(0, 150))}...</div>` : ''}
+        <div style="margin-top:4px;font-size:.72rem;color:var(--text-muted);">Aplicó: ${timeAgo(a.applied_at)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button class="btn btn-success" style="font-size:.75rem;padding:.3rem .7rem;" onclick="approveBoosterApp('${escapeForJsString(a.user_id || a.id)}', '${escapeForJsString(a.username || '')}')">✅ Aprobar</button>
+        <button class="btn btn-danger"  style="font-size:.75rem;padding:.3rem .7rem;" onclick="rejectBoosterApp('${escapeForJsString(a.user_id || a.id)}', '${escapeForJsString(a.username || '')}')">❌ Rechazar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderBoostBoosters(boosters) {
+  const tbody = $('boost-boosters-tbody');
+  if (!boosters.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>No hay boosters aprobados todavía.</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = boosters.map(b => {
+    const tierColor = BOOSTER_TIER_COLORS[b.tier] || '#7a7a8e';
+    return `<tr>
+      <td><strong style="font-size:.85rem;">${escapeHtml(b.username)}</strong></td>
+      <td style="font-size:.8rem;color:var(--text-muted);">${escapeHtml(b.battletag || '—')}</td>
+      <td style="font-size:.82rem;">2v2: ${b.rating_2v2 || '—'} / 3v3: ${b.rating_3v3 || '—'}</td>
+      <td><span style="color:${tierColor};font-weight:700;text-transform:uppercase;font-size:.78rem;">${b.tier || 'bronze'}</span></td>
+      <td style="font-size:.82rem;">${b.carries_completed || 0}</td>
+      <td style="font-size:.82rem;">$${(b.earnings_usd || 0).toFixed(2)}</td>
+      <td style="font-size:.75rem;color:var(--text-muted);">${timeAgo(b.approved_at || b.created_at)}</td>
+      <td>
+        <button class="btn" style="font-size:.72rem;padding:.25rem .55rem;" onclick="openBoosterDetail('${escapeForJsString(b.user_id || b.id)}')">👁️ Ver</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.approveBoosterApp = async function(userId, username) {
+  if (!confirm(`¿Aprobar a ${username} como booster?`)) return;
+  try {
+    await apiCall(`/admin/boost/applications/${userId}/approve`, 'POST');
+    toast(`✅ ${username} aprobado como booster`, 'success');
+    loadBoostBoosters();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+};
+
+window.rejectBoosterApp = async function(userId, username) {
+  if (!confirm(`¿Rechazar la aplicación de ${username}?`)) return;
+  try {
+    await apiCall(`/admin/boost/applications/${userId}/reject`, 'POST');
+    toast(`Aplicación de ${username} rechazada`, 'info');
+    loadBoostBoosters();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+};
+
+window.openBoosterDetail = function(userId) {
+  toast('Detalle de booster — próximamente', 'info');
+};
+
+// ══════════════════════════════════════════════════════════
+//  BOOSTING ECOSYSTEM — CLIENTES PORTAL
+// ══════════════════════════════════════════════════════════
+
+async function loadBoostClients() {
+  const tbody = $('boost-clients-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Cargando...</p></td></tr>';
+  try {
+    // Derive client list from orders (group by client_id/username)
+    const data = await apiCall('/admin/boost/orders');
+    const orders = Array.isArray(data) ? data : (data.orders || []);
+
+    // Build client map
+    const clientMap = {};
+    for (const o of orders) {
+      const key = o.client_id || o.client_username;
+      if (!key) continue;
+      if (!clientMap[key]) {
+        clientMap[key] = {
+          username: o.client_username || key,
+          orders: 0,
+          spent_usd: 0,
+          last_order: o.created_at,
+        };
+      }
+      clientMap[key].orders++;
+      if (o.payment_method === 'usd' && o.price_usd) {
+        clientMap[key].spent_usd += parseFloat(o.price_usd) || 0;
+      }
+      if (o.created_at > clientMap[key].last_order) {
+        clientMap[key].last_order = o.created_at;
+      }
+    }
+
+    const clients = Object.values(clientMap).sort((a, b) => b.orders - a.orders);
+
+    if (!clients.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>No hay clientes registrados con pedidos.</p></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = clients.map(c => `<tr>
+      <td><strong style="font-size:.85rem;">${escapeHtml(c.username)}</strong></td>
+      <td style="font-size:.8rem;color:var(--text-muted);">—</td>
+      <td style="font-size:.82rem;">${c.orders}</td>
+      <td style="font-size:.82rem;">$${c.spent_usd.toFixed(2)}</td>
+      <td style="font-size:.75rem;color:var(--text-muted);">—</td>
+      <td style="font-size:.75rem;color:var(--text-muted);">${timeAgo(c.last_order)}</td>
+    </tr>`).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><p>Error: ${escapeHtml(err.message)}</p></td></tr>`;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RBG STRATEGY HUB
+   ════════════════════════════════════════════════ */
+
+const RBG_MAP_DEFS = [
+  { id: 'warsong_gulch',     name: 'Warsong Gulch' },
+  { id: 'arathi_basin',      name: 'Arathi Basin' },
+  { id: 'eye_of_the_storm',  name: 'Eye of the Storm' },
+  { id: 'alterac_valley',    name: 'Alterac Valley' },
+  { id: 'isle_of_conquest',  name: 'Isle of Conquest' },
+  { id: 'battle_for_gilneas',name: 'Battle for Gilneas' },
+  { id: 'twin_peaks',        name: 'Twin Peaks' },
+  { id: 'temple_of_kotmogu', name: 'Temple of Kotmogu' },
+  { id: 'deepwind_gorge',    name: 'Deepwind Gorge' },
+  { id: 'silvershard_mines', name: 'Silvershard Mines' },
+];
+
+const ROLES = ['FC', 'Healer', 'Ofensa', 'Defensa', 'Roamer'];
+const WOW_CLASSES = [
+  'Death Knight','Demon Hunter','Druid','Evoker','Hunter',
+  'Mage','Monk','Paladin','Priest','Rogue','Shaman','Warlock','Warrior'
+];
+
+let _rbgStrategies = [];
+let _rbgGuildPlayers = [];
+
+async function loadRbgTab() {
+  // Load strategies from API
+  try {
+    _rbgStrategies = await apiCall('/admin/rbg-strategies') || [];
+  } catch (_) { _rbgStrategies = []; }
+
+  // Load guild players for dropdown
+  try {
+    const data = await apiCall('/admin/players');
+    _rbgGuildPlayers = Array.isArray(data) ? data : (data.players || []);
+  } catch (_) { _rbgGuildPlayers = []; }
+
+  loadRbgMapEditor();
+}
+
+function loadRbgMapEditor() {
+  const mapId = $('rbg-map-select')?.value;
+  if (!mapId) return;
+
+  const strat = _rbgStrategies.find(s => s.map === mapId) || { map: mapId, notes: '', status: 'empty', composition: [] };
+
+  // Set notes
+  const notesEl = $('rbg-notes-input');
+  if (notesEl) notesEl.value = strat.notes || '';
+
+  // Set status
+  const statusEl = $('rbg-status-select');
+  if (statusEl) statusEl.value = strat.status || 'empty';
+
+  // Render comp editor
+  renderRbgCompEditor(strat.composition || []);
+}
+
+function renderRbgCompEditor(comp) {
+  const container = $('rbg-comp-editor');
+  if (!container) return;
+
+  const playerOptions = _rbgGuildPlayers
+    .map(p => `<option value="${escapeHtml(p.name || p.id)}">${escapeHtml(p.name || p.id)}</option>`)
+    .join('');
+
+  let html = '';
+  for (let i = 0; i < 10; i++) {
+    const slot = comp[i] || {};
+    const classOpts = WOW_CLASSES.map(c =>
+      `<option value="${c}"${slot.class === c ? ' selected' : ''}>${c}</option>`
+    ).join('');
+    const roleOpts = ROLES.map(r =>
+      `<option value="${r}"${slot.role === r ? ' selected' : ''}>${r}</option>`
+    ).join('');
+
+    html += `
+      <div style="display:flex;align-items:center;gap:.6rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:.6rem .8rem;">
+        <span style="min-width:22px;height:22px;border-radius:50%;background:rgba(212,160,23,.12);border:1px solid rgba(212,160,23,.3);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;color:var(--accent);">${i + 1}</span>
+        <input class="input" list="rbg-players-list" id="rbg-slot-player-${i}"
+          style="flex:1;min-width:0;font-size:.8rem;padding:.3rem .5rem;"
+          placeholder="Jugador..." value="${escapeHtml(slot.player || '')}">
+        <select class="input" id="rbg-slot-class-${i}" style="font-size:.75rem;padding:.3rem .4rem;width:120px;">
+          <option value="">Clase...</option>
+          ${classOpts}
+        </select>
+        <select class="input" id="rbg-slot-role-${i}" style="font-size:.75rem;padding:.3rem .4rem;width:90px;">
+          <option value="">Rol...</option>
+          ${roleOpts}
+        </select>
+      </div>`;
+  }
+
+  html += `<datalist id="rbg-players-list">${playerOptions}</datalist>`;
+  container.innerHTML = html;
+}
+
+async function saveRbgStrategy() {
+  const mapId = $('rbg-map-select')?.value;
+  const notes = $('rbg-notes-input')?.value || '';
+  const status = $('rbg-status-select')?.value || 'empty';
+  const saveStatus = $('rbg-save-status');
+
+  // Build composition array
+  const composition = [];
+  for (let i = 0; i < 10; i++) {
+    const player = $(`rbg-slot-player-${i}`)?.value?.trim() || '';
+    const cls    = $(`rbg-slot-class-${i}`)?.value || '';
+    const role   = $(`rbg-slot-role-${i}`)?.value || '';
+    composition.push({ player, class: cls, role });
+  }
+
+  // Upsert into strategies array
+  const idx = _rbgStrategies.findIndex(s => s.map === mapId);
+  const entry = { map: mapId, notes, status, composition, updated_at: new Date().toISOString() };
+  if (idx >= 0) {
+    _rbgStrategies[idx] = entry;
+  } else {
+    _rbgStrategies.push(entry);
+  }
+
+  try {
+    if (saveStatus) saveStatus.textContent = 'Guardando...';
+    $('rbg-save-btn').disabled = true;
+    await apiCall('/admin/rbg-strategies', 'PUT', _rbgStrategies);
+    toast('✅ Estrategia guardada correctamente', 'success');
+    if (saveStatus) saveStatus.textContent = `✓ Guardado ${new Date().toLocaleTimeString('es-MX')}`;
+  } catch (err) {
+    toast('❌ Error al guardar: ' + err.message, 'error');
+    if (saveStatus) saveStatus.textContent = '❌ Error al guardar';
+  } finally {
+    $('rbg-save-btn').disabled = false;
+  }
+}

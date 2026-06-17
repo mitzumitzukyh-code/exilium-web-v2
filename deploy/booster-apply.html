@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-8194792499117380">
+    <title>Exilium Boosting · Aplicar como Booster WoW | Gana Oro haciendo Carries</title>
+    <meta name="description" content="¿Tienes 1400+ rating en WoW PvP? Únete al equipo de boosters de Exilium, acepta pedidos y gana oro real desde tu panel.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://exilium-battlepass.pages.dev/booster-apply.html">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://exilium-battlepass.pages.dev/booster-apply.html">
+    <meta property="og:title" content="Exilium Boosting · Aplicar como Booster WoW">
+    <meta property="og:description" content="¿Tienes 1400+ rating en WoW PvP? Únete al equipo de boosters de Exilium y gana oro haciendo carries.">
+    <meta property="og:image" content="https://exilium-battlepass.pages.dev/assets/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Exilium">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:image" content="https://exilium-battlepass.pages.dev/assets/og-image.jpg">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/portal.css">
+    <style>
+        .apply-layout {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+        .apply-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .apply-header img { height: 48px; margin-bottom: 0.75rem; }
+        .apply-header h1 {
+            font-family: 'Sport Break', sans-serif;
+            font-size: clamp(1.3rem, 4vw, 2rem);
+            background: linear-gradient(135deg, #d4a017, #f0b90b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4rem;
+        }
+        .apply-header p { color: var(--text-muted); font-size: 0.9rem; max-width: 500px; margin: 0 auto; }
+
+        .requirements-box {
+            background: rgba(212,160,23,0.05);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .requirements-box h3 {
+            font-family: 'Sport Break', sans-serif;
+            font-size: 0.85rem;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+        .req-list { list-style: none; display: flex; flex-direction: column; gap: 0.4rem; }
+        .req-list li { font-size: 0.83rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; }
+        .req-list li::before { content: '✓'; color: var(--accent-color); font-weight: 700; }
+
+        .apply-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+        }
+
+        .rating-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .section-divider {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+<!-- Header minimal -->
+<header class="portal-header">
+    <div class="portal-header-left">
+        <img src="assets/logo.png" alt="Exilium">
+        <span class="site-name">Exilium Boosting</span>
+        <span class="page-title">Aplicar como Booster</span>
+    </div>
+    <div class="portal-header-right">
+        <a href="booster-login.html" class="btn btn-sm btn-secondary">Ya tengo cuenta</a>
+        <a href="boosting.html" class="btn btn-sm btn-secondary">&#8592; Volver</a>
+    </div>
+</header>
+
+<div class="apply-layout">
+
+    <div class="apply-header">
+        <img src="assets/logo.png" alt="Exilium">
+        <h1>&#9876; Únete como Booster</h1>
+        <p>¿Eres un jugador veterano de WoW con alto rating? Aplica para ofrecer carries a los miembros de Exilium y ganar oro directamente.</p>
+    </div>
+
+    <div class="requirements-box">
+        <h3>Requisitos mínimos</h3>
+        <ul class="req-list">
+            <li>1400+ de rating en cualquier bracket PvP (2v2, 3v3, Solo Shuffle, RBG)</li>
+            <li>Screenshot del UI de WoW mostrando tu rating actual</li>
+            <li>BattleTag de Battle.net válido</li>
+            <li>Cuenta de Discord activa para coordinación</li>
+            <li>Disponibilidad mínima de 5 horas semanales</li>
+            <li>No usar programas externos (macros hardware permitidas)</li>
+        </ul>
+    </div>
+
+    <div class="apply-card">
+        <div id="apply-alert"></div>
+
+        <div id="apply-form">
+            <!-- CUENTA -->
+            <div class="section-divider">&#128274; Datos de tu cuenta</div>
+            <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre de usuario *</label>
+                        <input type="text" class="form-input" id="a-username" placeholder="TuNombre" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">BattleTag *</label>
+                        <input type="text" class="form-input" id="a-battletag" placeholder="Nombre#1234">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-input" id="a-email" placeholder="tu@email.com">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Contraseña *</label>
+                        <input type="password" class="form-input" id="a-password" placeholder="Mín. 6 caracteres">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmar contraseña *</label>
+                        <input type="password" class="form-input" id="a-password2" placeholder="Repite">
+                    </div>
+                </div>
+            </div>
+
+            <!-- PERSONAJE -->
+            <div class="section-divider">&#9876; Tu personaje principal</div>
+            <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del personaje *</label>
+                        <input type="text" class="form-input" id="a-char" placeholder="Ej: Arthas">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Especialización principal *</label>
+                        <input type="text" class="form-input" id="a-spec" placeholder="Ej: Arms Warrior">
+                    </div>
+                </div>
+            </div>
+
+            <!-- RATINGS -->
+            <div class="section-divider">&#127942; Tu rating PvP actual</div>
+            <div class="rating-grid" style="margin-bottom:1.5rem;">
+                <div class="form-group">
+                    <label class="form-label">Arena 2v2</label>
+                    <input type="number" class="form-input" id="a-r2v2" placeholder="0" min="0" max="4000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Arena 3v3</label>
+                    <input type="number" class="form-input" id="a-r3v3" placeholder="0" min="0" max="4000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Solo Shuffle</label>
+                    <input type="number" class="form-input" id="a-rshuffle" placeholder="0" min="0" max="4000">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">RBG</label>
+                    <input type="number" class="form-input" id="a-rrbg" placeholder="0" min="0" max="4000">
+                </div>
+            </div>
+
+            <!-- EXTRA -->
+            <div class="section-divider">&#128247; Verificación y contacto</div>
+            <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem;">
+                <div class="form-group">
+                    <label class="form-label">URL del screenshot de tu rating *</label>
+                    <input type="url" class="form-input" id="a-screenshot" placeholder="https://imgur.com/... (sube tu screenshot a Imgur o similar)">
+                    <span class="form-hint">Sube una captura del UI de WoW mostrando tu rating. Usa Imgur, Gyazo o similar.</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Discord Tag</label>
+                    <input type="text" class="form-input" id="a-discord" placeholder="usuario#0000 o @usuario">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Experiencia como booster (opcional)</label>
+                    <textarea class="form-textarea" id="a-experience" placeholder="¿Has ofrecido carries antes? ¿En qué brackets te especializas? Cuéntanos sobre tu experiencia PvP..." maxlength="500"></textarea>
+                </div>
+            </div>
+
+            <!-- TRIAL INFO -->
+            <div class="section-divider">&#9203; Proceso de incorporación</div>
+            <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.5rem;font-size:.83rem;">
+                <div style="display:flex;gap:.75rem;align-items:flex-start;">
+                    <span style="background:rgba(212,160,23,.15);color:var(--accent-color);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;font-size:.75rem;">1</span>
+                    <div><strong style="color:var(--text-color);">Revisión (24-48h):</strong><span style="color:var(--text-muted);"> El equipo admin verifica tu screenshot de rating y datos. Recibes una respuesta por Discord.</span></div>
+                </div>
+                <div style="display:flex;gap:.75rem;align-items:flex-start;">
+                    <span style="background:rgba(212,160,23,.15);color:var(--accent-color);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;font-size:.75rem;">2</span>
+                    <div><strong style="color:var(--text-color);">Período de Trial (2 semanas):</strong><span style="color:var(--text-muted);"> Acceso limitado a máx. 3 pedidos simultáneos. Necesitas calificación ≥4.0/5 en tus primeros 5 carries.</span></div>
+                </div>
+                <div style="display:flex;gap:.75rem;align-items:flex-start;">
+                    <span style="background:rgba(212,160,23,.15);color:var(--accent-color);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;font-size:.75rem;">3</span>
+                    <div><strong style="color:var(--text-color);">Booster Oficial:</strong><span style="color:var(--text-muted);"> Al superar el trial obtienes nivel Bronce, acceso completo y empiezas a ganar el 70% de cada carry.</span></div>
+                </div>
+            </div>
+
+            <!-- RULES ACCEPTANCE -->
+            <div class="section-divider">&#128203; Aceptación de Reglamento</div>
+            <div style="display:flex;flex-direction:column;gap:.85rem;margin-bottom:1.5rem;">
+                <label style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;">
+                    <input type="checkbox" id="check-rules" style="margin-top:3px;accent-color:var(--accent-color);width:16px;height:16px;flex-shrink:0;">
+                    <span style="font-size:.82rem;color:var(--text-muted);">He leído y acepto el <a href="booster-rules.html" target="_blank" style="color:var(--accent-color);font-weight:600;">Reglamento Completo del Booster</a>, incluyendo el código de conducta, tabla de sanciones y sistema de niveles.</span>
+                </label>
+                <label style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;">
+                    <input type="checkbox" id="check-nda" style="margin-top:3px;accent-color:var(--accent-color);width:16px;height:16px;flex-shrink:0;">
+                    <span style="font-size:.82rem;color:var(--text-muted);">Acepto el <strong style="color:var(--text-color);">Acuerdo de Confidencialidad (NDA)</strong>: no divulgaré datos de clientes, pedidos ni información interna de Exilium, ni durante ni después de ser booster.</span>
+                </label>
+                <label style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;">
+                    <input type="checkbox" id="check-manual" style="margin-top:3px;accent-color:var(--accent-color);width:16px;height:16px;flex-shrink:0;">
+                    <span style="font-size:.82rem;color:var(--text-muted);">Confirmo que <strong style="color:var(--text-color);">nunca usaré bots, hacks ni programas externos</strong> y que todos mis carries serán ejecutados manualmente.</span>
+                </label>
+                <label style="display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;">
+                    <input type="checkbox" id="check-vpn" style="margin-top:3px;accent-color:var(--accent-color);width:16px;height:16px;flex-shrink:0;">
+                    <span style="font-size:.82rem;color:var(--text-muted);">Para servicios Piloted, usaré <strong style="color:var(--text-color);">VPN regional y estado appear-offline</strong> en cada sesión, y cerraré sesión de la cuenta del cliente al terminar.</span>
+                </label>
+            </div>
+
+            <button class="btn btn-primary btn-lg btn-full" onclick="submitApplication()" id="apply-btn">
+                &#9876; Enviar Aplicación
+            </button>
+        </div>
+
+        <!-- SUCCESS STATE -->
+        <div id="apply-success" style="display:none;text-align:center;padding:2rem 0;">
+            <div style="font-size:3rem;margin-bottom:1rem;">&#127942;</div>
+            <h2 style="font-family:'Sport Break',sans-serif;color:var(--accent-color);font-size:1.2rem;margin-bottom:0.5rem;">APLICACIÓN ENVIADA</h2>
+            <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:1.5rem;">Tu solicitud ha sido recibida. Un administrador la revisará en 24-48 horas. Únete a nuestro Discord para seguimiento.</p>
+            <a href="https://discord.gg/gdekyTrv" target="_blank" class="btn btn-discord btn-md" style="display:inline-flex;">
+                &#128172; Ir al Discord de Exilium
+            </a>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin-top:1.5rem;font-size:.78rem;color:var(--text-muted);">
+        ¿Ya tienes cuenta booster? <a href="booster-login.html" style="color:var(--accent-color);">Inicia sesión aquí</a>
+    </div>
+</div>
+
+<script>
+const API = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+
+async function submitApplication() {
+    const username = document.getElementById('a-username').value.trim();
+    const battleTag = document.getElementById('a-battletag').value.trim();
+    const email = document.getElementById('a-email').value.trim();
+    const password = document.getElementById('a-password').value.trim();
+    const password2 = document.getElementById('a-password2').value.trim();
+    const mainChar = document.getElementById('a-char').value.trim();
+    const mainSpec = document.getElementById('a-spec').value.trim();
+    const r2v2 = parseInt(document.getElementById('a-r2v2').value || 0);
+    const r3v3 = parseInt(document.getElementById('a-r3v3').value || 0);
+    const rShuffle = parseInt(document.getElementById('a-rshuffle').value || 0);
+    const rRbg = parseInt(document.getElementById('a-rrbg').value || 0);
+    const screenshot = document.getElementById('a-screenshot').value.trim();
+    const discord = document.getElementById('a-discord').value.trim();
+    const experience = document.getElementById('a-experience').value.trim();
+    const alertEl = document.getElementById('apply-alert');
+
+    alertEl.innerHTML = '';
+
+    if (!username || !battleTag || !email || !password || !mainChar || !mainSpec) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:1rem;">Rellena todos los campos obligatorios (*).</div>';
+        return;
+    }
+    if (password !== password2) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:1rem;">Las contraseñas no coinciden.</div>';
+        return;
+    }
+    if (!screenshot) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:1rem;">La URL del screenshot es obligatoria para verificar tu rating.</div>';
+        return;
+    }
+    const checks = ['check-rules','check-nda','check-manual','check-vpn'];
+    if (!checks.every(id => document.getElementById(id).checked)) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:1rem;">Debes aceptar todos los acuerdos del reglamento para poder aplicar.</div>';
+        return;
+    }
+    const maxRating = Math.max(r2v2, r3v3, rShuffle, rRbg);
+    if (maxRating < 1400) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:1rem;">Necesitas al menos 1400 de rating en algún bracket para aplicar.</div>';
+        return;
+    }
+
+    const btn = document.getElementById('apply-btn');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+
+    try {
+        const res = await fetch(API + '/api/boost/booster/apply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username, battle_tag: battleTag, email, password,
+                main_char: mainChar, main_spec: mainSpec,
+                rating_2v2: r2v2, rating_3v3: r3v3,
+                rating_shuffle: rShuffle, rating_rbg: rRbg,
+                screenshot_url: screenshot,
+                discord_tag: discord, experience,
+            }),
+        });
+        const data = await res.json();
+        if (data.error) {
+            alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:1rem;">${data.error}</div>`;
+            btn.disabled = false; btn.textContent = '⚔ Enviar Aplicación';
+        } else {
+            document.getElementById('apply-form').style.display = 'none';
+            document.getElementById('apply-success').style.display = '';
+        }
+    } catch (_) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="margin-bottom:1rem;">Error de conexión. Inténtalo más tarde.</div>';
+        btn.disabled = false; btn.textContent = '⚔ Enviar Aplicación';
+    }
+}
+</script>
+</body>
+</html>

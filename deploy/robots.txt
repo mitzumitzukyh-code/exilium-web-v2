@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://exilium-battlepass.pages.dev/sitemap.xml

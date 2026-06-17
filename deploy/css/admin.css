@@ -991,7 +991,7 @@ select.input { cursor: pointer; }
 
   #main-content {
     margin-left: 0;
-    padding: 16px;
+    padding: 12px;
   }
 
   .mobile-header {
@@ -1016,6 +1016,7 @@ select.input { cursor: pointer; }
   }
 
   .search-bar { flex-direction: column; }
+  .search-bar .input { width: 100%; }
 
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
 
@@ -1023,7 +1024,42 @@ select.input { cursor: pointer; }
     grid-template-columns: 1fr;
   }
 
-  .tab-header { flex-direction: column; align-items: flex-start; }
+  .tab-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .tab-actions { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tab-actions .btn { flex: 1; min-width: 0; font-size: 12px; padding: 8px 10px; }
+
+  /* ── Tabla responsiva ── */
+  .data-table { font-size: 11px; }
+  .data-table th,
+  .data-table td { padding: 6px 6px; }
+  .data-table th:nth-child(n+6):not(:last-child),
+  .data-table td:nth-child(n+6):not(:last-child) { display: none; }
+  .data-table td:last-child { white-space: nowrap; }
+
+  .player-avatar { width: 24px; height: 24px; }
+
+  /* ── Formularios ── */
+  .form-inline { flex-direction: column; align-items: stretch; }
+  .form-group { margin-bottom: 8px; }
+
+  /* ── Cards ── */
+  .card-body { padding: 12px; }
+
+  /* ── Botones ── */
+  .title-buttons { flex-direction: column; gap: 6px; }
+  .title-buttons .btn { width: 100%; }
+
+  /* ── Tab content padding ── */
+  .tab-header { padding-bottom: 8px; }
+  .tab-title { font-size: 16px; }
+}
+
+@media (max-width: 480px) {
+  .data-table th:nth-child(n+4):not(:last-child),
+  .data-table td:nth-child(n+4):not(:last-child) { display: none; }
+
+  .stat-grid { grid-template-columns: 1fr; }
+  .login-box { padding: 32px 20px; }
 }
 
 @media (min-width: 769px) {

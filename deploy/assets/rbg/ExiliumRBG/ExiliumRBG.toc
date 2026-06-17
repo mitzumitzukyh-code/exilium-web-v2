@@ -1,0 +1,11 @@
+## Interface: 120000
+## Title: |cffC41E3AExiliumRBG|r Tracker
+## Notes: Addon oficial de Exilium — registra cada RBG automaticamente y sincroniza con la web.
+## Author: mItz
+## Version: 1.1.0
+## SavedVariables: ExiliumRBG_DB
+## IconTexture: Interface\Icons\Achievement_BG_winAB
+
+ExiliumRBG.lua
+ExiliumRBG_UI.lua
+ExiliumRBG_Sync.lua

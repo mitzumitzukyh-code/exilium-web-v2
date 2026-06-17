@@ -22,7 +22,7 @@ function normalizeRealmForId(realm) {
 }
 
 function ensurePlayerStructure(player) {
-  if (!player) return player;
+  if (!player || typeof player !== 'object' || Array.isArray(player)) return player;
   player.pvp = player.pvp || {};
   player.pvp.current = player.pvp.current || { rs: 0, r2: 0, r3: 0, rbg: 0, bgs: 0 };
   player.pvp.season_max = player.pvp.season_max || { max_rs: 0, max_r2: 0, max_r3: 0, max_rbg: 0, max_bgs: 0 };

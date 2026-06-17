@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google-adsense-account" content="ca-pub-8194792499117380">
+<title>Exilium — Battle Pass · Temporada I</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@300;400;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#060c18;--deep:#0a1222;--card:#0f1a2e;--surface:#152035;--hover:#1a2840;
+  --blue:#1a8fff;--blue-glow:rgba(26,143,255,.12);--blue-border:rgba(26,143,255,.25);
+  --blue-bright:rgba(26,143,255,.55);--gold:#e8a020;--text:#c8d4e4;--text-dim:#546880;
+  --text-bright:#eef2f8;--border:rgba(255,255,255,.06);--border-blue:rgba(26,143,255,.2);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--void);color:var(--text);font-family:'Source Sans 3',sans-serif;font-weight:300;overflow-x:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--void)}::-webkit-scrollbar-thumb{background:var(--blue-bright);border-radius:3px}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.6}
+
+/* ── SPA ENGINE ── */
+.page{display:none;min-height:calc(100vh - 0px);position:relative;z-index:1}
+.page.active{display:block;animation:pgIn .22s cubic-bezier(.22,.6,.36,1) both}
+@keyframes pgIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;padding:0 40px;height:60px;background:rgba(6,12,24,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(16px)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:36px;flex-shrink:0}
+.nav-logo-icon{width:34px;height:34px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:18px;color:#fff;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+.nav-logo-text{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:.12em;color:var(--text-bright)}
+.nav-links{display:flex;flex:1;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-links a{font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--text-dim);text-decoration:none;padding:0 15px;height:60px;display:flex;align-items:center;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s}
+.nav-links a:hover{color:var(--text-bright)}
+.nav-links a.active{color:#fff;border-bottom-color:var(--blue)}
+.nav-cta{font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:700;padding:9px 22px;background:var(--blue);color:#fff;border:none;border-radius:4px;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s;margin-left:16px}
+.nav-cta:hover{background:#1580e8}
+
+/* ── SEASON BAR ── */
+.season-bar{position:fixed;top:60px;left:0;right:0;z-index:199;background:rgba(26,143,255,.08);border-bottom:1px solid var(--border-blue);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;gap:32px;padding:7px 40px;font-family:'Source Sans 3',sans-serif;font-size:12px;font-weight:600;color:var(--text-dim);letter-spacing:.06em}
+.season-live{color:var(--blue);display:flex;align-items:center;gap:6px}
+.season-live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.s-sep{opacity:.28}
+
+/* ── SHARED ── */
+.container{max-width:1160px;margin:0 auto;padding:0 40px}
+.section-pad{padding:72px 0}.section-pad-sm{padding:48px 0}
+.eyebrow{font-family:'Source Sans 3',sans-serif;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:'';width:18px;height:2px;background:var(--blue);border-radius:1px}
+.section-title{font-family:'Bebas Neue',cursive;font-size:clamp(32px,4vw,48px);letter-spacing:.06em;color:var(--text-bright);line-height:1}
+.section-subtitle{margin-top:10px;font-size:15px;font-weight:300;color:var(--text-dim);line-height:1.65;max-width:580px}
+
+/* ── PAGE BANNER (inner pages) ── */
+.page-banner{padding:104px 40px 48px;background:var(--deep);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.page-banner::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(26,143,255,.05) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+.page-banner::after{content:'';position:absolute;bottom:-140px;right:-140px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(26,143,255,.07) 0%,transparent 70%);pointer-events:none}
+.page-banner-inner{max-width:1160px;margin:0 auto;position:relative;z-index:1}
+.page-breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.05em;color:var(--text-dim);margin-bottom:22px}
+.page-breadcrumb a{color:var(--blue);text-decoration:none;transition:color .15s}
+.page-breadcrumb a:hover{color:var(--text-bright)}
+.page-breadcrumb .bc-sep{opacity:.35;font-size:14px}
+.pb-title{font-family:'Bebas Neue',cursive;font-size:clamp(46px,6vw,72px);letter-spacing:.05em;color:var(--text-bright);line-height:1;margin-top:6px}
+.pb-sub{margin-top:10px;font-size:15px;font-weight:300;color:var(--text-dim);line-height:1.65;max-width:560px}
+
+/* ── BUTTONS ── */
+.btn-primary{font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:700;padding:13px 28px;background:var(--blue);color:#fff;border:none;border-radius:4px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .15s,transform .1s}
+.btn-primary:hover{background:#1580e8;transform:translateY(-1px)}
+.btn-secondary{font-family:'Source Sans 3',sans-serif;font-size:14px;font-weight:600;padding:13px 28px;background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.15);border-radius:4px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:border-color .15s,color .15s}
+.btn-secondary:hover{border-color:rgba(255,255,255,.35);color:#fff}
+
+/* ── HERO ── */
+#hero{min-height:100vh;display:flex;align-items:center;padding-top:94px;overflow:hidden;background:var(--deep)}
+#hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,rgba(26,143,255,.06) 1px,transparent 1px);background-size:32px 32px;pointer-events:none}
+#hero::after{content:'';position:absolute;bottom:-200px;right:-200px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(26,143,255,.07) 0%,transparent 70%);pointer-events:none}
+.hero-inner{position:relative;z-index:1;max-width:1160px;margin:0 auto;padding:60px 40px 80px;display:grid;grid-template-columns:1fr 420px;gap:80px;align-items:center}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--blue-glow);border:1px solid var(--border-blue);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:24px}
+.hero-title{font-family:'Bebas Neue',cursive;font-size:clamp(56px,8vw,96px);letter-spacing:.04em;line-height:.9;color:#fff}
+.hero-title .line2{color:var(--blue)}
+.hero-desc{margin-top:20px;font-size:16px;font-weight:300;color:var(--text);line-height:1.7;max-width:500px}
+.hero-btns{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap}
+.hero-badges{display:flex;gap:28px;margin-top:48px;padding-top:32px;border-top:1px solid var(--border)}
+.hero-badge-val{font-family:'Bebas Neue',cursive;font-size:36px;letter-spacing:.06em;color:var(--blue)}
+.hero-badge-lbl{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin-top:2px}
+.rank-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.rank-panel-head{padding:16px 20px;border-bottom:1px solid var(--border);font-family:'Source Sans 3',sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim)}
+.rank-list{padding:8px 0}
+.rank-item{display:flex;align-items:center;gap:12px;padding:10px 20px;transition:background .12s;cursor:default}
+.rank-item:hover{background:var(--hover)}
+.rank-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rank-label{flex:1;font-size:13px;font-weight:600;letter-spacing:.03em}
+.rank-levels{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text-dim);text-transform:uppercase}
+
+/* ── SERVICES ── */
+.services-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.service-card{background:var(--card);padding:40px 36px;position:relative;overflow:hidden}
+.service-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--blue)}
+.service-card.booster::before{background:#3a9be8}
+.service-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:4px 12px;border-radius:3px;margin-bottom:20px}
+.tag-buy{background:rgba(26,143,255,.12);color:var(--blue)}.tag-boost{background:rgba(58,155,232,.12);color:#3a9be8}
+.service-title{font-family:'Bebas Neue',cursive;font-size:30px;letter-spacing:.06em;color:var(--text-bright);margin-bottom:10px}
+.service-desc{font-size:14px;font-weight:300;color:var(--text-dim);line-height:1.7;margin-bottom:24px}
+.service-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.service-step{display:flex;align-items:flex-start;gap:14px;font-size:13px;color:var(--text)}
+.s-num{width:22px;height:22px;border-radius:50%;background:var(--blue-glow);border:1px solid var(--border-blue);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--blue);flex-shrink:0;margin-top:1px}
+.service-card.booster .s-num{color:#3a9be8;border-color:rgba(58,155,232,.3);background:rgba(58,155,232,.08)}
+.btn-service{font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:700;padding:11px 24px;border-radius:4px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:background .15s,transform .1s;border:none}
+.btn-service:hover{transform:translateY(-1px)}.bs-blue{background:var(--blue);color:#fff}.bs-blue:hover{background:#1580e8}
+.bs-outline{background:transparent;color:var(--text-dim);border:1px solid rgba(255,255,255,.12)}.bs-outline:hover{border-color:rgba(255,255,255,.3);color:var(--text-bright)}
+
+/* ── LEADERBOARD ── */
+.lb-header{display:flex;align-items:center;justify-content:flex-end;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+.lb-filter{display:flex;gap:2px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:3px}
+.lb-filter button{font-family:'Source Sans 3',sans-serif;font-size:12px;font-weight:600;padding:5px 16px;background:transparent;border:none;border-radius:4px;color:var(--text-dim);cursor:pointer;transition:background .12s,color .12s}
+.lb-filter button.active{background:var(--blue);color:#fff}
+.lb-table{width:100%;border-collapse:collapse}
+.lb-table thead th{font-family:'Source Sans 3',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:12px 16px;border-bottom:1px solid var(--border);text-align:left}
+.lb-table thead th:first-child{text-align:center;width:52px}.lb-table thead th:last-child{text-align:right}
+.lb-row{border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .12s}.lb-row:hover{background:var(--hover)}
+.lb-row.top1{background:rgba(232,160,32,.05)}.lb-row.top2{background:rgba(154,173,190,.03)}.lb-row.top3{background:rgba(176,90,50,.03)}
+.lb-row td{padding:14px 16px;font-size:14px}
+.pos{text-align:center;font-family:'Bebas Neue',cursive;font-size:18px;color:var(--text-dim)}.pos.p1{color:var(--gold)}.pos.p2{color:#9aadbe}.pos.p3{color:#b05a32}
+.player-cell{display:flex;align-items:center;gap:12px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border-blue);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--blue);flex-shrink:0}
+.avatar.p1{background:rgba(232,160,32,.1);border-color:rgba(232,160,32,.3);color:var(--gold)}
+.pname{font-weight:600;color:var(--text-bright);font-size:14px}.pclass{font-size:11px;color:var(--text-dim);margin-top:1px}
+.lv{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:.04em;color:var(--text-bright)}
+.xp-cell{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--blue)}
+.badge{font-family:'Source Sans 3',sans-serif;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;border:1px solid;white-space:nowrap}
+.prog{min-width:130px}.prog-bar{height:4px;background:var(--surface);border-radius:2px;overflow:hidden;margin-bottom:4px}
+.prog-fill{height:100%;border-radius:2px}.prog-lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--text-dim);text-align:right}
+
+/* ── BRACKETS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:28px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tab{font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:600;padding:12px 22px;background:transparent;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--text-dim);cursor:pointer;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--text)}.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.pvp-row{display:flex;align-items:center;gap:16px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .12s;border-radius:4px;cursor:default}
+.pvp-row:hover{background:var(--hover)}.pvp-num{font-family:'Bebas Neue',cursive;font-size:18px;color:var(--text-dim);width:24px;text-align:center}
+.pvp-name{flex:1;font-weight:600;color:var(--text-bright)}.pvp-spec{font-size:12px;color:var(--text-dim);width:160px;font-style:italic}
+.pvp-rating{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:.04em;color:var(--blue)}
+
+/* ── SISTEMA XP ── */
+.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.step-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:32px 24px;position:relative;overflow:hidden;transition:border-color .15s,transform .15s}
+.step-card:hover{border-color:var(--border-blue);transform:translateY(-2px)}
+.step-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--blue);transform:scaleX(0);transform-origin:left;transition:transform .25s}
+.step-card:hover::before{transform:scaleX(1)}
+.step-big{font-family:'Bebas Neue',cursive;font-size:64px;letter-spacing:.02em;color:rgba(26,143,255,.07);line-height:1;margin-bottom:12px}
+.step-ico{font-size:26px;margin-bottom:12px}.step-title{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:.08em;color:var(--blue);margin-bottom:10px}
+.step-text{font-size:13px;font-weight:300;color:var(--text-dim);line-height:1.7}
+.xp-tables{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px}
+.xp-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.xp-head{padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border);font-family:'Source Sans 3',sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
+.xp-body{padding:4px 0}.xp-row{display:flex;justify-content:space-between;align-items:center;padding:9px 20px;border-bottom:1px solid rgba(255,255,255,.03)}.xp-row:last-child{border:none}
+.xr-rating{font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--text-dim)}
+.xr-val{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--text-bright)}.xr-val.max{color:var(--gold)}
+
+/* ── HOF ── */
+.hof-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px}
+.hof-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:32px 28px;transition:border-color .15s}
+.hof-card:hover{border-color:var(--border-blue)}.hof-card.featured{border-color:rgba(232,160,32,.25)}
+.hof-pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:3px 12px;border-radius:20px;margin-bottom:18px}
+.pill-gold{background:rgba(232,160,32,.12);color:var(--gold);border:1px solid rgba(232,160,32,.25)}.pill-blue{background:var(--blue-glow);color:var(--blue);border:1px solid var(--border-blue)}
+.hof-heading{font-family:'Bebas Neue',cursive;font-size:14px;letter-spacing:.1em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px}
+.hof-name{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:.06em;color:var(--text-bright);line-height:1}.hof-name.gold{color:var(--gold)}
+.hof-sub{font-size:12px;color:var(--text-dim);margin-top:4px}
+.hof-reward{display:flex;align-items:center;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--text-dim)}
+
+/* ── OFFICERS ── */
+.officers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.officer-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px 20px;text-align:center;transition:border-color .15s,transform .15s}
+.officer-card:hover{border-color:var(--border-blue);transform:translateY(-2px)}
+.officer-av{width:60px;height:60px;border-radius:50%;background:var(--blue-glow);border:2px solid var(--border-blue);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:.04em;color:var(--blue)}
+.officer-name{font-weight:700;font-size:15px;color:var(--text-bright)}.officer-role{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-top:5px}
+
+/* ── GUILD ── */
+.guild-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.guild-item{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;transition:border-color .12s,background .12s}
+.guild-item:hover{background:var(--hover);border-color:var(--border-blue)}
+.g-num{font-family:'Bebas Neue',cursive;font-size:18px;color:var(--text-dim);width:24px;flex-shrink:0;text-align:center}.g-num.top{color:var(--gold)}
+.g-info{flex:1;min-width:0}.g-name{font-size:13px;font-weight:600;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-rating{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--blue);margin-top:1px}.g-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── FEEDBACK ── */
+.feedback-box{max-width:600px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:40px;text-align:center}
+.fb-title{font-family:'Bebas Neue',cursive;font-size:30px;letter-spacing:.06em;color:var(--text-bright);margin-bottom:6px}
+.fb-sub{font-size:14px;font-weight:300;color:var(--text-dim);margin-bottom:24px}
+.fb-like-btn{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 20px;font-size:14px;font-weight:600;color:var(--text-dim);cursor:pointer;transition:border-color .15s,color .15s;margin-bottom:24px}
+.fb-like-btn:hover,.fb-like-btn.liked{border-color:var(--border-blue);color:var(--blue)}
+.fb-ta{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:14px;padding:14px;resize:vertical;min-height:100px;outline:none;transition:border-color .15s;margin-bottom:12px}
+.fb-ta:focus{border-color:var(--border-blue)}.fb-ta::placeholder{color:var(--text-dim)}
+
+/* ── FOOTER ── */
+footer{position:relative;z-index:1;background:var(--deep);border-top:1px solid var(--border);padding:40px 40px 28px}
+.footer-inner{max-width:1160px;margin:0 auto}.footer-top{display:flex;gap:64px;margin-bottom:36px;flex-wrap:wrap}.footer-brand{flex-shrink:0}
+.footer-logo{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:.12em;color:var(--text-bright);display:flex;align-items:center;gap:10px}
+.footer-logo-icon{width:28px;height:28px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:14px;color:#fff;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+.footer-tagline{font-size:12px;font-weight:300;color:var(--text-dim);margin-top:6px}
+.footer-col-title{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:14px}.footer-col{flex:1;min-width:120px}
+.footer-col a{display:block;font-size:13px;color:var(--text-dim);text-decoration:none;margin-bottom:8px;transition:color .15s}.footer-col a:hover{color:var(--text-bright)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:20px;border-top:1px solid var(--border);flex-wrap:wrap}
+.footer-copy{font-size:12px;color:var(--text-dim)}.footer-discord{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--blue);text-decoration:none;transition:color .15s}.footer-discord:hover{color:#5865f2}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr;gap:40px}
+  .hof-grid{grid-template-columns:1fr}
+  .xp-tables{grid-template-columns:1fr}
+  .steps-grid{grid-template-columns:1fr 1fr}
+  .services-grid{grid-template-columns:1fr}
+  .footer-top{gap:32px}
+  .page-banner{padding:104px 20px 40px}
+  .container{padding:0 20px}
+}
+@media(max-width:540px){
+  .steps-grid{grid-template-columns:1fr}
+  nav{padding:0 16px}
+  .season-bar{gap:12px;font-size:11px;padding:7px 16px}
+  .hero-inner{padding:40px 20px 60px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <a href="#home" class="nav-logo">
+    <div class="nav-logo-icon">E</div>
+    <span class="nav-logo-text">EXILIUM</span>
+  </a>
+  <div class="nav-links">
+    <a href="#home"       data-route="home"       class="active">Inicio</a>
+    <a href="#salon"      data-route="salon"              >Salón de la Fama</a>
+    <a href="#leaderboard" data-route="leaderboard"       >Leaderboard</a>
+    <a href="#brackets"  data-route="brackets"            >Brackets</a>
+    <a href="#sistema-xp" data-route="sistema-xp"         >Sistema XP</a>
+    <a href="#oficiales" data-route="oficiales"           >Oficiales</a>
+    <a href="#guild"     data-route="guild"               >Guild Top 20</a>
+  </div>
+  <a href="login.html" class="nav-cta">⚔ Entrar</a>
+</nav>
+
+<!-- ══ SEASON BAR ══ -->
+<div class="season-bar">
+  <span class="season-live">Temporada I Activa</span>
+  <span class="s-sep">|</span>
+  <span>La Sombra de Midnight</span>
+  <span class="s-sep">|</span>
+  <span>Realm: Quel'Thalas</span>
+</div>
+
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║  PAGE: HOME                         ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div class="page" id="page-home">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-tag">⚔ Guild PvP · World of Warcraft</div>
+        <h1 class="hero-title">EXILIUM<br><span class="line2">BATTLE</span><br>PASS</h1>
+        <p class="hero-desc">Sistema de progresión competitivo para Quel'Thalas. Compite en arenas y campos de batalla, acumula XP por rating y desbloquea rangos hasta alcanzar el título de <strong style="color:var(--gold)">Exarca</strong>.</p>
+        <div class="hero-btns">
+          <a href="login.html" class="btn-primary">⚔ Registrarse gratis</a>
+          <a href="#sistema-xp" class="btn-secondary">¿Cómo funciona? →</a>
+          <a href="booster-apply.html" class="btn-secondary">Aplicar como Booster</a>
+        </div>
+        <div class="hero-badges">
+          <div><div class="hero-badge-val">40</div><div class="hero-badge-lbl">Niveles</div></div>
+          <div><div class="hero-badge-val">5</div><div class="hero-badge-lbl">Brackets</div></div>
+          <div><div class="hero-badge-val">7</div><div class="hero-badge-lbl">Rangos</div></div>
+          <div><div class="hero-badge-val">24K</div><div class="hero-badge-lbl">XP Base</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="rank-panel">
+          <div class="rank-panel-head">Jerarquía de Rangos · T1</div>
+          <div class="rank-list" id="rank-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="section-pad-sm" style="background:var(--deep);position:relative;z-index:1">
+    <div class="container">
+      <div class="eyebrow" style="margin-bottom:24px">Servicios de la Guild</div>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-tag tag-buy">👤 Para Compradores</div>
+          <div class="service-title">Compra un Carry</div>
+          <p class="service-desc">Sube tu rating, obtén equipo Elite o títulos de Gladiador con los mejores jugadores de Exilium.</p>
+          <div class="service-steps">
+            <div class="service-step"><div class="s-num">1</div>Regístrate gratis en la plataforma</div>
+            <div class="service-step"><div class="s-num">2</div>Elige el servicio que necesitas</div>
+            <div class="service-step"><div class="s-num">3</div>Un booster te contacta directamente</div>
+          </div>
+          <a href="login.html" class="btn-service bs-blue">⚔ Registrarse / Iniciar Sesión</a>
+        </div>
+        <div class="service-card booster">
+          <div class="service-tag tag-boost">⚔ Para Boosters</div>
+          <div class="service-title">Únete como Booster</div>
+          <p class="service-desc">¿Tienes 1400+ rating? Gana oro real haciendo carries a miembros de la comunidad.</p>
+          <div class="service-steps">
+            <div class="service-step"><div class="s-num">1</div>Envía tu aplicación al equipo</div>
+            <div class="service-step"><div class="s-num">2</div>Período de trial de 2 semanas</div>
+            <div class="service-step"><div class="s-num">3</div>Acepta pedidos y cobra tu parte</div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="booster-apply.html" class="btn-service bs-blue">📄 Aplicar como Booster</a>
+            <a href="booster-rules.html" class="btn-service bs-outline">Ver Reglamento →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK (home-only) -->
+  <section class="section-pad" style="background:var(--void);position:relative;z-index:1">
+    <div class="container">
+      <div class="feedback-box">
+        <div class="fb-title">Feedback de la Comunidad</div>
+        <p class="fb-sub">¿Qué piensas de Exilium? Déjanos tu opinión.</p>
+        <button class="fb-like-btn" id="like-btn" onclick="toggleLike()">
+          <span id="like-ico">👍</span> <span id="like-cnt">0</span> likes
+        </button>
+        <textarea class="fb-ta" placeholder="Escribe tu comentario..." maxlength="300"></textarea>
+        <a href="#" class="btn-primary" style="width:100%;justify-content:center;border-radius:8px;text-decoration:none">💬 Enviar comentario</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║  PAGE: SALÓN DE LA FAMA             ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div class="page" id="page-salon">
+  <div class="page-banner">
+    <div class="page-banner-inner">
+      <div class="page-breadcrumb">
+        <a href="#home">Inicio</a><span class="bc-sep">›</span><span>Salón de la Fama</span>
+      </div>
+      <div class="eyebrow">Reconocimientos</div>
+      <div class="pb-title">Salón de la Fama</div>
+      <p class="pb-sub">Los jugadores más destacados de Exilium. Reconocimientos por rendimiento PvP.</p>
+    </div>
+  </div>
+  <section class="section-pad" style="background:var(--void);position:relative;z-index:1">
+    <div class="container">
+      <div class="hof-grid">
+        <div class="hof-card featured">
+          <span class="hof-pill pill-gold">★ Jugador Destacado</span>
+          <div class="hof-heading">Jugador de la Semana</div>
+          <div class="hof-name gold">— Vacante —</div>
+          <div class="hof-sub">Semana actual · Sin reclamar</div>
+          <div class="hof-reward"><span>🏅</span><span>Oro de guild + Título temporal de honor</span></div>
+        </div>
+        <div class="hof-card">
+          <span class="hof-pill pill-blue">⚔ Arenas</span>
+          <div class="hof-heading">Mejor Rating del Mes</div>
+          <div class="hof-name">— Vacante —</div>
+          <div class="hof-sub">Rating más alto en cualquier bracket</div>
+          <div class="hof-reward"><span>🏆</span><span>Máximo rendimiento global</span></div>
+        </div>
+        <div class="hof-card">
+          <span class="hof-pill pill-gold">💰 Premio</span>
+          <div class="hof-heading">Recompensa de Oro</div>
+          <div class="hof-name">Por definir</div>
+          <div class="hof-sub">Premio mensual para el destacado</div>
+          <div class="hof-reward"><span>💛</span><span>Compite y sube tu rating</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║  PAGE: LEADERBOARD                  ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div class="page" id="page-leaderboard">
+  <div class="page-banner">
+    <div class="page-banner-inner">
+      <div class="page-breadcrumb">
+        <a href="#home">Inicio</a><span class="bc-sep">›</span><span>Leaderboard</span>
+      </div>
+      <div class="eyebrow">Clasificación</div>
+      <div class="pb-title">Leaderboard de XP</div>
+      <p class="pb-sub">Los jugadores con mayor progresión en el Battle Pass de la temporada actual.</p>
+    </div>
+  </div>
+  <section class="section-pad" style="background:var(--void);position:relative;z-index:1">
+    <div class="container">
+      <div class="lb-header">
+        <div class="lb-filter">
+          <button class="active">Todos</button>
+          <button>Esta semana</button>
+          <button>Este mes</button>
+        </div>
+      </div>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Jugador</th><th>Nivel</th><th>XP Total</th><th>Rango</th>
+            <th style="text-align:right">Progreso</th>
+          </tr>
+        </thead>
+        <tbody id="lb-body"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║  PAGE: BRACKETS                     ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div class="page" id="page-brackets">
+  <div class="page-banner">
+    <div class="page-banner-inner">
+      <div class="page-breadcrumb">
+        <a href="#home">Inicio</a><span class="bc-sep">›</span><span>Brackets PvP</span>
+      </div>
+      <div class="eyebrow">PvP Competitivo</div>
+      <div class="pb-title">Top por Bracket</div>
+      <p class="pb-sub">Rankings por modalidad: Solo Shuffle, 2v2, 3v3, RBG y Blitz Battleground.</p>
+    </div>
+  </div>
+  <section class="section-pad" style="background:var(--void);position:relative;z-index:1">
+    <div class="container">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab(this,'shuffle')">Solo Shuffle</button>
+        <button class="tab" onclick="switchTab(this,'2v2')">2v2</button>
+        <button class="tab" onclick="switchTab(this,'3v3')">3v3</button>
+        <button class="tab" onclick="switchTab(this,'rbg')">RBG</button>
+        <button class="tab" onclick="switchTab(this,'blitz')">Blitz</button>
+      </div>
+      <div id="tab-shuffle" class="tab-pane active"><div id="pvp-shuffle"></div></div>
+      <div id="tab-2v2"     class="tab-pane"><div id="pvp-2v2"></div></div>
+      <div id="tab-3v3"     class="tab-pane"><div id="pvp-3v3"></div></div>
+      <div id="tab-rbg"     class="tab-pane"><div id="pvp-rbg"></div></div>
+      <div id="tab-blitz"   class="tab-pane"><div id="pvp-blitz"></div></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║  PAGE: SISTEMA XP                   ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div class="page" id="page-sistema-xp">
+  <div class="page-banner">
+    <div class="page-banner-inner">
+      <div class="page-breadcrumb">
+        <a href="#home">Inicio</a><span class="bc-sep">›</span><span>Sistema XP</span>
+      </div>
+      <div class="eyebrow">Sistema de Progresión</div>
+      <div class="pb-title">¿Cómo funciona?</div>
+      <p class="pb-sub">Tu progreso se calcula con picos de rating por bracket, convertidos a XP con tablas fijas.</p>
+    </div>
+  </div>
+  <section class="section-pad" style="background:var(--void);position:relative;z-index:1">
+    <div class="container">
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-big">01</div><div class="step-ico">⚔️</div>
+          <div class="step-title">Juega PvP</div>
+          <p class="step-text">Participa en Solo Shuffle, 2v2, 3v3, RBG o Blitz. Se registra tu rating máximo.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-big">02</div><div class="step-ico">📊</div>
+          <div class="step-title">Rating → XP</div>
+          <p class="step-text">Tablas oficiales: estándar hasta 4,550 XP. 3v3 hasta 5,800 XP como bracket premium.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-big">03</div><div class="step-ico">🏆</div>
+          <div class="step-title">Sube de Nivel</div>
+          <p class="step-text">XP total = RS + 2v2 + 3v3 + RBG + Blitz + bonus manual. Define tu nivel 0–40 y rango.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-big">04</div><div class="step-ico">🎁</div>
+          <div class="step-title">Reclama Premios</div>
+          <p class="step-text">Cada nivel otorga recompensa: oro, gemas, juguetes y heliotropos. Nivel 40 = Exarca.</p>
+        </div>
+      </div>
+      <div class="xp-tables">
+        <div class="xp-card">
+          <div class="xp-head">RS · 2v2 · RBG · Blitz</div>
+          <div class="xp-body">
+            <div class="xp-row"><span class="xr-rating">1,000</span><span class="xr-val">50 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">1,400</span><span class="xr-val">250 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">1,600</span><span class="xr-val">550 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">1,800</span><span class="xr-val">1,050 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">2,100</span><span class="xr-val">2,550 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">2,400</span><span class="xr-val max">4,550 XP · Máx</span></div>
+          </div>
+        </div>
+        <div class="xp-card">
+          <div class="xp-head">3v3 — Bracket Premium</div>
+          <div class="xp-body">
+            <div class="xp-row"><span class="xr-rating">1,000</span><span class="xr-val">50 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">1,400</span><span class="xr-val">350 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">1,800</span><span class="xr-val">1,300 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">2,000</span><span class="xr-val">2,300 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">2,100</span><span class="xr-val">3,300 XP</span></div>
+            <div class="xp-row"><span class="xr-rating">2,400</span><span class="xr-val max">5,800 XP · Máx</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║  PAGE: OFICIALES                    ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div class="page" id="page-oficiales">
+  <div class="page-banner">
+    <div class="page-banner-inner">
+      <div class="page-breadcrumb">
+        <a href="#home">Inicio</a><span class="bc-sep">›</span><span>Oficiales</span>
+      </div>
+      <div class="eyebrow">Liderazgo</div>
+      <div class="pb-title">Oficiales de la Guild</div>
+      <p class="pb-sub">El equipo que gestiona Exilium. Contacta a un oficial para cualquier duda.</p>
+    </div>
+  </div>
+  <section class="section-pad" style="background:var(--void);position:relative;z-index:1">
+    <div class="container">
+      <div class="officers-grid" id="officers-grid"></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║  PAGE: GUILD TOP 20                 ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div class="page" id="page-guild">
+  <div class="page-banner">
+    <div class="page-banner-inner">
+      <div class="page-breadcrumb">
+        <a href="#home">Inicio</a><span class="bc-sep">›</span><span>Guild Top 20</span>
+      </div>
+      <div class="eyebrow">Quel'Thalas</div>
+      <div class="pb-title">Guild Top 20</div>
+      <p class="pb-sub">Los 20 jugadores con mayor rating PvP de la hermandad.</p>
+    </div>
+  </div>
+  <section class="section-pad" style="background:var(--void);position:relative;z-index:1">
+    <div class="container">
+      <div class="guild-grid" id="guild-grid"></div>
+    </div>
+  </section>
+</div>
+
+
+<!-- ══ FOOTER (siempre visible) ══ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo"><div class="footer-logo-icon">E</div>EXILIUM</div>
+        <div class="footer-tagline">Guild PvP · Quel'Thalas · World of Warcraft</div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Navegación</div>
+        <a href="#home">Inicio</a>
+        <a href="#salon">Salón de la Fama</a>
+        <a href="#leaderboard">Leaderboard</a>
+        <a href="#brackets">Brackets</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Sistema</div>
+        <a href="#sistema-xp">Sistema XP</a>
+        <a href="#oficiales">Oficiales</a>
+        <a href="#guild">Guild Top 20</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Servicios</div>
+        <a href="login.html">Comprar Carry</a>
+        <a href="booster-apply.html">Ser Booster</a>
+        <a href="booster-rules.html">Reglamento</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Comunidad</div>
+        <a href="https://discord.gg/gdekyTrv">Discord</a>
+        <a href="https://ko-fi.com/mitzukyhs">Ko-fi ☕</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 Exilium Guild · Creado por <strong>Mitzukyhs</strong> · No afiliado con Blizzard Entertainment</div>
+      <a href="https://discord.gg/gdekyTrv" class="footer-discord">💬 Únete al Discord</a>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+/* ═══════════════════════════════════════════════
+   SPA ROUTER — hash routing sin recarga de página
+   URL cambia → hashchange → muestra/oculta páginas
+   ═══════════════════════════════════════════════ */
+
+const ROUTES = {
+  '':            'page-home',
+  'home':        'page-home',
+  'salon':       'page-salon',
+  'leaderboard': 'page-leaderboard',
+  'brackets':    'page-brackets',
+  'sistema-xp':  'page-sistema-xp',
+  'oficiales':   'page-oficiales',
+  'guild':       'page-guild'
+};
+
+const PAGE_TITLES = {
+  'page-home':        'Exilium — Battle Pass · Temporada I',
+  'page-salon':       'Salón de la Fama · Exilium',
+  'page-leaderboard': 'Leaderboard · Exilium',
+  'page-brackets':    'Brackets PvP · Exilium',
+  'page-sistema-xp':  'Sistema XP · Exilium',
+  'page-oficiales':   'Oficiales · Exilium',
+  'page-guild':       'Guild Top 20 · Exilium'
+};
+
+function navigate() {
+  const hash   = (window.location.hash || '').replace('#', '').trim();
+  const pageId = ROUTES.hasOwnProperty(hash) ? ROUTES[hash] : 'page-home';
+
+  /* — ocultar todas las páginas — */
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  /* — mostrar la página destino con animación — */
+  const target = document.getElementById(pageId);
+  if (target) {
+    target.classList.add('active');
+  }
+
+  /* — actualizar estado activo en el nav — */
+  document.querySelectorAll('.nav-links a[data-route]').forEach(a => {
+    const r = a.dataset.route;
+    const isActive = r === hash || (hash === '' && r === 'home');
+    a.classList.toggle('active', isActive);
+  });
+
+  /* — actualizar título del documento — */
+  document.title = PAGE_TITLES[pageId] || 'Exilium';
+
+  /* — scroll al inicio instantáneo — */
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+/* escucha cambios de hash (botón atrás/adelante del navegador también funciona) */
+window.addEventListener('hashchange', navigate);
+
+/* carga inicial */
+navigate();
+
+
+/* ═══════════════════════════════════════════════
+   DATOS & LÓGICA
+   ═══════════════════════════════════════════════ */
+
+const RANKS = [
+  { name:'Exarca',           color:'#e8a020', min:40, max:40 },
+  { name:'Profeta',          color:'#c88b12', min:35, max:39 },
+  { name:'Hereje',           color:'#c43a3a', min:30, max:34 },
+  { name:'Rompejuramentos',  color:'#2ea88a', min:23, max:29 },
+  { name:'Apóstata',         color:'#3a9be8', min:18, max:22 },
+  { name:'Sombra',           color:'#9b72c2', min:12, max:17 },
+  { name:'Penitente',        color:'#7fa8c4', min:0,  max:11 }
+];
+const REWARDS = {
+  'Exarca':          '8 Heliotropos · Inmortalidad',
+  'Profeta':         'Juguetes · 5,000 de Oro',
+  'Hereje':          'Juguetes · 4,000 de Oro',
+  'Rompejuramentos': '2 Gemas + Heliotropos',
+  'Apóstata':        'Gemas de Stats · Oro',
+  'Sombra':          'Gemas de Stats · Oro',
+  'Penitente':       'Paquete inicial · Bodas Nv 3'
+};
+function getRank(lvl) { return RANKS.find(r => lvl >= r.min && lvl <= r.max) || RANKS[6]; }
+
+/* — rank list en el hero — */
+const rl = document.getElementById('rank-list');
+RANKS.forEach(r => {
+  rl.innerHTML += `<div class="rank-item">
+    <div class="rank-dot" style="background:${r.color}"></div>
+    <div style="flex:1">
+      <div class="rank-label" style="color:${r.color}">${r.name}</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:1px">${REWARDS[r.name]}</div>
+    </div>
+    <div class="rank-levels">Nv ${r.min === r.max ? r.min : r.min + '–' + r.max}</div>
+  </div>`;
+});
+
+/* — leaderboard — */
+const PLAYERS = [
+  { n:'Mitzukyhs', c:'Mago Fuego',     lvl:40, xp:24000 },
+  { n:'Vaelthar',  c:'DH Havoc',       lvl:35, xp:19800 },
+  { n:'Syrthanel', c:'DK Frost',       lvl:30, xp:16200 },
+  { n:'Khorrath',  c:'Pala Retri',     lvl:27, xp:13450 },
+  { n:'Erevia',    c:'Druida Resto',   lvl:22, xp:10100 },
+  { n:'Drothgar',  c:'Guerrero Arms',  lvl:18, xp:7600  },
+  { n:'Nyxara',    c:'Ladrón Sub',     lvl:14, xp:5200  },
+  { n:'Zuldrak',   c:'Chamán Resto',   lvl:10, xp:3100  }
+];
+const tbody = document.getElementById('lb-body');
+PLAYERS.forEach((p, i) => {
+  const rk  = getRank(p.lvl);
+  const pct = Math.round(p.lvl / 40 * 100);
+  const pc  = i === 0 ? 'p1' : i === 1 ? 'p2' : i === 2 ? 'p3' : '';
+  const rc  = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+  tbody.innerHTML += `<tr class="lb-row ${rc}">
+    <td><div class="pos ${pc}">${i + 1}</div></td>
+    <td><div class="player-cell">
+      <div class="avatar ${pc}">${p.n.slice(0,2)}</div>
+      <div><div class="pname">${p.n}</div><div class="pclass">${p.c}</div></div>
+    </div></td>
+    <td><span class="lv">${p.lvl}</span></td>
+    <td><span class="xp-cell">${p.xp.toLocaleString('es')}</span></td>
+    <td><span class="badge" style="color:${rk.color};border-color:${rk.color};background:${rk.color}18">${rk.name}</span></td>
+    <td><div class="prog">
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${rk.color}"></div></div>
+      <div class="prog-lbl">${pct}%</div>
+    </div></td>
+  </tr>`;
+});
+
+/* — brackets PvP — */
+const PVP = {
+  shuffle: [
+    { n:'Mitzukyhs', s:'Mago Fuego',    r:2210 },
+    { n:'Vaelthar',  s:'DH Havoc',      r:2180 },
+    { n:'Khorrath',  s:'Pala Retri',    r:2050 },
+    { n:'Syrthanel', s:'DK Frost',      r:1980 },
+    { n:'Erevia',    s:'Druida Feral',  r:1850 }
+  ],
+  '2v2': [
+    { n:'Vaelthar',  s:'DH Havoc',      r:2350 },
+    { n:'Mitzukyhs', s:'Mago Arcano',   r:2310 },
+    { n:'Syrthanel', s:'DK Frost',      r:2150 },
+    { n:'Nyxara',    s:'Ladrón Sub',    r:2020 },
+    { n:'Drothgar',  s:'Guerrero Arms', r:1920 }
+  ],
+  '3v3': [
+    { n:'Mitzukyhs', s:'Mago Fuego',    r:2480 },
+    { n:'Syrthanel', s:'DK Frost',      r:2400 },
+    { n:'Vaelthar',  s:'DH Havoc',      r:2330 },
+    { n:'Khorrath',  s:'Pala Retri',    r:2200 },
+    { n:'Erevia',    s:'Druida Resto',  r:2100 }
+  ],
+  rbg: [
+    { n:'Mitzukyhs', s:'Mago Fuego',    r:2100 },
+    { n:'Vaelthar',  s:'DH Havoc',      r:2050 },
+    { n:'Drothgar',  s:'Guerrero',      r:1980 },
+    { n:'Zuldrak',   s:'Chamán Resto',  r:1900 },
+    { n:'Erevia',    s:'Druida Bala',   r:1850 }
+  ],
+  blitz: [
+    { n:'Syrthanel', s:'DK Frost',      r:2050 },
+    { n:'Mitzukyhs', s:'Mago Fuego',    r:2020 },
+    { n:'Khorrath',  s:'Pala Retri',    r:1950 },
+    { n:'Vaelthar',  s:'DH Havoc',      r:1900 },
+    { n:'Nyxara',    s:'Ladrón Sub',    r:1820 }
+  ]
+};
+Object.entries(PVP).forEach(([k, rows]) => {
+  const el = document.getElementById('pvp-' + k);
+  if (!el) return;
+  el.innerHTML = rows.map((r, i) =>
+    `<div class="pvp-row">
+      <div class="pvp-num">${i + 1}</div>
+      <div class="pvp-name">${r.n}</div>
+      <div class="pvp-spec">${r.s}</div>
+      <div class="pvp-rating">${r.r}</div>
+    </div>`
+  ).join('');
+});
+
+function switchTab(btn, key) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + key).classList.add('active');
+}
+
+/* — oficiales — */
+const OFFICERS = [
+  { n:'Mitzukyhs', r:'Guild Master'  },
+  { n:'Vaelthar',  r:'Oficial PvP'   },
+  { n:'Syrthanel', r:'Reclutador'    },
+  { n:'Erevia',    r:'Oficial Carry' }
+];
+const og = document.getElementById('officers-grid');
+OFFICERS.forEach(o => {
+  og.innerHTML += `<div class="officer-card">
+    <div class="officer-av">${o.n.slice(0,2)}</div>
+    <div class="officer-name">${o.n}</div>
+    <div class="officer-role">${o.r}</div>
+  </div>`;
+});
+
+/* — guild top 20 — */
+const GUILD = [
+  { n:'Mitzukyhs', r:2480 }, { n:'Syrthanel', r:2400 }, { n:'Vaelthar',  r:2350 },
+  { n:'Khorrath',  r:2200 }, { n:'Erevia',    r:2100 }, { n:'Drothgar',  r:1980 },
+  { n:'Nyxara',    r:1920 }, { n:'Zuldrak',   r:1900 }, { n:'Thelnir',   r:1880 },
+  { n:'Aravel',    r:1850 }, { n:'Quelmar',   r:1820 }, { n:'Virethan',  r:1800 },
+  { n:'Sorvath',   r:1780 }, { n:'Draxen',    r:1760 }, { n:'Lyssara',   r:1740 },
+  { n:'Ommeth',    r:1720 }, { n:'Ferrath',   r:1700 }, { n:'Branar',    r:1680 },
+  { n:'Tzarvel',   r:1660 }, { n:'Xanthel',   r:1640 }
+].sort((a, b) => b.r - a.r);
+
+const gg = document.getElementById('guild-grid');
+GUILD.forEach((p, i) => {
+  const dc = i < 3 ? '#e8a020' : i < 10 ? '#2ea88a' : 'var(--text-dim)';
+  gg.innerHTML += `<div class="guild-item">
+    <div class="g-num ${i < 3 ? 'top' : ''}">${i + 1}</div>
+    <div class="g-info"><div class="g-name">${p.n}</div><div class="g-rating">${p.r}</div></div>
+    <div class="g-dot" style="background:${dc}"></div>
+  </div>`;
+});
+
+/* — feedback — */
+let liked = false, cnt = 0;
+function toggleLike() {
+  liked = !liked;
+  cnt += liked ? 1 : -1;
+  const btn = document.getElementById('like-btn');
+  btn.classList.toggle('liked', liked);
+  document.getElementById('like-ico').textContent = liked ? '❤️' : '👍';
+  document.getElementById('like-cnt').textContent = cnt;
+}
+</script>
+</body>
+</html>

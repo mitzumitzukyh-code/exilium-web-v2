@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-adsense-account" content="ca-pub-8194792499117380" />
+  <title>Exilium Casino - Preview PandaCoins</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #071018;
+      --bg-1: #0d1e2b;
+      --bg-2: #142f40;
+      --card: rgba(13, 31, 42, 0.76);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #edf8ff;
+      --muted: #9cb4c3;
+      --gold: #f8b63c;
+      --gold-2: #ffd88b;
+      --mint: #51f0b7;
+      --danger: #ff6e5f;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.36);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--text);
+      font-family: "Manrope", sans-serif;
+      background:
+        radial-gradient(1100px 500px at 12% -10%, #235574 0%, transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, #132f45 0%, transparent 65%),
+        linear-gradient(140deg, var(--bg-0), var(--bg-1) 55%, var(--bg-2));
+      overflow-x: hidden;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 3px 3px;
+      opacity: 0.07;
+      z-index: 0;
+    }
+
+    .orb {
+      position: fixed;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      filter: blur(70px);
+      z-index: 0;
+      pointer-events: none;
+      animation: pulse 8s ease-in-out infinite;
+    }
+
+    .orb-a { background: rgba(248, 182, 60, 0.18); top: -80px; right: -100px; }
+    .orb-b { background: rgba(81, 240, 183, 0.15); bottom: -120px; left: -80px; animation-delay: -3s; }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(1150px, 92vw);
+      margin: 28px auto 40px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      padding: 24px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      background: linear-gradient(160deg, #ffdf94, #f6b32f);
+      color: #41290a;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-family: "Cinzel", serif;
+      margin: 0;
+      letter-spacing: 0.6px;
+      font-size: clamp(1.35rem, 3vw, 2rem);
+    }
+
+    .subtitle {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .wallet {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(248, 182, 60, 0.35);
+      background: rgba(248, 182, 60, 0.1);
+      font-weight: 800;
+    }
+
+    .wallet .coin {
+      font-size: 20px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .metric span {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 6px;
+      font-size: clamp(1rem, 2vw, 1.3rem);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .left,
+    .right {
+      display: grid;
+      gap: 18px;
+    }
+
+    .roulette {
+      padding: 20px;
+    }
+
+    .roulette h2,
+    .games h2,
+    .history h2 {
+      font-family: "Cinzel", serif;
+      margin: 0 0 12px;
+      font-size: 1.2rem;
+      letter-spacing: 0.4px;
+    }
+
+    .wheel-wrap {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: rgba(6, 15, 22, 0.55);
+    }
+
+    .pointer {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 18px solid var(--gold);
+      filter: drop-shadow(0 0 8px rgba(248, 182, 60, 0.45));
+    }
+
+    .wheel {
+      width: min(360px, 72vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      margin: 8px auto 14px;
+      border: 8px solid rgba(255, 216, 139, 0.35);
+      box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.35), 0 0 30px rgba(248, 182, 60, 0.25);
+      background:
+        conic-gradient(
+          #f8b63c 0deg 45deg,
+          #1f4a62 45deg 90deg,
+          #51f0b7 90deg 135deg,
+          #214f68 135deg 180deg,
+          #f8b63c 180deg 225deg,
+          #1f4a62 225deg 270deg,
+          #51f0b7 270deg 315deg,
+          #214f68 315deg 360deg
+        );
+      transition: transform 4.6s cubic-bezier(0.1, 0.75, 0.15, 1);
+    }
+
+    .bet-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip,
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .chip { padding: 9px 10px; }
+    .chip.active {
+      border-color: rgba(248, 182, 60, 0.6);
+      background: rgba(248, 182, 60, 0.18);
+    }
+
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 11px 16px;
+      border-radius: 12px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(160deg, #ffd88b, #f8b63c 58%, #cd8b12);
+      color: #3f2b0b;
+      border: none;
+      font-weight: 800;
+    }
+
+    .btn:hover,
+    .chip:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .result {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .games,
+    .history {
+      padding: 18px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .card {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.98rem;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .entry {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .plus { color: var(--mint); font-weight: 800; }
+    .minus { color: var(--danger); font-weight: 800; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.75; }
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+
+  <main class="shell">
+    <section class="panel hero">
+      <div class="top">
+        <div class="brand">
+          <div class="brand-badge">🐼</div>
+          <div>
+            <h1>Exilium Casino</h1>
+            <p class="subtitle">Preview visual con economia PandaCoins</p>
+          </div>
+        </div>
+        <div class="wallet" aria-label="Saldo actual de PandaCoins">
+          <span class="coin">🪙</span>
+          <span id="balance">12,500 PandaCoins</span>
+        </div>
+      </div>
+
+      <div class="metrics">
+        <article class="metric">
+          <span>Tu rango casino</span>
+          <strong>Legado Dorado</strong>
+        </article>
+        <article class="metric">
+          <span>Racha actual</span>
+          <strong id="streak">3 victorias</strong>
+        </article>
+        <article class="metric">
+          <span>Jackpot guild</span>
+          <strong>48,900 PandaCoins</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="left">
+        <article class="panel roulette">
+          <h2>Ruleta de PandaCoins</h2>
+          <div class="wheel-wrap">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel"></div>
+
+            <div class="bet-row" role="group" aria-label="Seleccion de apuesta">
+              <button class="chip active" data-bet="100">100</button>
+              <button class="chip" data-bet="250">250</button>
+              <button class="chip" data-bet="500">500</button>
+              <button class="chip" data-bet="1000">1000</button>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-primary" id="spinBtn">Girar Ruleta</button>
+              <button class="btn" id="dailyBtn">Reclamar bono diario +300</button>
+            </div>
+
+            <p class="result" id="result">Elige una apuesta y gira para probar resultados.</p>
+          </div>
+        </article>
+
+        <article class="panel games">
+          <h2>Otros Juegos del Casino</h2>
+          <div class="cards">
+            <div class="card">
+              <strong>Duelo de Dados</strong>
+              <p>Reto 1v1 con apuesta limitada. El ganador se lleva el bote menos comision guild.</p>
+            </div>
+            <div class="card">
+              <strong>Cofre Misterioso</strong>
+              <p>Abre cofres por rareza con probabilidades visibles y recompensas cosmeticas.</p>
+            </div>
+            <div class="card">
+              <strong>Jackpot Semanal</strong>
+              <p>Participa con tickets obtenidos en PvP. Sorteo automatico cada domingo.</p>
+            </div>
+            <div class="card">
+              <strong>Racha de Gloria</strong>
+              <p>Multiplicador por victorias consecutivas con premio extra en PandaCoins.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <aside class="right">
+        <article class="panel history">
+          <h2>Historial Reciente</h2>
+          <div id="historyList">
+            <div class="entry"><span>Bono diario</span><span class="plus">+300</span></div>
+            <div class="entry"><span>Ruleta - Apuesta 250</span><span class="minus">-250</span></div>
+            <div class="entry"><span>Ruleta - Premio x2</span><span class="plus">+500</span></div>
+          </div>
+        </article>
+
+        <article class="panel history">
+          <h2>Reglas Rápidas</h2>
+          <div class="entry"><span>Apuesta minima</span><span>100</span></div>
+          <div class="entry"><span>Apuesta maxima</span><span>1,000</span></div>
+          <div class="entry"><span>Retorno promedio</span><span>~92%</span></div>
+          <div class="entry"><span>Limite diario</span><span>12 giros</span></div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spinBtn');
+    const dailyBtn = document.getElementById('dailyBtn');
+    const result = document.getElementById('result');
+    const balanceEl = document.getElementById('balance');
+    const historyList = document.getElementById('historyList');
+    const streakEl = document.getElementById('streak');
+    const chips = [...document.querySelectorAll('.chip')];
+
+    let balance = 12500;
+    let selectedBet = 100;
+    let spinning = false;
+    let streak = 3;
+    let rotation = 0;
+
+    const outcomes = [
+      { label: 'Sin premio', mult: 0, chance: 0.34 },
+      { label: 'x1', mult: 1, chance: 0.28 },
+      { label: 'x2', mult: 2, chance: 0.2 },
+      { label: 'x3', mult: 3, chance: 0.11 },
+      { label: 'x5', mult: 5, chance: 0.07 }
+    ];
+
+    function fmt(num) {
+      return new Intl.NumberFormat('es-ES').format(num);
+    }
+
+    function updateBalance() {
+      balanceEl.textContent = `${fmt(balance)} PandaCoins`;
+    }
+
+    function addHistory(text, value) {
+      const row = document.createElement('div');
+      row.className = 'entry';
+      const cls = value >= 0 ? 'plus' : 'minus';
+      const sign = value >= 0 ? '+' : '';
+      row.innerHTML = `<span>${text}</span><span class="${cls}">${sign}${fmt(value)}</span>`;
+      historyList.prepend(row);
+      while (historyList.children.length > 6) {
+        historyList.removeChild(historyList.lastChild);
+      }
+    }
+
+    function randomOutcome() {
+      const r = Math.random();
+      let acc = 0;
+      for (const o of outcomes) {
+        acc += o.chance;
+        if (r <= acc) return o;
+      }
+      return outcomes[0];
+    }
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        chips.forEach((c) => c.classList.remove('active'));
+        chip.classList.add('active');
+        selectedBet = Number(chip.dataset.bet);
+        result.textContent = `Apuesta seleccionada: ${fmt(selectedBet)} PandaCoins.`;
+      });
+    });
+
+    spinBtn.addEventListener('click', () => {
+      if (spinning) return;
+      if (balance < selectedBet) {
+        result.textContent = 'No tienes suficientes PandaCoins para esa apuesta.';
+        return;
+      }
+
+      spinning = true;
+      balance -= selectedBet;
+      updateBalance();
+      addHistory(`Ruleta - Apuesta ${fmt(selectedBet)}`, -selectedBet);
+
+      const extraTurns = 1440 + Math.floor(Math.random() * 720);
+      rotation += extraTurns;
+      wheel.style.transform = `rotate(${rotation}deg)`;
+
+      const outcome = randomOutcome();
+      setTimeout(() => {
+        const reward = selectedBet * outcome.mult;
+        balance += reward;
+        updateBalance();
+
+        if (reward > 0) {
+          streak += 1;
+          streakEl.textContent = `${streak} victorias`;
+          addHistory(`Ruleta - Premio ${outcome.label}`, reward);
+          result.textContent = `Ganaste ${fmt(reward)} PandaCoins (${outcome.label}).`;
+        } else {
+          streak = 0;
+          streakEl.textContent = '0 victorias';
+          result.textContent = 'Sin premio esta vez. Prueba otra ronda.';
+        }
+
+        spinning = false;
+      }, 4650);
+    });
+
+    dailyBtn.addEventListener('click', () => {
+      balance += 300;
+      updateBalance();
+      addHistory('Bono diario', 300);
+      result.textContent = 'Bono diario reclamado: +300 PandaCoins.';
+      dailyBtn.disabled = true;
+      dailyBtn.style.opacity = '0.6';
+      dailyBtn.style.cursor = 'not-allowed';
+    });
+
+    updateBalance();
+  </script>
+</body>
+</html>

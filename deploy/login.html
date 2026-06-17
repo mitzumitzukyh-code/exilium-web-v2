@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-8194792499117380">
+    <title>Exilium Boosting · Portal del Cliente</title>
+    <meta name="description" content="Inicia sesión o regístrate para acceder al portal de carry services de Exilium.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://exilium-battlepass.pages.dev/login.html">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="css/portal.css">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg-color); }
+        .login-bg {
+            position: fixed; inset: 0;
+            background: url('assets/boosting/banner.webp') center/cover no-repeat;
+            filter: brightness(0.15);
+            z-index: 0;
+        }
+        .login-wrapper {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 440px;
+            padding: 1rem;
+        }
+        .login-card {
+            background: rgba(14,14,22,0.95);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2rem;
+            backdrop-filter: blur(16px);
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 1.75rem;
+        }
+        .login-logo img { height: 48px; margin-bottom: 0.5rem; }
+        .login-logo .brand {
+            display: block;
+            font-family: 'Sport Break', sans-serif;
+            color: var(--accent-color);
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .login-logo .sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .portal-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(212,160,23,0.1);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 0.3rem 0.9rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+        }
+        .booster-link-box {
+            margin-top: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .booster-link-box a { color: var(--accent-color); font-weight: 600; }
+        .tab-switcher {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            padding: 3px;
+            margin-bottom: 1.75rem;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-btn.active {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .form-section { display: none; }
+        .form-section.active { display: flex; flex-direction: column; gap: 1rem; }
+        .back-link {
+            text-align: center;
+            margin-top: 1.25rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .back-link a { color: var(--accent-color); }
+        .divider {
+            display: flex; align-items: center; gap: 0.75rem;
+            font-size: 0.72rem; color: var(--text-muted);
+            margin: 0.5rem 0;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; height: 1px; background: var(--border-color);
+        }
+        .apply-link-box {
+            background: rgba(212,160,23,0.06);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .apply-link-box a { color: var(--accent-color); font-weight: 600; }
+    </style>
+</head>
+<body>
+<div class="login-bg"></div>
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="assets/logo.png" alt="Exilium">
+            <span class="brand">Exilium Boosting</span>
+            <span class="sub">Portal del Cliente</span>
+        </div>
+        <div style="text-align:center;">
+            <span class="portal-type-badge">&#128100; Área de Compradores</span>
+        </div>
+
+        <div class="tab-switcher">
+            <button class="tab-btn active" onclick="showTab('login')">Iniciar Sesión</button>
+            <button class="tab-btn" onclick="showTab('register')">Registrarse</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div class="form-section active" id="tab-login">
+            <div id="login-alert"></div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" id="login-email" placeholder="tu@email.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Contraseña</label>
+                <input type="password" class="form-input" id="login-password" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <button class="btn btn-primary btn-lg btn-full" onclick="doLogin()" id="login-btn">
+                &#9876; Iniciar Sesión
+            </button>
+            <div class="booster-link-box">
+                ¿Eres booster de Exilium? <a href="booster-login.html">Accede al portal de boosters &#8594;</a>
+            </div>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div class="form-section" id="tab-register">
+            <div id="register-alert"></div>
+            <div class="form-group">
+                <label class="form-label">Nombre de usuario</label>
+                <input type="text" class="form-input" id="reg-username" placeholder="TuNombre" maxlength="30">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" id="reg-email" placeholder="tu@email.com" autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label class="form-label">BattleTag (opcional)</label>
+                <input type="text" class="form-input" id="reg-battletag" placeholder="NombrePersonaje#1234">
+                <span class="form-hint">Tu BattleTag de Battle.net para coordinar los carries.</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Contraseña</label>
+                <input type="password" class="form-input" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirmar contraseña</label>
+                <input type="password" class="form-input" id="reg-password2" placeholder="Repite la contraseña" autocomplete="new-password">
+            </div>
+            <button class="btn btn-primary btn-lg btn-full" onclick="doRegister()" id="register-btn">
+                ✓ Crear cuenta
+            </button>
+        </div>
+
+        <div class="back-link">
+            <a href="boosting.html">&#8592; Ver servicios de Boosting</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+
+function showTab(tab) {
+    document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelectorAll('.tab-btn')[tab === 'login' ? 0 : 1].classList.add('active');
+}
+
+function setAlert(id, msg, type = 'error') {
+    const el = document.getElementById(id);
+    if (!msg) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+}
+
+function setBtnLoading(id, loading, text) {
+    const btn = document.getElementById(id);
+    btn.disabled = loading;
+    btn.textContent = loading ? '...' : text;
+}
+
+async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    setAlert('login-alert', '');
+    if (!email || !password) return setAlert('login-alert', 'Rellena todos los campos.');
+
+    setBtnLoading('login-btn', true, '');
+    try {
+        const res = await fetch(API + '/api/boost/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (data.error) return setAlert('login-alert', data.error);
+
+        localStorage.setItem('boost_token', data.token);
+        localStorage.setItem('boost_user', JSON.stringify(data.user));
+
+        // Solo clientes en este portal
+        if (data.user.role === 'booster' || data.user.role === 'booster_pending') {
+            window.location.href = 'booster-login.html';
+            return;
+        }
+        const redirect = new URLSearchParams(location.search).get('redirect') || 'dashboard.html';
+        window.location.href = redirect;
+    } catch (_) {
+        setAlert('login-alert', 'Error de conexión. Inténtalo más tarde.');
+    } finally {
+        setBtnLoading('login-btn', false, '⚔ Iniciar Sesión');
+    }
+}
+
+async function doRegister() {
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const battle_tag = document.getElementById('reg-battletag').value.trim();
+    const password = document.getElementById('reg-password').value.trim();
+    const password2 = document.getElementById('reg-password2').value.trim();
+    setAlert('register-alert', '');
+
+    if (!username || !email || !password) return setAlert('register-alert', 'Rellena todos los campos requeridos.');
+    if (password !== password2) return setAlert('register-alert', 'Las contraseñas no coinciden.');
+    if (password.length < 6) return setAlert('register-alert', 'La contraseña debe tener al menos 6 caracteres.');
+
+    setBtnLoading('register-btn', true, '');
+    try {
+        const res = await fetch(API + '/api/boost/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password, battle_tag }),
+        });
+        const data = await res.json();
+        if (data.error) return setAlert('register-alert', data.error);
+
+        localStorage.setItem('boost_token', data.token);
+        localStorage.setItem('boost_user', JSON.stringify(data.user));
+        setAlert('register-alert', '¡Cuenta creada! Redirigiendo...', 'success');
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+    } catch (_) {
+        setAlert('register-alert', 'Error de conexión. Inténtalo más tarde.');
+    } finally {
+        setBtnLoading('register-btn', false, '✓ Crear cuenta');
+    }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        if (document.getElementById('tab-login').classList.contains('active')) doLogin();
+        else doRegister();
+    }
+});
+
+// If already logged in as client, redirect to dashboard
+const existing = localStorage.getItem('boost_token');
+if (existing) {
+    const u = JSON.parse(localStorage.getItem('boost_user') || '{}');
+    if (u.role === 'client') window.location.href = 'dashboard.html';
+    else if (u.role === 'booster' || u.role === 'booster_pending') window.location.href = 'booster-login.html';
+}
+</script>
+</body>
+</html>
