@@ -1198,6 +1198,3 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 }); // Fin DOMContentLoaded
-
-    loadComments();
-});
