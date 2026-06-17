@@ -65,6 +65,7 @@
             <button data-tab="boost-boosters"><span class="nav-icon">🛡️</span> Boosters</button>
             <button data-tab="boost-clients"><span class="nav-icon">👥</span> Clientes Portal</button>
             <button data-tab="rbg-strategies"><span class="nav-icon">🗺️</span> RBG Strategies</button>
+            <button data-tab="news"><span class="nav-icon">📰</span> Noticias</button>
         </nav>
         <div class="sidebar-footer">
             <button class="btn-logout" id="logout-btn">Cerrar sesión</button>
@@ -946,6 +947,135 @@
                     <div id="rbg-comp-editor" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:.75rem;">
                         <!-- Populated by JS -->
                         <div style="color:var(--text-muted);font-size:.85rem;">Cargando...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ TAB: NOTICIAS DE PARCHE ═══════ -->
+        <div id="tab-news" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">📰 Noticias de Parche</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-success" onclick="showNewsForm(null)">➕ Nueva noticia</button>
+                    <button class="btn" onclick="loadNews()">🔄 Refrescar</button>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="search-bar">
+                <select class="input" id="news-filter-status" onchange="renderNewsTable()">
+                    <option value="all">Todos los estados</option>
+                    <option value="draft">📝 Borrador</option>
+                    <option value="pending">⏳ Pendiente</option>
+                    <option value="published">✅ Publicado</option>
+                    <option value="rejected">❌ Rechazado</option>
+                </select>
+                <select class="input" id="news-filter-class" onchange="renderNewsTable()">
+                    <option value="all">Todas las clases</option>
+                    <option value="warrior">Guerrero</option>
+                    <option value="paladin">Paladín</option>
+                    <option value="hunter">Cazador</option>
+                    <option value="rogue">Pícaro</option>
+                    <option value="priest">Sacerdote</option>
+                    <option value="deathknight">Caballero de la Muerte</option>
+                    <option value="shaman">Chamán</option>
+                    <option value="mage">Mago</option>
+                    <option value="warlock">Brujo</option>
+                    <option value="monk">Monje</option>
+                    <option value="druid">Druida</option>
+                    <option value="demonhunter">Cazador de Demonios</option>
+                    <option value="evoker">Evocador</option>
+                    <option value="general">General</option>
+                </select>
+                <span class="players-count" id="news-count">—</span>
+            </div>
+
+            <!-- Tabla -->
+            <div class="table-wrap">
+                <table class="data-table" id="news-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Título</th>
+                            <th>Clase</th>
+                            <th>Parche</th>
+                            <th>Fuente</th>
+                            <th>Estado</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="news-tbody">
+                        <tr><td colspan="8" class="empty-state"><p>Cargando...</p></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Formulario -->
+            <div class="card" id="news-form-card" style="display:none;margin-top:1rem;">
+                <div class="card-header">
+                    <span class="card-title" id="news-form-title">Nueva noticia</span>
+                </div>
+                <div class="card-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label for="news-form-title-input">Título *</label>
+                            <input class="input" type="text" id="news-form-title-input" maxlength="200" placeholder="Ej: Filotormenta potenciada un 15% en PvP">
+                        </div>
+                        <div class="form-group">
+                            <label for="news-form-class">Clase afectada</label>
+                            <select class="input" id="news-form-class">
+                                <option value="general">General (todas)</option>
+                                <option value="warrior">Guerrero</option>
+                                <option value="paladin">Paladín</option>
+                                <option value="hunter">Cazador</option>
+                                <option value="rogue">Pícaro</option>
+                                <option value="priest">Sacerdote</option>
+                                <option value="deathknight">Caballero de la Muerte</option>
+                                <option value="shaman">Chamán</option>
+                                <option value="mage">Mago</option>
+                                <option value="warlock">Brujo</option>
+                                <option value="monk">Monje</option>
+                                <option value="druid">Druida</option>
+                                <option value="demonhunter">Cazador de Demonios</option>
+                                <option value="evoker">Evocador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                        <div class="form-group">
+                            <label for="news-form-expansion">Expansión</label>
+                            <input class="input" type="text" id="news-form-expansion" value="The War Within" maxlength="50">
+                        </div>
+                        <div class="form-group">
+                            <label for="news-form-patch">Parche *</label>
+                            <input class="input" type="text" id="news-form-patch" placeholder="11.1" maxlength="20">
+                        </div>
+                        <div class="form-group">
+                            <label for="news-form-source">Fuente *</label>
+                            <select class="input" id="news-form-source">
+                                <option value="blizzard">Blizzard</option>
+                                <option value="wowhead">Wowhead</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="news-form-url">URL de la fuente original</label>
+                        <input class="input" type="url" id="news-form-url" placeholder="https://news.blizzard.com/..." maxlength="500">
+                    </div>
+                    <div class="form-group">
+                        <label for="news-form-summary">Resumen *</label>
+                        <textarea class="input" id="news-form-summary" rows="2" maxlength="500" placeholder="Breve descripción del cambio PvP..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="news-form-body">Cuerpo (Markdown)</label>
+                        <textarea class="input" id="news-form-body" rows="6" maxlength="10000" placeholder="**Cambio:** descripción detallada&#10;**Impacto:** análisis del cambio&#10;🔗 https://..."></textarea>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-success" onclick="saveNewsArticle()">💾 Guardar como borrador</button>
+                        <button class="btn btn-primary" onclick="saveAndPublishNews()">📢 Guardar y publicar</button>
+                        <button class="btn" onclick="cancelNewsForm()">Cancelar</button>
                     </div>
                 </div>
             </div>

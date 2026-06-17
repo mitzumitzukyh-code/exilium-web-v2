@@ -230,6 +230,7 @@ function switchTab(tabName) {
     case 'boost-boosters': loadBoostBoosters(); break;
     case 'boost-clients': loadBoostClients(); break;
     case 'rbg-strategies': loadRbgTab(); break;
+    case 'news': loadNews(); break;
   }
 }
 
@@ -2753,4 +2754,263 @@ async function saveRbgStrategy() {
   } finally {
     $('rbg-save-btn').disabled = false;
   }
+}
+
+// ══════════════════════════════════════════════════════════
+//  TAB: NOTICIAS DE PARCHE
+// ══════════════════════════════════════════════════════════
+
+const NEWS_CLASS_ICONS = {
+  warrior:     { icon: 'assets/class-icons/Ability_warrior_savageblow.webp',     name: 'Guerrero' },
+  paladin:     { icon: 'assets/class-icons/Ability_paladin_shieldofthetemplar.webp',name: 'Paladín' },
+  hunter:      { icon: 'assets/class-icons/Spell_nature_magicimmunity.webp',      name: 'Cazador' },
+  rogue:       { icon: 'assets/class-icons/Ability_rogue_eviscerate.webp',        name: 'Pícaro' },
+  priest:      { icon: 'assets/class-icons/Spell_holy_guardianspirit.webp',       name: 'Sacerdote' },
+  deathknight: { icon: 'assets/class-icons/Spell_deathknight_unholypresence.webp',name: 'Caballero de la Muerte' },
+  shaman:      { icon: 'assets/class-icons/Spell_shaman_improvedstormstrike.webp',name: 'Chamán' },
+  mage:        { icon: 'assets/class-icons/Spell_holy_holybolt.webp',             name: 'Mago' },
+  warlock:     { icon: 'assets/class-icons/Spell_shadow_shadowwordpain.webp',     name: 'Brujo' },
+  monk:        { icon: 'assets/class-icons/Spell_monk_windwalker_spec.webp',      name: 'Monje' },
+  druid:       { icon: 'assets/class-icons/Ability_druid_catform.webp',           name: 'Druida' },
+  demonhunter: { icon: 'assets/class-icons/Ability_stealth.webp',                 name: 'Cazador de Demonios' },
+  evoker:      { icon: 'assets/class-icons/Spell_nature_lightning.webp',          name: 'Evocador' },
+  general:     { icon: '', name: 'General' }
+};
+
+let _newsArticles = [];
+let _newsEditingId = null;
+
+async function loadNews() {
+  try {
+    _newsArticles = await apiCall('/admin/news');
+    renderNewsTable();
+  } catch (err) {
+    $('news-tbody').innerHTML = '<tr><td colspan="8" class="empty-state"><p>Error: ' + escapeHtml(err.message) + '</p></td></tr>';
+  }
+}
+
+function renderNewsTable() {
+  const filterStatus = $('news-filter-status').value;
+  const filterClass = $('news-filter-class').value;
+  const tbody = $('news-tbody');
+
+  let filtered = _newsArticles;
+  if (filterStatus !== 'all')
+    filtered = filtered.filter(a => a.status === filterStatus);
+  if (filterClass !== 'all')
+    filtered = filtered.filter(a => a.class === filterClass);
+
+  $('news-count').textContent = filtered.length + ' noticias';
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>No hay noticias con esos filtros</p></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(function(article) {
+    const cd = NEWS_CLASS_ICONS[article.class] || NEWS_CLASS_ICONS.general;
+    const iconHtml = cd.icon ? '<img src="' + cd.icon + '" width="20" height="20" style="border-radius:3px;vertical-align:middle;" alt="">' : '';
+    const statusBadge = {
+      'draft':     '<span class="badge badge-muted" style="background:rgba(100,100,120,.15);color:#a0a0b0;">📝 Borrador</span>',
+      'pending':   '<span class="badge badge-warn" style="background:rgba(234,179,8,.15);color:#eab308;">⏳ Pendiente</span>',
+      'published': '<span class="badge badge-ok" style="background:rgba(34,197,94,.15);color:#22c55e;">✅ Publicado</span>',
+      'rejected':  '<span class="badge badge-error" style="background:rgba(239,68,68,.15);color:#ef4444;">❌ Rechazado</span>'
+    }[article.status] || '<span class="badge badge-muted">' + article.status + '</span>';
+
+    var actions = '<div style="display:flex;gap:4px;flex-wrap:nowrap;">';
+    actions += '<button class="btn btn-sm" onclick="previewNews(\'' + article.id + '\')">👁️</button>';
+    if (article.status === 'pending') {
+      actions += '<button class="btn btn-sm btn-success" onclick="approveNews(\'' + article.id + '\')" title="Publicar">✅</button>';
+      actions += '<button class="btn btn-sm btn-danger" onclick="rejectNews(\'' + article.id + '\')" title="Rechazar">❌</button>';
+    }
+    if (article.status === 'published') {
+      actions += '<button class="btn btn-sm btn-danger" onclick="unpublishNews(\'' + article.id + '\')" title="Despublicar">⏸️</button>';
+    }
+    actions += '<button class="btn btn-sm" onclick="editNews(\'' + article.id + '\')" title="Editar">✏️</button>';
+    actions += '<button class="btn btn-sm btn-danger" onclick="deleteNews(\'' + article.id + '\')" title="Eliminar">🗑️</button>';
+    actions += '</div>';
+
+    return '<tr>' +
+      '<td>' + iconHtml + '</td>' +
+      '<td><strong>' + escapeHtml(article.title) + '</strong></td>' +
+      '<td>' + cd.name + '</td>' +
+      '<td>' + escapeHtml(article.expansion || '') + ' ' + escapeHtml(article.patchVersion || '') + '</td>' +
+      '<td><span class="source-dot ' + article.source + '" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + (article.source === 'wowhead' ? '#f8a000' : '#00b4ff') + ';box-shadow:0 0 4px ' + (article.source === 'wowhead' ? 'rgba(248,160,0,0.5)' : 'rgba(0,180,255,0.5)') + ';vertical-align:middle;"></span> ' + (article.source === 'wowhead' ? 'Wowhead' : 'Blizzard') + '</td>' +
+      '<td>' + statusBadge + '</td>' +
+      '<td style="font-size:.8em;color:var(--text-muted);">' + timeAgo(article.createdAt) + '</td>' +
+      '<td class="actions-cell">' + actions + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function showNewsForm(article) {
+  _newsEditingId = article ? article.id : null;
+  var formCard = $('news-form-card');
+  formCard.style.display = 'block';
+  $('news-form-title').textContent = _newsEditingId ? '✏️ Editar noticia' : '📰 Nueva noticia';
+
+  $('news-form-title-input').value = article ? article.title : '';
+  $('news-form-class').value = article ? (article.class || 'general') : 'general';
+  $('news-form-expansion').value = article ? article.expansion : 'The War Within';
+  $('news-form-patch').value = article ? article.patchVersion : '';
+  $('news-form-source').value = article ? article.source : 'blizzard';
+  $('news-form-url').value = article ? article.sourceUrl : '';
+  $('news-form-summary').value = article ? article.summary : '';
+  $('news-form-body').value = article ? article.body : '';
+
+  formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelNewsForm() {
+  $('news-form-card').style.display = 'none';
+  _newsEditingId = null;
+}
+
+function getNewsFormData() {
+  return {
+    title: $('news-form-title-input').value.trim(),
+    class: $('news-form-class').value,
+    expansion: $('news-form-expansion').value.trim(),
+    patchVersion: $('news-form-patch').value.trim(),
+    source: $('news-form-source').value,
+    sourceUrl: $('news-form-url').value.trim(),
+    summary: $('news-form-summary').value.trim(),
+    body: $('news-form-body').value.trim()
+  };
+}
+
+async function saveNewsArticle() {
+  const data = getNewsFormData();
+  if (!data.title) { toast('El título es obligatorio', 'error'); return; }
+  if (!data.patchVersion) { toast('La versión del parche es obligatoria', 'error'); return; }
+
+  try {
+    if (_newsEditingId) {
+      await apiCall('/admin/news/' + _newsEditingId, 'PATCH', data);
+      toast('✅ Noticia actualizada', 'success');
+    } else {
+      data.status = 'draft';
+      await apiCall('/admin/news', 'POST', data);
+      toast('✅ Noticia guardada como borrador', 'success');
+    }
+    cancelNewsForm();
+    await loadNews();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function saveAndPublishNews() {
+  const data = getNewsFormData();
+  if (!data.title) { toast('El título es obligatorio', 'error'); return; }
+  if (!data.patchVersion) { toast('La versión del parche es obligatoria', 'error'); return; }
+
+  try {
+    if (_newsEditingId) {
+      data.status = 'published';
+      await apiCall('/admin/news/' + _newsEditingId, 'PATCH', data);
+      toast('✅ Noticia publicada', 'success');
+    } else {
+      data.status = 'published';
+      await apiCall('/admin/news', 'POST', data);
+      toast('✅ Noticia creada y publicada', 'success');
+    }
+    cancelNewsForm();
+    await loadNews();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function approveNews(id) {
+  if (!confirm('¿Publicar esta noticia en la web principal?')) return;
+  try {
+    await apiCall('/admin/news/' + id, 'PATCH', { status: 'published' });
+    toast('✅ Noticia publicada', 'success');
+    await loadNews();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function rejectNews(id) {
+  try {
+    await apiCall('/admin/news/' + id, 'PATCH', { status: 'rejected' });
+    toast('Noticia rechazada', 'info');
+    await loadNews();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function unpublishNews(id) {
+  if (!confirm('¿Despublicar esta noticia? Se ocultará de la web principal.')) return;
+  try {
+    await apiCall('/admin/news/' + id, 'PATCH', { status: 'draft' });
+    toast('Noticia despublicada', 'info');
+    await loadNews();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+function editNews(id) {
+  const article = _newsArticles.find(a => a.id === id);
+  if (article) showNewsForm(article);
+}
+
+async function deleteNews(id) {
+  if (!confirm('¿Eliminar esta noticia permanentemente?')) return;
+  try {
+    await apiCall('/admin/news/' + id, 'DELETE');
+    toast('Noticia eliminada', 'info');
+    await loadNews();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+function previewNews(id) {
+  const article = _newsArticles.find(a => a.id === id);
+  if (!article) { toast('Noticia no encontrada', 'error'); return; }
+
+  const cd = NEWS_CLASS_ICONS[article.class] || NEWS_CLASS_ICONS.general;
+  const sourceDot = article.source === 'wowhead' ? '🟠' : '🔵';
+  const sourceLabel = article.source === 'wowhead'
+    ? 'Wowhead — Noticias PvP'
+    : 'Blizzard — Notas de parche oficiales';
+
+  const bodyHtml = (article.body || '').replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;';
+
+  modal.innerHTML = '<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;padding:2rem;">' +
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">' +
+    (cd.icon ? '<img src="' + cd.icon + '" width="28" height="28" style="border-radius:4px;">' : '') +
+    '<span style="font-weight:600;">' + cd.name + '</span>' +
+    '<span style="background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.2);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600;color:var(--accent);">' +
+    escapeHtml(article.expansion || '') + ' ' + escapeHtml(article.patchVersion || '') + '</span>' +
+    '<span style="font-size:.78rem;color:var(--text-muted);margin-left:auto;">' + timeAgo(article.createdAt) + '</span>' +
+    '</div>' +
+    '<h3 style="font-family:\'Sport Break\',sans-serif;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-color);">' + escapeHtml(article.title) + '</h3>' +
+    '<p style="color:var(--text-muted);margin-bottom:16px;">' + escapeHtml(article.summary) + '</p>' +
+    '<hr style="border-color:var(--border);margin:12px 0;">' +
+    '<div style="color:var(--text-muted);line-height:1.7;font-size:.9rem;">' + bodyHtml + '</div>' +
+    '<hr style="border-color:var(--border);margin:12px 0;">' +
+    '<div style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--text-muted);">' +
+    sourceDot + ' ' + sourceLabel +
+    '</div>' +
+    (article.sourceUrl ? '<p style="margin-top:8px;"><a href="' + escapeHtml(article.sourceUrl) + '" target="_blank" style="color:var(--accent);font-size:.85rem;">🔗 Fuente original →</a></p>' : '') +
+    '<div style="display:flex;gap:8px;margin-top:20px;">' +
+    (article.status !== 'published' ? '<button class="btn btn-success" onclick="this.closest(\'div[style*=\\"fixed\\"]\').remove();approveNews(\'' + article.id + '\');" style="flex:1;">✅ Publicar</button>' : '') +
+    '<button class="btn" onclick="this.closest(\'div[style*=\\"fixed\\"]\').remove()" style="flex:1;">Cerrar</button>' +
+    '</div>' +
+    '</div>';
+
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.remove();
+  });
+
+  document.body.appendChild(modal);
 }

@@ -25,8 +25,7 @@ import {
   handleClaimOrder, handleStartOrder, handleCompleteOrder, handleCancelOrder,
   handleAddProgressNote, handleGetNotifications, handleMarkNotificationsRead,
   handleAdminGetAllOrders, handleAdminGetBoosters,
-} from './boosting-orders.js';
-
+} from './boosting-orders.js';import { getArticles, getArticleById, createArticle, updateArticle, deleteArticle } from './news.js';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -118,6 +117,29 @@ async function handleRequest(request, env, ctx) {
   if (method === 'GET' && path === '/api/rbg-strategies') {
     const raw = await env.EXILIUM_KV.get('config:rbg_strategies', 'json');
     return cachedJsonResponse(raw || [], 60);
+  }
+
+  // ── Public News ──
+  if (method === 'GET' && path === '/api/news') {
+    try {
+      const articles = await getArticles(env, false);
+      return cachedJsonResponse(articles, 120);
+    } catch (err) {
+      return jsonResponse({ error: err.message }, 500);
+    }
+  }
+
+  if (method === 'GET' && path.startsWith('/api/news/')) {
+    const id = decodeURIComponent(path.split('/')[3]);
+    try {
+      const article = await getArticleById(env, id);
+      if (!article || article.status !== 'published') {
+        return jsonResponse({ error: 'Noticia no encontrada' }, 404);
+      }
+      return jsonResponse(article);
+    } catch (err) {
+      return jsonResponse({ error: err.message }, 500);
+    }
   }
 
   // ── Public Comments ──
@@ -467,6 +489,51 @@ async function handleRequest(request, env, ctx) {
       const upload = env.EXILIUM_MEDIA.resumeMultipartUpload(key, uploadId);
       await upload.abort();
       return jsonResponse({ ok: true });
+    }
+
+    // ── Noticias de Parche ──
+    if (method === 'GET' && path === '/admin/news') {
+      try {
+        const articles = await getArticles(env, true);
+        return jsonResponse(articles);
+      } catch (err) {
+        return jsonResponse({ error: err.message }, 500);
+      }
+    }
+
+    if (method === 'POST' && path === '/admin/news') {
+      try {
+        const body = await request.json();
+        const article = await createArticle(env, body);
+        return jsonResponse(article, 201);
+      } catch (err) {
+        return jsonResponse({ error: err.message }, 400);
+      }
+    }
+
+    if (method === 'PATCH' && path.startsWith('/admin/news/')) {
+      const id = decodeURIComponent(path.split('/')[3]);
+      if (!id) return jsonResponse({ error: 'ID requerido' }, 400);
+      try {
+        const body = await request.json();
+        const article = await updateArticle(env, id, body);
+        if (!article) return jsonResponse({ error: 'Noticia no encontrada' }, 404);
+        return jsonResponse(article);
+      } catch (err) {
+        return jsonResponse({ error: err.message }, 400);
+      }
+    }
+
+    if (method === 'DELETE' && path.startsWith('/admin/news/')) {
+      const id = decodeURIComponent(path.split('/')[3]);
+      if (!id) return jsonResponse({ error: 'ID requerido' }, 400);
+      try {
+        const deleted = await deleteArticle(env, id);
+        if (!deleted) return jsonResponse({ error: 'Noticia no encontrada' }, 404);
+        return jsonResponse({ ok: true });
+      } catch (err) {
+        return jsonResponse({ error: err.message }, 500);
+      }
     }
 
     // ── Hall of Fame ──
