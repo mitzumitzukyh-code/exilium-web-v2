@@ -28,4 +28,10 @@ npm-debug.log*
 
 # Temp
 *.tmp
+
+# Large video files (exceed GitHub 100MB limit)
+assets/videos/
+*.mp4
+*.mov
+*.avi
 *.bak
