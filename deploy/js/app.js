@@ -96,21 +96,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchData() {
-        const [playersRes, announcementRes, officersRes, guildRankingRes, hofRes, boostBannerRes, newsRes] = await Promise.all([
+        const [playersRes, announcementRes, officersRes, guildRankingRes, hofRes, boostBannerRes] = await Promise.all([
             safeFetch(`${API_URL}/players`, []),
             safeFetch(`${API_URL}/announcement`, { message: null }),
             safeFetch(`${API_URL}/officers`, []),
             safeFetch(`${API_URL}/guild-ranking`, { ranking: [] }),
             safeFetch(`${API_URL}/hall-of-fame`, { entries: [] }),
             safeFetch(`${API_URL}/boost-banner`, { visible: true }),
-            safeFetch(`${API_URL}/news`, []),
         ]);
         state.players = Array.isArray(playersRes) ? playersRes : [];
         state.announcement = announcementRes;
         state.officers = Array.isArray(officersRes) ? officersRes : [];
         state.guildRanking = guildRankingRes;
         state.hallOfFame = hofRes && Array.isArray(hofRes.entries) ? hofRes : { entries: [] };
-        state.news = Array.isArray(newsRes) ? newsRes : [];
         const boostBanner = document.querySelector('.carries-banner-v2');
         if (boostBanner) boostBanner.style.display = boostBannerRes.visible ? '' : 'none';
         renderAll();
@@ -127,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderOfficers();
         renderHallOfFame();
         renderGuildRanking();
-        renderNews();
     }
 
     function renderAnnouncement() {
@@ -1101,100 +1098,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // ══════════════════════════════════════════════════════════
     //  NOTICIAS DE PARCHE
     // ══════════════════════════════════════════════════════════
-
-    const NEWS_CLASS_ICONS = {
-        warrior:     'assets/class-icons/Ability_warrior_savageblow.webp',
-        paladin:     'assets/class-icons/Ability_paladin_shieldofthetemplar.webp',
-        hunter:      'assets/class-icons/Spell_nature_magicimmunity.webp',
-        rogue:       'assets/class-icons/Ability_rogue_eviscerate.webp',
-        priest:      'assets/class-icons/Spell_holy_guardianspirit.webp',
-        deathknight: 'assets/class-icons/Spell_deathknight_unholypresence.webp',
-        shaman:      'assets/class-icons/Spell_shaman_improvedstormstrike.webp',
-        mage:        'assets/class-icons/Spell_holy_holybolt.webp',
-        warlock:     'assets/class-icons/Spell_shadow_shadowwordpain.webp',
-        monk:        'assets/class-icons/Spell_monk_windwalker_spec.webp',
-        druid:       'assets/class-icons/Ability_druid_catform.webp',
-        demonhunter: 'assets/class-icons/Ability_stealth.webp',
-        evoker:      'assets/class-icons/Spell_nature_lightning.webp'
-    };
-
-    function renderNews() {
-        const container = document.getElementById('news-container');
-        const badge = document.getElementById('news-live-badge');
-        const trustBadge = document.getElementById('news-trust-badge');
-        const updatedAt = document.getElementById('news-updated-at');
-
-        if (!container || !state.news || !state.news.length) {
-            if (badge) badge.style.display = 'none';
-            if (trustBadge) trustBadge.style.display = 'none';
-            return;
-        }
-
-        // Mostrar badges
-        if (badge) badge.style.display = 'inline-block';
-        if (trustBadge) trustBadge.style.display = 'flex';
-
-        // Fecha del más reciente
-        if (updatedAt && state.news[0].publishedAt) {
-            updatedAt.textContent = timeAgo(state.news[0].publishedAt);
-        }
-
-        container.innerHTML = state.news.map(function(article, i) {
-            var isFeatured = i === 0;
-            var iconSrc = NEWS_CLASS_ICONS[article.class] || '';
-            var iconHtml = iconSrc
-                ? '<img src="' + iconSrc + '" class="news-class-icon" alt="' + (article.class || '') + '" width="24" height="24">'
-                : '';
-            var className = article.class ? article.class.charAt(0).toUpperCase() + article.class.slice(1) : 'General';
-            var sourceDot = article.source === 'wowhead' ? 'wowhead' : 'blizzard';
-            var sourceLabel = article.source === 'wowhead'
-                ? 'Wowhead — Noticias PvP'
-                : 'Blizzard — Notas de parche oficiales';
-            var patchLabel = (article.expansion || '') + ' ' + (article.patchVersion || '');
-
-            return '<article class="news-card' + (isFeatured ? ' featured' : '') + '">' +
-                (isFeatured ? '<div class="news-card-glow"></div>' : '') +
-                '<div class="news-card-header">' +
-                iconHtml +
-                '<span class="news-class-name">' + className + '</span>' +
-                '<span class="news-patch-badge">' +
-                '<span class="patch-expansion">' + escapeHtmlPublic(article.expansion || '') + '</span>' +
-                '<span class="patch-version">' + escapeHtmlPublic(article.patchVersion || '') + '</span>' +
-                '</span>' +
-                '<span class="news-date">' + timeAgo(article.publishedAt || article.createdAt) + '</span>' +
-                '</div>' +
-                '<h3 class="news-title">' + escapeHtmlPublic(article.title) + '</h3>' +
-                '<p class="news-summary">' + escapeHtmlPublic(article.summary) + '</p>' +
-                '<div class="news-footer">' +
-                '<div class="news-source">' +
-                '<span class="source-dot ' + sourceDot + '"></span>' +
-                '<span>' + sourceLabel + '</span>' +
-                '</div>' +
-                '<button class="news-expand-btn" onclick="toggleNewsBody(\'' + article.id + '\')">Leer m&aacute;s &#9662;</button>' +
-                '</div>' +
-                '<div class="news-body hidden" id="news-body-' + article.id + '">' +
-                '<div class="news-body-divider"></div>' +
-                formatNewsBody(article.body || '') +
-                (article.sourceUrl ? '<p style="margin-top:12px;"><a href="' + escapeHtmlPublic(article.sourceUrl) + '" target="_blank" style="color:var(--accent-color);text-decoration:none;font-size:.88rem;">🔗 Fuente original →</a></p>' : '') +
-                '</div>' +
-                '</article>';
-        }).join('');
-    }
-
-    function formatNewsBody(body) {
-        // Conversión simple de Markdown: **texto** → negritas, \n → <br>
-        return escapeHtmlPublic(body)
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\n/g, '<br>');
-    }
-
-    window.toggleNewsBody = function(id) {
-        var body = document.getElementById('news-body-' + id);
-        var btn = body && body.parentElement ? body.parentElement.querySelector('.news-expand-btn') : null;
-        if (!body) return;
-        var isHidden = body.classList.contains('hidden');
-        body.classList.toggle('hidden');
-        if (btn) btn.textContent = isHidden ? 'Leer menos &#9652;' : 'Leer m&aacute;s &#9662;';
-    };
 
 }); // Fin DOMContentLoaded

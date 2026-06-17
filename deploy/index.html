@@ -213,33 +213,19 @@
         <hr class="section-divider">
 
         <!-- Últimas Noticias de Parche -->
-        <section id="patch-news" class="container section reveal">
-            <div class="section-header" style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
-                <h2 style="margin-bottom:0;">Últimas Noticias de Parche</h2>
-                <span class="news-badge-live" id="news-live-badge" style="display:none;background:#1a5276;color:#fff;font-size:0.65rem;font-weight:700;padding:0.25rem 0.6rem;border-radius:20px;text-transform:uppercase;letter-spacing:1px;">SIGUIENDO</span>
-            </div>
-            <p class="section-subtitle">
-                Cambios PvP oficiales rastreados desde 
-                <strong>Blizzard Entertainment</strong> y <strong>Wowhead</strong>.
-                Información verificada y actualizada por el staff.
-            </p>
-            <div id="news-container" class="news-grid">
-                <!-- Se rellena con JS -->
-            </div>
-            <div class="news-trust-badge" id="news-trust-badge" style="display:none;">
-                <div class="trust-item">
-                    <span class="trust-icon">&#9889;</span>
-                    <span>Datos recopilados de fuentes oficiales</span>
+        <section id="patch-news" class="container section reveal" style="text-align:center;">
+            <a href="/patch-notes" style="text-decoration:none;color:inherit;display:inline-flex;align-items:center;gap:1.2rem;padding:2rem 3rem;background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:var(--radius-lg,16px);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);" onmouseover="this.style.borderColor='var(--border-glow)';this.style.boxShadow='0 0 30px var(--accent-glow)';this.style.transform='translateY(-4px)'" onmouseout="this.style.borderColor='';this.style.boxShadow='';this.style.transform=''">
+                <div style="text-align:left;">
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.3rem;">
+                        <h2 style="margin:0;font-size:1.5rem;">Últimas Noticias de Parche</h2>
+                        <span style="background:#1a5276;color:#fff;font-size:0.6rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:20px;text-transform:uppercase;letter-spacing:1px;">SIGUIENDO</span>
+                    </div>
+                    <p style="margin:0;color:var(--text-muted);font-size:0.85rem;">
+                        Cambios PvP oficiales — Blizzard Entertainment y Wowhead
+                    </p>
                 </div>
-                <div class="trust-item">
-                    <span class="trust-icon">&#9989;</span>
-                    <span>Verificado por el staff de Exilium</span>
-                </div>
-                <div class="trust-item">
-                    <span class="trust-icon">&#128260;</span>
-                    <span>Actualizado: <strong id="news-updated-at">—</strong></span>
-                </div>
-            </div>
+                <span style="font-size:0.8rem;color:var(--accent-color);border:1px solid rgba(212,160,23,0.3);border-radius:8px;padding:0.5rem 1rem;font-weight:600;white-space:nowrap;transition:all 0.2s;">Ver notas completas →</span>
+            </a>
         </section>
 
         <hr class="section-divider">
