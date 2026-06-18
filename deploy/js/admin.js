@@ -230,7 +230,7 @@ function switchTab(tabName) {
     case 'boost-boosters': loadBoostBoosters(); break;
     case 'boost-clients': loadBoostClients(); break;
     case 'rbg-strategies': loadRbgTab(); break;
-    case 'news': loadNews(); break;
+    case 'news': loadAdminNews(); loadCronStatus(); break;
   }
 }
 
@@ -2756,241 +2756,124 @@ async function saveRbgStrategy() {
   }
 }
 
-// ══════════════════════════════════════════════════════════
-//  TAB: NOTICIAS DE PARCHE
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// NEWS ADMIN — Importar, aprobar, rechazar
+// ═══════════════════════════════════════════════════════
 
-const NEWS_CLASS_ICONS = {
-  warrior:     { icon: 'assets/class-icons/Ability_warrior_savageblow.webp',     name: 'Guerrero' },
-  paladin:     { icon: 'assets/class-icons/Ability_paladin_shieldofthetemplar.webp',name: 'Paladín' },
-  hunter:      { icon: 'assets/class-icons/Spell_nature_magicimmunity.webp',      name: 'Cazador' },
-  rogue:       { icon: 'assets/class-icons/Ability_rogue_eviscerate.webp',        name: 'Pícaro' },
-  priest:      { icon: 'assets/class-icons/Spell_holy_guardianspirit.webp',       name: 'Sacerdote' },
-  deathknight: { icon: 'assets/class-icons/Spell_deathknight_unholypresence.webp',name: 'Caballero de la Muerte' },
-  shaman:      { icon: 'assets/class-icons/Spell_shaman_improvedstormstrike.webp',name: 'Chamán' },
-  mage:        { icon: 'assets/class-icons/Spell_holy_holybolt.webp',             name: 'Mago' },
-  warlock:     { icon: 'assets/class-icons/Spell_shadow_shadowwordpain.webp',     name: 'Brujo' },
-  monk:        { icon: 'assets/class-icons/Spell_monk_windwalker_spec.webp',      name: 'Monje' },
-  druid:       { icon: 'assets/class-icons/Ability_druid_catform.webp',           name: 'Druida' },
-  demonhunter: { icon: 'assets/class-icons/Ability_stealth.webp',                 name: 'Cazador de Demonios' },
-  evoker:      { icon: 'assets/class-icons/Spell_nature_lightning.webp',          name: 'Evocador' },
-  general:     { icon: '', name: 'General' }
-};
+let adminNewsFilter = 'all';
 
-let _newsArticles = [];
-let _newsEditingId = null;
+async function loadAdminNews() {
+  const container = document.getElementById('adminNewsList');
+  if (!container) return;
+  container.innerHTML = '<div style="color:#8A7A5A;padding:20px;">Cargando...</div>';
 
-async function loadNews() {
   try {
-    _newsArticles = await apiCall('/admin/news');
-    renderNewsTable();
+    const articles = await apiCall('/admin/news');
+    if (!Array.isArray(articles)) throw new Error('Respuesta inválida');
+    renderAdminNews(articles);
   } catch (err) {
-    $('news-tbody').innerHTML = '<tr><td colspan="8" class="empty-state"><p>Error: ' + escapeHtml(err.message) + '</p></td></tr>';
+    container.innerHTML = `<div style="color:#ff6b6b;padding:20px;">Error: ${err.message}</div>`;
   }
 }
 
-function renderNewsTable() {
-  const filterStatus = $('news-filter-status').value;
-  const filterClass = $('news-filter-class').value;
-  const tbody = $('news-tbody');
+function renderAdminNews(articles) {
+  const container = document.getElementById('adminNewsList');
+  const filtered = adminNewsFilter === 'all' ? articles : articles.filter(a => a.status === adminNewsFilter);
 
-  let filtered = _newsArticles;
-  if (filterStatus !== 'all')
-    filtered = filtered.filter(a => a.status === filterStatus);
-  if (filterClass !== 'all')
-    filtered = filtered.filter(a => a.class === filterClass);
-
-  $('news-count').textContent = filtered.length + ' noticias';
-
-  if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>No hay noticias con esos filtros</p></td></tr>';
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="color:#8A7A5A;padding:40px;text-align:center;">Sin artículos en esta categoría.</div>';
     return;
   }
 
-  tbody.innerHTML = filtered.map(function(article) {
-    const cd = NEWS_CLASS_ICONS[article.class] || NEWS_CLASS_ICONS.general;
-    const iconHtml = cd.icon ? '<img src="' + cd.icon + '" width="20" height="20" style="border-radius:3px;vertical-align:middle;" alt="">' : '';
-    const statusBadge = {
-      'draft':     '<span class="badge badge-muted" style="background:rgba(100,100,120,.15);color:#a0a0b0;">📝 Borrador</span>',
-      'pending':   '<span class="badge badge-warn" style="background:rgba(234,179,8,.15);color:#eab308;">⏳ Pendiente</span>',
-      'published': '<span class="badge badge-ok" style="background:rgba(34,197,94,.15);color:#22c55e;">✅ Publicado</span>',
-      'rejected':  '<span class="badge badge-error" style="background:rgba(239,68,68,.15);color:#ef4444;">❌ Rechazado</span>'
-    }[article.status] || '<span class="badge badge-muted">' + article.status + '</span>';
+  container.innerHTML = filtered.map(a => {
+    const statusColor = { pending: '#C89B3C', published: '#4CAF50', rejected: '#f44336' }[a.status] || '#8A7A5A';
+    const date = new Date(a.createdAt).toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric' });
 
-    var actions = '<div style="display:flex;gap:4px;flex-wrap:nowrap;">';
-    actions += '<button class="btn btn-sm" onclick="previewNews(\'' + article.id + '\')">👁️</button>';
-    if (article.status === 'pending') {
-      actions += '<button class="btn btn-sm btn-success" onclick="approveNews(\'' + article.id + '\')" title="Publicar">✅</button>';
-      actions += '<button class="btn btn-sm btn-danger" onclick="rejectNews(\'' + article.id + '\')" title="Rechazar">❌</button>';
-    }
-    if (article.status === 'published') {
-      actions += '<button class="btn btn-sm btn-danger" onclick="unpublishNews(\'' + article.id + '\')" title="Despublicar">⏸️</button>';
-    }
-    actions += '<button class="btn btn-sm" onclick="editNews(\'' + article.id + '\')" title="Editar">✏️</button>';
-    actions += '<button class="btn btn-sm btn-danger" onclick="deleteNews(\'' + article.id + '\')" title="Eliminar">🗑️</button>';
-    actions += '</div>';
-
-    return '<tr>' +
-      '<td>' + iconHtml + '</td>' +
-      '<td><strong>' + escapeHtml(article.title) + '</strong></td>' +
-      '<td>' + cd.name + '</td>' +
-      '<td>' + escapeHtml(article.expansion || '') + ' ' + escapeHtml(article.patchVersion || '') + '</td>' +
-      '<td><span class="source-dot ' + article.source + '" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + (article.source === 'wowhead' ? '#f8a000' : '#00b4ff') + ';box-shadow:0 0 4px ' + (article.source === 'wowhead' ? 'rgba(248,160,0,0.5)' : 'rgba(0,180,255,0.5)') + ';vertical-align:middle;"></span> ' + (article.source === 'wowhead' ? 'Wowhead' : 'Blizzard') + '</td>' +
-      '<td>' + statusBadge + '</td>' +
-      '<td style="font-size:.8em;color:var(--text-muted);">' + timeAgo(article.createdAt) + '</td>' +
-      '<td class="actions-cell">' + actions + '</td>' +
-      '</tr>';
+    return `
+      <div style="background:#1A1A1A;border:1px solid #3A3A3A;border-left:3px solid ${statusColor};border-radius:6px;padding:16px 20px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
+          <div style="color:#F0D080;font-size:0.92rem;font-weight:600;line-height:1.4;">${escAdminHtml(a.title)}</div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <span style="padding:2px 8px;border-radius:3px;font-size:0.68rem;font-weight:700;text-transform:uppercase;color:${statusColor};border:1px solid ${statusColor};">${a.status}</span>
+            ${a.patchVersion ? `<span style="padding:2px 8px;border-radius:3px;font-size:0.68rem;background:rgba(200,155,60,0.15);color:#C89B3C;border:1px solid #C89B3C;">v${escAdminHtml(a.patchVersion)}</span>` : ''}
+          </div>
+        </div>
+        <div style="color:#C0B090;font-size:0.82rem;margin-bottom:10px;line-height:1.5;">${escAdminHtml(a.summary)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div style="color:#8A7A5A;font-size:0.72rem;">
+            ${date} · ${a.source} · Clase: ${a.class}
+            ${a.aiConfidence ? ` · IA: ${Math.round(a.aiConfidence * 100)}%` : ''}
+          </div>
+          <div style="display:flex;gap:6px;">
+            ${a.status !== 'published' ? `<button onclick="newsAction('${a.id}','published')" style="padding:4px 12px;background:rgba(76,175,80,0.2);color:#4CAF50;border:1px solid #4CAF50;border-radius:4px;cursor:pointer;font-size:0.75rem;">✅ Publicar</button>` : ''}
+            ${a.status !== 'rejected' ? `<button onclick="newsAction('${a.id}','rejected')" style="padding:4px 12px;background:rgba(244,67,54,0.2);color:#f44336;border:1px solid #f44336;border-radius:4px;cursor:pointer;font-size:0.75rem;">❌ Rechazar</button>` : ''}
+            <button onclick="newsAction('${a.id}','delete')" style="padding:4px 12px;background:rgba(139,0,0,0.2);color:#ff6b6b;border:1px solid #8B0000;border-radius:4px;cursor:pointer;font-size:0.75rem;">🗑️</button>
+            ${a.sourceUrl ? `<a href="${escAdminHtml(a.sourceUrl)}" target="_blank" rel="noopener" style="padding:4px 12px;background:var(--dark-3,#242424);color:#C89B3C;border:1px solid #3A3A3A;border-radius:4px;text-decoration:none;font-size:0.75rem;">↗ Fuente</a>` : ''}
+          </div>
+        </div>
+      </div>`;
   }).join('');
 }
 
-// ── Importar desde Blizzard ──
-async function importNewsFromBlizzard() {
-  var btn = $('news-import-btn');
-  var resultDiv = $('news-import-result');
-  if (!btn || !resultDiv) return;
-
-  btn.disabled = true;
-  btn.textContent = '🤖 Importando...';
-  resultDiv.style.display = 'none';
-
+async function newsAction(id, action) {
   try {
-    var data = await apiCall('/admin/news/import', 'POST');
-    resultDiv.style.display = 'block';
-    resultDiv.style.background = data.newArticles > 0
-      ? 'rgba(34,197,94,.08)'
-      : 'rgba(234,179,8,.08)';
-    resultDiv.style.borderColor = data.newArticles > 0
-      ? 'rgba(34,197,94,.2)'
-      : 'rgba(234,179,8,.2)';
-
-    if (data.newArticles > 0) {
-      resultDiv.innerHTML = '<strong>✅ Importación completada</strong><br>' +
-        '📡 Artículos analizados: ' + data.fetched + '<br>' +
-        '🎯 Cambios PvP encontrados: ' + data.pvpFound + '<br>' +
-        '📰 Nuevos pendientes: ' + data.newArticles +
-        (data.titles && data.titles.length > 0
-          ? '<br><br><strong>Artículos importados:</strong><br>' + data.titles.map(function(t) { return '• ' + escapeHtml(t); }).join('<br>')
-          : '');
+    if (action === 'delete') {
+      if (!confirm('¿Eliminar este artículo?')) return;
+      await apiCall(`/admin/news/${id}`, 'DELETE');
     } else {
-      resultDiv.innerHTML = '<strong>ℹ️ Sin novedades</strong><br>' +
-        '📡 Artículos analizados: ' + data.fetched + '<br>' +
-        'No se encontraron nuevos cambios PvP.';
+      await apiCall(`/admin/news/${id}`, 'PATCH', { status: action, approvedBy: 'admin' });
     }
+    await loadAdminNews();
+  } catch (err) {
+    alert(`Error: ${err.message}`);
+  }
+}
 
-    if (data.errors > 0) {
-      resultDiv.innerHTML += '<br><span style="color:#ef4444;">⚠️ ' + data.errors + ' fuente(s) con error</span>';
+async function loadCronStatus() {
+  try {
+    const data = await apiCall('/admin/news/cron-status');
+    const el = document.getElementById('cronStatus');
+    if (!el) return;
+    if (data.lastRun) {
+      const d = new Date(data.lastRun);
+      el.textContent = `Último import: ${d.toLocaleString('es-ES')} · ${data.newArticles || 0} nuevos`;
     }
-
-    await loadNews();
-  } catch (err) {
-    resultDiv.style.display = 'block';
-    resultDiv.style.background = 'rgba(239,68,68,.08)';
-    resultDiv.style.borderColor = 'rgba(239,68,68,.2)';
-    resultDiv.innerHTML = '<strong>❌ Error al importar</strong><br>' + escapeHtml(err.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '🤖 Importar desde Blizzard';
-  }
+  } catch {}
 }
 
-async function approveNews(id) {
-  if (!confirm('¿Publicar esta noticia en la web principal?')) return;
-  try {
-    await apiCall('/admin/news/' + id, 'PATCH', { status: 'published' });
-    toast('✅ Noticia publicada', 'success');
-    await loadNews();
-  } catch (err) {
-    toast('Error: ' + err.message, 'error');
-  }
+function escAdminHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-async function rejectNews(id) {
-  try {
-    await apiCall('/admin/news/' + id, 'PATCH', { status: 'rejected' });
-    toast('Noticia rechazada', 'info');
-    await loadNews();
-  } catch (err) {
-    toast('Error: ' + err.message, 'error');
-  }
-}
-
-async function unpublishNews(id) {
-  if (!confirm('¿Despublicar esta noticia? Se ocultará de la web principal.')) return;
-  try {
-    await apiCall('/admin/news/' + id, 'PATCH', { status: 'draft' });
-    toast('Noticia despublicada', 'info');
-    await loadNews();
-  } catch (err) {
-    toast('Error: ' + err.message, 'error');
-  }
-}
-
-function editNews(id) {
-  const article = _newsArticles.find(a => a.id === id);
-  if (article) showNewsForm(article);
-}
-
-async function deleteNews(id) {
-  if (!confirm('¿Eliminar esta noticia permanentemente?')) return;
-  try {
-    await apiCall('/admin/news/' + id, 'DELETE');
-    toast('Noticia eliminada', 'info');
-    await loadNews();
-  } catch (err) {
-    toast('Error: ' + err.message, 'error');
-  }
-}
-
-function previewNews(id) {
-  const article = _newsArticles.find(a => a.id === id);
-  if (!article) { toast('Noticia no encontrada', 'error'); return; }
-
-  const cd = NEWS_CLASS_ICONS[article.class] || NEWS_CLASS_ICONS.general;
-  const sourceDot = article.source === 'wowhead' ? '🟠' : '🔵';
-  const sourceLabel = article.source === 'wowhead'
-    ? 'Wowhead — Noticias PvP'
-    : 'Blizzard — Notas de parche oficiales';
-
-  const bodyHtml = (article.body || '').replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-  const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;';
-
-  modal.innerHTML = '<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:16px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;padding:2rem;">' +
-    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">' +
-    (cd.icon ? '<img src="' + cd.icon + '" width="28" height="28" style="border-radius:4px;">' : '') +
-    '<span style="font-weight:600;">' + cd.name + '</span>' +
-    '<span style="background:rgba(212,160,23,0.12);border:1px solid rgba(212,160,23,0.2);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600;color:var(--accent);">' +
-    escapeHtml(article.expansion || '') + ' ' + escapeHtml(article.patchVersion || '') + '</span>' +
-    '<span style="font-size:.78rem;color:var(--text-muted);margin-left:auto;">' + timeAgo(article.createdAt) + '</span>' +
-    '</div>' +
-    '<h3 style="font-family:\'Sport Break\',sans-serif;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;color:var(--text-color);">' + escapeHtml(article.title) + '</h3>' +
-    '<p style="color:var(--text-muted);margin-bottom:16px;">' + escapeHtml(article.summary) + '</p>' +
-    '<hr style="border-color:var(--border);margin:12px 0;">' +
-    '<div style="color:var(--text-muted);line-height:1.7;font-size:.9rem;">' + bodyHtml + '</div>' +
-    '<hr style="border-color:var(--border);margin:12px 0;">' +
-    '<div style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--text-muted);">' +
-    sourceDot + ' ' + sourceLabel +
-    '</div>' +
-    (article.sourceUrl ? '<p style="margin-top:8px;"><a href="' + escapeHtml(article.sourceUrl) + '" target="_blank" style="color:var(--accent);font-size:.85rem;">🔗 Fuente original →</a></p>' : '') +
-    '<div style="display:flex;gap:8px;margin-top:20px;">' +
-    (article.status !== 'published' ? '<button class="btn btn-success" id="modal-publish-btn" style="flex:1;">✅ Publicar</button>' : '') +
-    '<button class="btn" id="modal-close-btn" style="flex:1;">Cerrar</button>' +
-    '</div>' +
-    '</div>';
-
-  // Manejar clics con event listeners directamente, no con onclick
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal || e.target.id === 'modal-close-btn') modal.remove();
-  });
-
-  var publishBtn = modal.querySelector('#modal-publish-btn');
-  if (publishBtn) {
-    publishBtn.addEventListener('click', function() {
-      modal.remove();
-      approveNews(article.id);
+// ── Event listeners del tab de news ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const btnImport = document.getElementById('btnImportNews');
+  if (btnImport) {
+    btnImport.addEventListener('click', async () => {
+      btnImport.disabled = true;
+      btnImport.textContent = '⏳ Importando...';
+      try {
+        const data = await apiCall('/admin/news/import', 'POST');
+        if (data.success) {
+          alert(`Import completado:\n• Fetched: ${data.stats.fetched}\n• PvP encontrados: ${data.stats.pvpFound}\n• Nuevos artículos: ${data.stats.newArticles}${data.stats.errors.length ? '\n• Errores: ' + data.stats.errors.join(', ') : ''}`);
+          await loadAdminNews();
+          await loadCronStatus();
+        }
+      } catch (err) {
+        alert(`Error al importar: ${err.message}`);
+      } finally {
+        btnImport.disabled = false;
+        btnImport.textContent = '⬇️ Importar RSS';
+      }
     });
   }
 
-  document.body.appendChild(modal);
-}
+  document.querySelectorAll('[data-news-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-news-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      adminNewsFilter = btn.dataset.newsFilter;
+      loadAdminNews();
+    });
+  });
+});

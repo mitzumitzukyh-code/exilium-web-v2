@@ -1874,15 +1874,24 @@ footer a:hover {
     }
 }
 
-/* ══════════════════════════════════════════════════════════
-   NOTICIAS DE PARCHE
-   ══════════════════════════════════════════════════════════ */
-
-.news-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 1.25rem;
-    margin-top: 2rem;
+/* ── Patch Notes Banner (homepage) ── */
+.pn-banner-link { text-decoration: none; display: block; }
+.pn-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #1A1A1A 0%, #1a0e0e 100%);
+  border: 1px solid #C89B3C;
+  border-radius: 8px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.pn-banner:hover { border-color: #F0D080; background: rgba(200,155,60,0.08); }
+.pn-banner-icon { font-size: 1.8rem; }
+.pn-banner-title { color: #F0D080; font-weight: 700; font-size: 0.95rem; }
+.pn-banner-sub   { color: #8A7A5A; font-size: 0.78rem; margin-top: 2px; }
+.pn-banner-arrow { margin-left: auto; color: #C89B3C; font-size: 1.2rem; }
 }
 
 .news-card {

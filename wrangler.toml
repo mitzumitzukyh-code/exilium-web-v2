@@ -9,6 +9,10 @@ crons = ["*/30 * * * *", "0 */6 * * *"]
 binding = "EXILIUM_KV"
 id = "2d6d2badfc184b408f6c5af7e380d6be"
 
+[[kv_namespaces]]
+binding = "KV"
+id = "2d6d2badfc184b408f6c5af7e380d6be"
+
 [[r2_buckets]]
 binding = "EXILIUM_MEDIA"
 bucket_name = "exilium-media"

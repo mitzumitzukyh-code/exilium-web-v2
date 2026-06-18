@@ -25,8 +25,16 @@ import {
   handleClaimOrder, handleStartOrder, handleCompleteOrder, handleCancelOrder,
   handleAddProgressNote, handleGetNotifications, handleMarkNotificationsRead,
   handleAdminGetAllOrders, handleAdminGetBoosters,
-} from './boosting-orders.js';import { getArticles, getArticleById, createArticle, updateArticle, deleteArticle } from './news.js';
-import { scheduled as newsCronScheduled, handleImportNews } from './news-cron.js';
+} from './boosting-orders.js';
+import {
+  handleGetNews,
+  handleGetNewsById,
+  handleAdminGetNews,
+  handleAdminPatchNews,
+  handleAdminDeleteNews,
+  handleAdminGetCronStatus,
+} from './news.js';
+import { runNewsCron } from './news-cron.js';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -120,27 +128,13 @@ async function handleRequest(request, env, ctx) {
     return cachedJsonResponse(raw || [], 60);
   }
 
-  // ── Public News ──
+  // ── News públicas ──
   if (method === 'GET' && path === '/api/news') {
-    try {
-      const articles = await getArticles(env, false);
-      return cachedJsonResponse(articles, 120);
-    } catch (err) {
-      return jsonResponse({ error: err.message }, 500);
-    }
+    return handleGetNews(request, env);
   }
-
-  if (method === 'GET' && path.startsWith('/api/news/')) {
-    const id = decodeURIComponent(path.split('/')[3]);
-    try {
-      const article = await getArticleById(env, id);
-      if (!article || article.status !== 'published') {
-        return jsonResponse({ error: 'Noticia no encontrada' }, 404);
-      }
-      return jsonResponse(article);
-    } catch (err) {
-      return jsonResponse({ error: err.message }, 500);
-    }
+  if (method === 'GET' && path.startsWith('/api/news/') && path.split('/').length === 4) {
+    const id = path.split('/')[3];
+    return handleGetNewsById(request, env, id);
   }
 
   // ── Public Comments ──
@@ -492,51 +486,24 @@ async function handleRequest(request, env, ctx) {
       return jsonResponse({ ok: true });
     }
 
-    // ── Noticias de Parche ──
+    // ── News admin ──
     if (method === 'GET' && path === '/admin/news') {
-      try {
-        const articles = await getArticles(env, true);
-        return jsonResponse(articles);
-      } catch (err) {
-        return jsonResponse({ error: err.message }, 500);
-      }
+      return handleAdminGetNews(request, env);
+    }
+    if (method === 'GET' && path === '/admin/news/cron-status') {
+      return handleAdminGetCronStatus(request, env);
     }
     if (method === 'POST' && path === '/admin/news/import') {
-      return await handleImportNews(request, env);
+      const stats = await runNewsCron(env);
+      return Response.json({ success: true, stats });
     }
-    if (method === 'POST' && path === '/admin/news') {
-      try {
-        const body = await request.json();
-        const article = await createArticle(env, body);
-        return jsonResponse(article, 201);
-      } catch (err) {
-        return jsonResponse({ error: err.message }, 400);
-      }
-    }
-
     if (method === 'PATCH' && path.startsWith('/admin/news/')) {
-      const id = decodeURIComponent(path.split('/')[3]);
-      if (!id) return jsonResponse({ error: 'ID requerido' }, 400);
-      try {
-        const body = await request.json();
-        const article = await updateArticle(env, id, body);
-        if (!article) return jsonResponse({ error: 'Noticia no encontrada' }, 404);
-        return jsonResponse(article);
-      } catch (err) {
-        return jsonResponse({ error: err.message }, 400);
-      }
+      const id = path.split('/')[3];
+      return handleAdminPatchNews(request, env, id);
     }
-
     if (method === 'DELETE' && path.startsWith('/admin/news/')) {
-      const id = decodeURIComponent(path.split('/')[3]);
-      if (!id) return jsonResponse({ error: 'ID requerido' }, 400);
-      try {
-        const deleted = await deleteArticle(env, id);
-        if (!deleted) return jsonResponse({ error: 'Noticia no encontrada' }, 404);
-        return jsonResponse({ ok: true });
-      } catch (err) {
-        return jsonResponse({ error: err.message }, 500);
-      }
+      const id = path.split('/')[3];
+      return handleAdminDeleteNews(request, env, id);
     }
 
     // ── Hall of Fame ──
@@ -826,41 +793,40 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    console.log(`[CRON] Iniciando sincronización programada: ${new Date().toISOString()}`);
-    ctx.waitUntil(
-      (async () => {
-        // Comprobar si hay un ranking build parcial en progreso
-        const partial = await env.EXILIUM_KV.get('cache:guild-ranking:partial', 'json');
+    if (event.cron === '*/30 * * * *') {
+      console.log(`[CRON] Iniciando sincronización programada: ${new Date().toISOString()}`);
+      ctx.waitUntil(
+        (async () => {
+          const partial = await env.EXILIUM_KV.get('cache:guild-ranking:partial', 'json');
+          if (partial) {
+            try {
+              const off = partial.offset || 0;
+              const result = await buildGuildRanking(env, String(off));
+              console.log(`[CRON] Guild ranking phase: ${result.status}`);
+            } catch (err) {
+              console.error('[CRON] Error en guild ranking build:', err);
+            }
+          } else {
+            try {
+              await syncAllPlayers(env);
+            } catch (err) {
+              console.error('[CRON] Error durante la sincronización masiva:', err);
+              await logError(err, 'cron', env);
+            }
+            try {
+              const result = await buildGuildRanking(env, '0');
+              console.log(`[CRON] Guild ranking started: ${result.status}`);
+            } catch (err) {
+              console.error('[CRON] Error iniciando guild ranking build:', err);
+            }
+          }
+        })()
+      );
+    }
 
-        if (partial) {
-          // Si hay un build parcial, continuarlo (NO sincronizar jugadores para no exceder 50 subrequests)
-          try {
-            const off = partial.offset || 0;
-            const result = await buildGuildRanking(env, String(off));
-            console.log(`[CRON] Guild ranking phase: ${result.status}`);
-          } catch (err) {
-            console.error('[CRON] Error en guild ranking build:', err);
-          }
-        } else {
-          // Sin build parcial: sincronizar jugadores y luego iniciar un nuevo ranking build (fase 1 = roster, ~3 calls)
-          try {
-            await syncAllPlayers(env);
-          } catch (err) {
-            console.error('[CRON] Error durante la sincronización masiva:', err);
-            await logError(err, 'cron', env);
-          }
-          // Iniciar fase 1 del ranking (roster fetch = ~3 subrequests, seguro tras sync de ~39)
-          try {
-            const result = await buildGuildRanking(env, '0');
-            console.log(`[CRON] Guild ranking started: ${result.status}`);
-          } catch (err) {
-            console.error('[CRON] Error iniciando guild ranking build:', err);
-          }
-        }
-      })()
-    );
-
-    // Ejecutar también el cron de noticias
-    ctx.waitUntil(newsCronScheduled(event, env, ctx));
+    if (event.cron === '0 */6 * * *') {
+      const results = await runNewsCron(env);
+      console.log('[CRON] News import:', JSON.stringify(results));
+    }
   },
 };

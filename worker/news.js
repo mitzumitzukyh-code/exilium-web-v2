@@ -1,121 +1,119 @@
-// worker/news.js — Sistema de noticias de parches WoW (solo PvP)
-// Almacenamiento: KV key "news:articles" → Array de artículos
+// worker/news.js
 
-const NEWS_KEY = 'news:articles';
+const KV_KEY_ARTICLES = 'news:articles';
+const KV_KEY_CRON = 'news:cron_last_run';
 
-// ── Helpers ──
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function generateId() {
-  return 'news_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  const ts = Date.now();
+  const rand = Math.random().toString(36).slice(2, 6);
+  return `auto_${ts}_${rand}`;
 }
 
-function sanitizeArticle(body) {
-  return {
-    id: body.id || generateId(),
-    title: (body.title || '').trim().slice(0, 200),
-    summary: (body.summary || '').trim().slice(0, 500),
-    body: (body.body || '').trim().slice(0, 10000),
-    class: body.class || 'general',
-    expansion: (body.expansion || '').trim().slice(0, 50),
-    patchVersion: (body.patchVersion || '').trim().slice(0, 20),
-    source: body.source === 'wowhead' ? 'wowhead' : 'blizzard',
-    sourceUrl: (body.sourceUrl || '').trim().slice(0, 500),
-    status: body.status || 'draft',
-    createdAt: body.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    publishedAt: body.publishedAt || null,
-    approvedBy: body.approvedBy || null,
-  };
+async function getAllArticles(env) {
+  const raw = await env.KV.get(KV_KEY_ARTICLES);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
 }
 
-function compareDatesDesc(a, b) {
-  const dateA = a.publishedAt || a.createdAt;
-  const dateB = b.publishedAt || b.createdAt;
-  return dateB.localeCompare(dateA);
+async function saveAllArticles(env, articles) {
+  await env.KV.put(KV_KEY_ARTICLES, JSON.stringify(articles));
 }
 
-// ── CRUD ──
+// ─── Handlers públicos ────────────────────────────────────────────────────────
 
-export async function getArticles(env, includeAll = false) {
-  const raw = await env.EXILIUM_KV.get(NEWS_KEY, 'json');
-  const articles = Array.isArray(raw) ? raw : [];
+export async function handleGetNews(request, env) {
+  const articles = await getAllArticles(env);
+  const published = articles
+    .filter(a => a.status === 'published')
+    .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  return Response.json(published);
+}
 
-  if (!includeAll) {
-    // Público: solo published, ordenados por fecha
-    return articles
-      .filter(a => a.status === 'published')
-      .sort(compareDatesDesc);
+export async function handleGetNewsById(request, env, id) {
+  const articles = await getAllArticles(env);
+  const article = articles.find(a => a.id === id);
+  if (!article || article.status !== 'published') {
+    return new Response('Not found', { status: 404 });
+  }
+  return Response.json(article);
+}
+
+// ─── Handlers admin ───────────────────────────────────────────────────────────
+
+export async function handleAdminGetNews(request, env) {
+  const articles = await getAllArticles(env);
+  const sorted = [...articles].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  return Response.json(sorted);
+}
+
+export async function handleAdminPatchNews(request, env, id) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response('Invalid JSON', { status: 400 });
   }
 
-  // Admin: todos, ordenados por fecha descendente
-  return articles.sort(compareDatesDesc);
-}
-
-export async function getArticleById(env, id) {
-  const raw = await env.EXILIUM_KV.get(NEWS_KEY, 'json');
-  const articles = Array.isArray(raw) ? raw : [];
-  return articles.find(a => a.id === id) || null;
-}
-
-export async function createArticle(env, body) {
-  const raw = await env.EXILIUM_KV.get(NEWS_KEY, 'json');
-  const articles = Array.isArray(raw) ? raw : [];
-
-  const article = sanitizeArticle(body);
-  article.createdAt = new Date().toISOString();
-  article.updatedAt = article.createdAt;
-
-  articles.unshift(article);
-  await env.EXILIUM_KV.put(NEWS_KEY, JSON.stringify(articles));
-  return article;
-}
-
-export async function updateArticle(env, id, body) {
-  const raw = await env.EXILIUM_KV.get(NEWS_KEY, 'json');
-  const articles = Array.isArray(raw) ? raw : [];
+  const articles = await getAllArticles(env);
   const idx = articles.findIndex(a => a.id === id);
+  if (idx === -1) return new Response('Not found', { status: 404 });
 
-  if (idx === -1) return null;
-
-  const article = articles[idx];
-
-  // Actualizar campos permitidos
-  if (body.title !== undefined) article.title = (body.title || '').trim().slice(0, 200);
-  if (body.summary !== undefined) article.summary = (body.summary || '').trim().slice(0, 500);
-  if (body.body !== undefined) article.body = (body.body || '').trim().slice(0, 10000);
-  if (body.class !== undefined) article.class = body.class;
-  if (body.expansion !== undefined) article.expansion = (body.expansion || '').trim().slice(0, 50);
-  if (body.patchVersion !== undefined) article.patchVersion = (body.patchVersion || '').trim().slice(0, 20);
-  if (body.source !== undefined) article.source = body.source === 'wowhead' ? 'wowhead' : 'blizzard';
-  if (body.sourceUrl !== undefined) article.sourceUrl = (body.sourceUrl || '').trim().slice(0, 500);
-
-  // Manejo de status
-  if (body.status === 'published' && article.status !== 'published') {
-    article.status = 'published';
-    article.publishedAt = new Date().toISOString();
-    article.approvedBy = body.approvedBy || 'admin';
-  } else if (body.status === 'rejected') {
-    article.status = 'rejected';
-  } else if (body.status === 'draft') {
-    article.status = 'draft';
-  } else if (body.status === 'pending') {
-    article.status = 'pending';
+  const allowed = ['status', 'title', 'summary', 'body', 'class', 'patchVersion', 'expansion'];
+  for (const key of allowed) {
+    if (body[key] !== undefined) articles[idx][key] = body[key];
   }
 
-  article.updatedAt = new Date().toISOString();
-  articles[idx] = article;
-  await env.EXILIUM_KV.put(NEWS_KEY, JSON.stringify(articles));
-  return article;
+  if (body.status === 'published' && !articles[idx].publishedAt) {
+    articles[idx].publishedAt = new Date().toISOString();
+    articles[idx].approvedBy = body.approvedBy || 'admin';
+  }
+
+  await saveAllArticles(env, articles);
+  return Response.json(articles[idx]);
 }
 
-export async function deleteArticle(env, id) {
-  const raw = await env.EXILIUM_KV.get(NEWS_KEY, 'json');
-  const articles = Array.isArray(raw) ? raw : [];
-  const idx = articles.findIndex(a => a.id === id);
+export async function handleAdminDeleteNews(request, env, id) {
+  const articles = await getAllArticles(env);
+  const filtered = articles.filter(a => a.id !== id);
+  if (filtered.length === articles.length) {
+    return new Response('Not found', { status: 404 });
+  }
+  await saveAllArticles(env, filtered);
+  return new Response(null, { status: 204 });
+}
 
-  if (idx === -1) return false;
+export async function handleAdminGetCronStatus(request, env) {
+  const raw = await env.KV.get(KV_KEY_CRON);
+  if (!raw) return Response.json({ lastRun: null });
+  return Response.json(JSON.parse(raw));
+}
 
-  articles.splice(idx, 1);
-  await env.EXILIUM_KV.put(NEWS_KEY, JSON.stringify(articles));
-  return true;
+// ─── Función interna: insertar artículos desde el cron ────────────────────────
+
+export async function insertArticles(env, newArticles) {
+  const articles = await getAllArticles(env);
+  const existingIds = new Set(articles.map(a => a.blizzardId));
+  let inserted = 0;
+
+  for (const article of newArticles) {
+    if (existingIds.has(article.blizzardId)) continue;
+    articles.push({
+      ...article,
+      id: generateId(),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      publishedAt: null,
+      approvedBy: null,
+    });
+    inserted++;
+  }
+
+  await saveAllArticles(env, articles);
+  return inserted;
 }
