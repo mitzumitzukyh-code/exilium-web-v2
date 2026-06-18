@@ -3,8 +3,14 @@
 import { insertArticles } from './news.js';
 
 const SOURCES = [
-  { id: 'blizzard', url: 'https://news.blizzard.com/en-us/world-of-warcraft/rss' },
-  { id: 'wowhead', url: 'https://www.wowhead.com/news/rss/world-of-warcraft' },
+  {
+    id: 'wowhead',
+    url: 'https://www.wowhead.com/news/rss/retail',
+  },
+  {
+    id: 'mmo-champion',
+    url: 'https://www.mmo-champion.com/external.php?type=rss2',
+  },
 ];
 
 const PVP_KEYWORDS = [
@@ -15,6 +21,8 @@ const PVP_KEYWORDS = [
   'damage reduced in pvp', 'healing reduced in pvp', 'effectiveness in pvp',
   'pvp tuning', 'pvp adjustment', 'pvp hotfix', 'pvp change',
   'resilience', 'versatility',
+  'patch', 'hotfix', 'tuning', 'balance', 'class', 'damage', 'healing',
+  'nerf', 'buff', 'ability', 'spell', 'talent', 'spec', 'specialization',
 ];
 
 const WOW_CLASSES = [
@@ -108,36 +116,97 @@ function parseRSS(xmlText) {
 
 async function classifyWithAI(env, title, description) {
   const text = `${title} ${description}`.slice(0, 500);
-
-  const prompt = `You are a World of Warcraft expert. Determine if the following article is about PvP (Player vs Player) content.
-PvP includes: arena, battlegrounds, honor, conquest, pvp talents, rated play, solo shuffle, war mode.
-PvP does NOT include: raids, dungeons, quests, crafting, housing, general class changes without pvp context.
-
-Article: "${text}"
-
-Respond ONLY with valid JSON, nothing else. Format:
-{"pvp":"yes","class":"warrior"} if it IS pvp content (use class name or "general")
-{"pvp":"no"} if it is NOT pvp content`;
-
   try {
-    const result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-      prompt,
-      max_tokens: 50,
-      temperature: 0.05,
+    const result = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a strict classifier for World of Warcraft news articles. You only output JSON matching the given schema. Never explain, never comment, never add extra text.',
+        },
+        {
+          role: 'user',
+          content: `Is this article about PvP combat (arenas, battlegrounds, honor, conquest, pvp talents, solo shuffle, war mode, rated pvp)? If yes, identify which class it affects: warrior, mage, priest, druid, hunter, rogue, shaman, warlock, paladin, monk, demonhunter, deathknight, evoker, or general if it's not class-specific.\n\nArticle: ${text}`,
+        },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          type: 'object',
+          properties: {
+            pvp: { type: 'boolean' },
+            class: { type: 'string' },
+          },
+          required: ['pvp', 'class'],
+        },
+      },
+      max_tokens: 80,
+      temperature: 0.1,
     });
 
-    const raw = (result.response || result || '').toString().trim();
-    const jsonMatch = raw.match(/\{[^}]+\}/);
-    if (!jsonMatch) return { pvp: false, confidence: 0.5 };
+    let parsed = result?.response;
+    if (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed); } catch { parsed = null; }
+    }
 
-    const parsed = JSON.parse(jsonMatch[0]);
+    if (!parsed || typeof parsed.pvp !== 'boolean') {
+      return { pvp: false, confidence: 0.5, debug: 'no_json:' + JSON.stringify(result).slice(0, 150) };
+    }
+
     return {
-      pvp: parsed.pvp === 'yes',
+      pvp: parsed.pvp === true,
       class: parsed.class || 'general',
-      confidence: parsed.pvp === 'yes' ? 0.85 : 0.9,
+      confidence: parsed.pvp === true ? 0.85 : 0.9,
+    };
+  } catch (err) {
+    return { pvp: false, confidence: 0.0, debug: 'catch:' + err.message };
+  }
+}
+
+// ─── Traducción a español ─────────────────────────────────────────────────────
+
+async function translateToSpanish(env, title, description) {
+  try {
+    const result = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a translator. You only output JSON matching the given schema. Never explain, never comment, never add extra text.',
+        },
+        {
+          role: 'user',
+          content: `Translate this World of Warcraft article title and summary to Spanish. Keep WoW terms in English (arena, battleground, pvp, buff, nerf, hotfix, patch, honor, conquest, class names).\n\nTitle: ${title}\nSummary: ${description.slice(0, 300)}`,
+        },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            summary: { type: 'string' },
+          },
+          required: ['title', 'summary'],
+        },
+      },
+      max_tokens: 500,
+      temperature: 0.1,
+    });
+
+    let parsed = result?.response;
+    if (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed); } catch { parsed = null; }
+    }
+
+    if (!parsed || !parsed.title) {
+      return { title, summary: description.slice(0, 300) };
+    }
+
+    return {
+      title: parsed.title,
+      summary: parsed.summary || description.slice(0, 300),
     };
   } catch {
-    return { pvp: false, confidence: 0.0 };
+    return { title, summary: description.slice(0, 300) };
   }
 }
 
@@ -169,9 +238,12 @@ export async function runNewsCron(env) {
         if (!hasPvPKeywords(combined)) continue;
 
         const ai = await classifyWithAI(env, item.title, item.description);
+        if (ai.debug) stats.errors.push(`AI debug: ${ai.debug}`);
         if (!ai.pvp) continue;
 
         stats.pvpFound++;
+
+        const translated = await translateToSpanish(env, item.title, item.description);
 
         const detectedClass = ai.class !== 'general'
           ? ai.class
@@ -179,8 +251,8 @@ export async function runNewsCron(env) {
 
         articlesToInsert.push({
           blizzardId: generateBlizzardId(item),
-          title: item.title,
-          summary: item.description.slice(0, 300).replace(/<[^>]*>/g, ''),
+          title: translated.title,
+          summary: translated.summary.replace(/<[^>]*>/g, ''),
           body: item.description.replace(/<[^>]*>/g, ''),
           class: detectedClass,
           expansion: detectExpansion(combined),
