@@ -4,7 +4,7 @@ import { handleAdminLogin, handleAdminAuth, handlePublicAuth } from './auth.js';
 import {
   getPlayersData, getPlayer, createPlayer, updatePlayer, deletePlayer,
   syncPlayer, syncAllPlayers, adjustPlayerXp, grantPlayerTitle,
-  marryPlayers, divorcePlayer,
+  marryPlayers, divorcePlayer, getLevelupLogs,
 } from './players.js';
 import { getAccessToken, getCurrentSeasonId } from './blizzard.js';
 import { getRatingsForAddon, exportAddonDataLua } from './addon.js';
@@ -35,6 +35,19 @@ import {
   handleAdminGetCronStatus,
 } from './news.js';
 import { runNewsCron } from './news-cron.js';
+import {
+  handleCasinoRegister, handleCasinoLogin, handleCasinoLogout, handleCasinoMe,
+  verifyCasinoSession, handleAdminGetCasinoUsers,
+} from './casino-auth.js';
+import {
+  tickStateMachine, getCasinoState,
+  handleSeat, handlePlaceBet, handleMarkReady, handleClearBets, handleSendChat,
+  handleGetLeaderboard,
+  handleAdminGetConfig, handleAdminPutConfig, handleAdminAdjustBalance,
+  handleAdminGetRounds, handleAdminGetTransactions, handleAdminGetStats,
+  handleAdminKick, handleAdminResetState,
+  handleAdminGetRound, handleAdminGetAdvancedStats,
+} from './casino.js';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
@@ -625,6 +638,13 @@ async function handleRequest(request, env, ctx) {
       return jsonResponse({ ok: true, count: body.rewards.length });
     }
 
+    // ── Level-up Logs (monitoreo de subidas de nivel) ──
+    if (method === 'GET' && path === '/admin/levelup-logs') {
+      const limit = parseInt(new URL(request.url).searchParams.get('limit') || '100', 10);
+      const logs = await getLevelupLogs(env, limit);
+      return jsonResponse(logs);
+    }
+
     // ── Backup / Restore ──
     if (method === 'GET' && path === '/admin/backup/info') {
       const info = await getBackupInfo(request, env);
@@ -764,6 +784,145 @@ async function handleRequest(request, env, ctx) {
 
     if (method === 'GET' && path === '/admin/boost/boosters') {
       const result = await handleAdminGetBoosters(env);
+      return jsonResponse(result);
+    }
+  }
+
+  // ── Casino — Rutas públicas (auth opcional, sesiones dedicadas) ──
+  // Auth del casino: register/login/logout no requieren sesión previa
+  if (method === 'POST' && path === '/api/casino/auth/register') {
+    const result = await handleCasinoRegister(request, env);
+    return jsonResponse(result, result.error ? 400 : 201);
+  }
+  if (method === 'POST' && path === '/api/casino/auth/login') {
+    const result = await handleCasinoLogin(request, env);
+    return jsonResponse(result, result.error ? 401 : 200);
+  }
+  if (method === 'POST' && path === '/api/casino/auth/logout') {
+    const result = await handleCasinoLogout(request, env);
+    return jsonResponse(result);
+  }
+
+  // Rutas del casino con sesión opcional/obligatoria
+  if (path.startsWith('/api/casino/')) {
+    // Avanzar la máquina de estados antes de cada request (polling-friendly)
+    try { await tickStateMachine(env); } catch (e) {
+      // No bloquear si falla la transición
+      console.error('[CASINO] tickStateMachine error:', e);
+    }
+
+    // Endpoints públicos o con sesión
+    if (method === 'GET' && path === '/api/casino/leaderboard') {
+      const result = await handleGetLeaderboard(env);
+      return cachedJsonResponse(result, 60);
+    }
+
+    // Los siguientes endpoints requieren sesión del casino
+    const session = await verifyCasinoSession(request, env);
+
+    if (method === 'GET' && path === '/api/casino/me') {
+      const result = await handleCasinoMe(request, env);
+      return jsonResponse(result, result.status || 200);
+    }
+
+    if (method === 'GET' && path === '/api/casino/state') {
+      const result = await getCasinoState(env, session);
+      return jsonResponse(result);
+    }
+
+    if (!session) {
+      return jsonResponse({ error: 'No autenticado', status: 401 }, 401);
+    }
+
+    if (method === 'POST' && path === '/api/casino/seat') {
+      let body; try { body = await request.json(); } catch (_) { body = {}; }
+      const result = await handleSeat(request, env, session, body.action || 'sit');
+      return jsonResponse(result, result.status || (result.error ? 400 : 200));
+    }
+
+    if (method === 'POST' && path === '/api/casino/bet') {
+      const result = await handlePlaceBet(request, env, session);
+      return jsonResponse(result, result.status || (result.error ? 400 : 200));
+    }
+
+    if (method === 'POST' && path === '/api/casino/clear-bets') {
+      const result = await handleClearBets(request, env, session);
+      return jsonResponse(result, result.status || (result.error ? 400 : 200));
+    }
+
+    if (method === 'POST' && path === '/api/casino/ready') {
+      const result = await handleMarkReady(request, env, session);
+      return jsonResponse(result, result.status || (result.error ? 400 : 200));
+    }
+
+    if (method === 'POST' && path === '/api/casino/chat') {
+      const result = await handleSendChat(request, env, session);
+      return jsonResponse(result, result.status || (result.error ? 400 : 200));
+    }
+  }
+
+  // ── Casino — Rutas Admin ──
+  if (path.startsWith('/admin/casino/')) {
+    if (!(await handleAdminAuth(request, env))) {
+      return jsonResponse({ error: 'Unauthorized' }, 401);
+    }
+
+    if (method === 'GET' && path === '/admin/casino/users') {
+      const result = await handleAdminGetCasinoUsers(env);
+      return jsonResponse(result);
+    }
+
+    if (method === 'GET' && path === '/admin/casino/config') {
+      const result = await handleAdminGetConfig(env);
+      return jsonResponse(result);
+    }
+
+    if (method === 'PUT' && path === '/admin/casino/config') {
+      const result = await handleAdminPutConfig(request, env);
+      return jsonResponse(result, result.error ? 400 : 200);
+    }
+
+    if (method === 'POST' && path.startsWith('/admin/casino/users/') && path.endsWith('/balance')) {
+      const userId = path.split('/')[4];
+      const result = await handleAdminAdjustBalance(request, env, userId);
+      return jsonResponse(result, result.error ? 400 : 200);
+    }
+
+    if (method === 'GET' && path === '/admin/casino/rounds') {
+      const result = await handleAdminGetRounds(env);
+      return jsonResponse(result);
+    }
+
+    if (method === 'GET' && path.startsWith('/admin/casino/transactions/')) {
+      const userId = path.split('/')[4];
+      const result = await handleAdminGetTransactions(env, userId);
+      return jsonResponse(result);
+    }
+
+    if (method === 'GET' && path === '/admin/casino/stats') {
+      const result = await handleAdminGetStats(env);
+      return jsonResponse(result);
+    }
+
+    if (method === 'POST' && path.startsWith('/admin/casino/kick/')) {
+      const userId = path.split('/')[4];
+      const result = await handleAdminKick(env, userId);
+      return jsonResponse(result);
+    }
+
+    if (method === 'GET' && path.startsWith('/admin/casino/round/')) {
+      const roundId = path.split('/')[4];
+      const result = await handleAdminGetRound(env, roundId);
+      return jsonResponse(result, result.error ? 400 : 200);
+    }
+
+    if (method === 'GET' && path === '/admin/casino/advanced-stats') {
+      const result = await handleAdminGetAdvancedStats(env);
+      return jsonResponse(result);
+    }
+
+    if (method === 'POST' && path === '/admin/casino/reset-state') {
+      const result = await handleAdminResetState(env);
       return jsonResponse(result);
     }
   }

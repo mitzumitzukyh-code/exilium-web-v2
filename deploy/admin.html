@@ -11,9 +11,9 @@
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      LOGIN VIEW
-     ════════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="login-view">
     <div class="login-box">
         <img src="assets/logo.png" alt="Exilium" class="login-logo">
@@ -28,14 +28,14 @@
     </div>
 </div>
 
-<!-- ════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      DASHBOARD VIEW
-     ════════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="dashboard-view">
 
     <!-- Mobile Header -->
     <div class="mobile-header">
-        <button class="hamburger-btn" id="hamburger-btn">☰</button>
+        <button class="hamburger-btn" id="hamburger-btn">â˜°</button>
         <span style="font-family:var(--font-title);letter-spacing:2px;color:var(--text-bright);">EXILIUM</span>
     </div>
 
@@ -55,17 +55,18 @@
             <button data-tab="export"><span class="nav-icon">📦</span> Exportar Addon</button>
             <button data-tab="season"><span class="nav-icon">🏆</span> Temporada</button>
             <button data-tab="battlepass"><span class="nav-icon">🎖️</span> Pase de Batalla</button>
-            <button data-tab="officers"><span class="nav-icon">👑</span> Oficiales</button>
+            <button data-tab="officers"><span class="nav-icon">🛡️</span> Oficiales</button>
             <button data-tab="hall-of-fame"><span class="nav-icon">🏛️</span> Salón de la Fama</button>
             <button data-tab="analytics"><span class="nav-icon">📈</span> Analíticas</button>
             <button data-tab="n8n"><span class="nav-icon">⚡</span> N8N / Discord</button>
             <button data-tab="errors"><span class="nav-icon">🔬</span> Errores</button>
             <div style="height:1px;background:var(--border);margin:8px 12px;"></div>
             <button data-tab="boost-orders"><span class="nav-icon">⚔️</span> Pedidos Carry</button>
-            <button data-tab="boost-boosters"><span class="nav-icon">🛡️</span> Boosters</button>
+            <button data-tab="boost-boosters"><span class="nav-icon">🏛️</span> Boosters</button>
             <button data-tab="boost-clients"><span class="nav-icon">👥</span> Clientes Portal</button>
             <button data-tab="rbg-strategies"><span class="nav-icon">🗺️</span> RBG Strategies</button>
             <button data-tab="news"><span class="nav-icon">📰</span> Noticias</button>
+            <button data-tab="casino"><span class="nav-icon">🎰</span> Casino PandaCoins</button>
         </nav>
         <div class="sidebar-footer">
             <button class="btn-logout" id="logout-btn">Cerrar sesión</button>
@@ -75,7 +76,7 @@
     <!-- Main Content -->
     <main id="main-content">
 
-        <!-- ═══════ TAB: JUGADORES ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: JUGADORES â•â•â•â•â•â•â• -->
         <div id="tab-players" class="tab-content active">
             <div class="tab-header">
                 <h2 class="tab-title">Jugadores</h2>
@@ -91,7 +92,7 @@
                     <option value="active">Activos</option>
                     <option value="banned">Baneados</option>
                 </select>
-                <span class="players-count" id="players-count">—</span>
+                <span class="players-count" id="players-count">â€”</span>
             </div>
             <div class="table-wrap">
                 <table class="data-table" id="players-table">
@@ -99,7 +100,7 @@
                         <tr>
                             <th>#</th>
                             <th></th>
-                            <th>Nombre · Realm</th>
+                            <th>Nombre  Realm</th>
                             <th>Clase</th>
                             <th>iLvl</th>
                             <th>XP</th>
@@ -117,7 +118,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: SINCRONIZACIÓN ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: SINCRONIZACI“N â•â•â•â•â•â•â• -->
         <div id="tab-sync" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Sincronizacion</h2>
@@ -129,15 +130,15 @@
                 <div class="card-body">
                     <div class="stat-grid" id="sync-stats">
                         <div class="stat-card">
-                            <div class="stat-val" id="sync-last-run">—</div>
+                            <div class="stat-val" id="sync-last-run">â€”</div>
                             <div class="stat-label">Último sync</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-val" id="sync-ok-count">—</div>
+                            <div class="stat-val" id="sync-ok-count">â€”</div>
                             <div class="stat-label">Sincronizados OK</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-val" id="sync-error-count">—</div>
+                            <div class="stat-val" id="sync-error-count">â€”</div>
                             <div class="stat-label">Con problemas</div>
                         </div>
                     </div>
@@ -158,7 +159,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: AJUSTE DE XP ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: AJUSTE DE XP â•â•â•â•â•â•â• -->
         <div id="tab-xp" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Ajuste de XP</h2>
@@ -171,7 +172,7 @@
                     <div class="form-group">
                         <label for="xp-player-select">Jugador</label>
                         <select class="input" id="xp-player-select">
-                            <option value="">— Seleccionar —</option>
+                            <option value="">â€” Seleccionar â€”</option>
                         </select>
                     </div>
                     <div id="xp-player-info" style="display:none;">
@@ -199,7 +200,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: BODAS ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: BODAS â•â•â•â•â•â•â• -->
         <div id="tab-marriages" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Bodas</h2>
@@ -214,25 +215,25 @@
             </div>
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">💒 Casar jugadores</span>
+                    <span class="card-title">💰 Casar jugadores</span>
                 </div>
                 <div class="card-body">
                     <div class="form-inline" style="margin-bottom:12px;flex-wrap:wrap;">
                         <div class="form-group" style="flex:1;min-width:180px;margin-bottom:0;">
                             <label for="marry-p1">Jugador 1</label>
-                            <select class="input" id="marry-p1"><option value="">— Seleccionar —</option></select>
+                            <select class="input" id="marry-p1"><option value="">â€” Seleccionar â€”</option></select>
                         </div>
                         <div class="form-group" style="flex:1;min-width:180px;margin-bottom:0;">
                             <label for="marry-p2">Jugador 2</label>
-                            <select class="input" id="marry-p2"><option value="">— Seleccionar —</option></select>
+                            <select class="input" id="marry-p2"><option value="">â€” Seleccionar â€”</option></select>
                         </div>
                     </div>
-                    <button class="btn btn-primary" id="marry-btn">💒 Casar</button>
+                    <button class="btn btn-primary" id="marry-btn">💰 Casar</button>
                 </div>
             </div>
         </div>
 
-        <!-- ═══════ TAB: ANUNCIO ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: ANUNCIO â•â•â•â•â•â•â• -->
         <div id="tab-announcement" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Anuncio</h2>
@@ -259,7 +260,7 @@
                     <div class="form-group">
                         <label for="announce-type">Tipo</label>
                         <select class="input" id="announce-type">
-                            <option value="info">ℹ️ Info</option>
+                            <option value="info">â„¹ï¸ Info</option>
                             <option value="success">✅ Success</option>
                             <option value="warning">⚠️ Warning</option>
                             <option value="critical">🚨 Critical</option>
@@ -274,7 +275,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: EXPORTAR ADDON ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: EXPORTAR ADDON â•â•â•â•â•â•â• -->
         <div id="tab-export" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Exportar Addon</h2>
@@ -300,7 +301,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: TEMPORADA ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: TEMPORADA â•â•â•â•â•â•â• -->
         <div id="tab-season" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Temporada</h2>
@@ -316,14 +317,14 @@
                             <div class="stat-label">ID de Temporada</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-val" id="season-player-count">—</div>
+                            <div class="stat-val" id="season-player-count">â€”</div>
                             <div class="stat-label">Jugadores activos</div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="danger-zone">
-                <h3>⚠️ Zona de peligro — Cerrar temporada</h3>
+                <h3>⚠️ Zona de peligro â€” Cerrar temporada</h3>
                 <p>Al cerrar la temporada:</p>
                 <ul>
                     <li>Los máximos históricos se guardarán en el historial</li>
@@ -339,11 +340,11 @@
                     <label for="season-confirm-text">Escribe CONFIRMAR para habilitar el botón</label>
                     <input class="input" type="text" id="season-confirm-text" placeholder="CONFIRMAR" style="max-width:300px;">
                 </div>
-                <button class="btn btn-danger" id="close-season-btn" disabled>☠️ Cerrar Temporada</button>
+                <button class="btn btn-danger" id="close-season-btn" disabled>â˜ ï¸ Cerrar Temporada</button>
             </div>
         </div>
 
-        <!-- ═══════ TAB: PASE DE BATALLA ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: PASE DE BATALLA â•â•â•â•â•â•â• -->
         <div id="tab-battlepass" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Pase de Batalla</h2>
@@ -361,7 +362,7 @@
                 <div class="card-body">
                     <div class="stat-grid" id="bp-stats">
                         <div class="stat-card">
-                            <div class="stat-val" id="bp-total-rewards">—</div>
+                            <div class="stat-val" id="bp-total-rewards">â€”</div>
                             <div class="stat-label">Recompensas configuradas</div>
                         </div>
                         <div class="stat-card">
@@ -369,11 +370,11 @@
                             <div class="stat-label">Nivel máximo</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-val" id="bp-players-maxed">—</div>
+                            <div class="stat-val" id="bp-players-maxed">â€”</div>
                             <div class="stat-label">Jugadores nivel 40</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-val" id="bp-avg-level">—</div>
+                            <div class="stat-val" id="bp-avg-level">â€”</div>
                             <div class="stat-label">Nivel promedio</div>
                         </div>
                     </div>
@@ -470,9 +471,57 @@
                     </div>
                 </div>
             </div>
+
+            <!-- â•â•â•â•â•â•â• MONITOREO: SUBIDAS DE NIVEL â•â•â•â•â•â•â• -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📈 Actividad â€” Subidas de Nivel</span>
+                    <span class="badge" id="levelup-count-badge" style="background:rgba(88,166,255,.15);color:#58a6ff;border:1px solid rgba(88,166,255,.3);border-radius:12px;padding:.15rem .6rem;font-size:.75rem;font-weight:700;">0</span>
+                </div>
+                <div class="card-body">
+                    <!-- Stats row -->
+                    <div class="stat-grid" id="levelup-stats" style="margin-bottom:16px;">
+                        <div class="stat-card">
+                            <div class="stat-val" id="lu-stats-24h">â€”</div>
+                            <div class="stat-label">Subidas últimas 24h</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="lu-stats-7d">â€”</div>
+                            <div class="stat-label">Subidas últimos 7d</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="lu-stats-total">â€”</div>
+                            <div class="stat-label">Total registradas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="lu-stats-unique">â€”</div>
+                            <div class="stat-label">Jugadores distintos</div>
+                        </div>
+                    </div>
+                    <!-- Mini chart -->
+                    <div style="margin-bottom:16px;padding:12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;" id="levelup-chart-section">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                            <span style="font-size:.82rem;font-weight:600;color:var(--text-bright);">📊 Subidas por día (últimos 14 días)</span>
+                        </div>
+                        <div id="levelup-chart" style="display:flex;align-items:flex-end;gap:4px;height:120px;padding:4px 0;"></div>
+                        <div id="levelup-chart-labels" style="display:flex;gap:4px;margin-top:4px;"></div>
+                    </div>
+                    <!-- Filter + List -->
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+                        <button class="btn" id="refresh-levelup-btn">🔄 Actualizar</button>
+                        <select class="input" id="levelup-player-filter" style="max-width:200px;font-size:.82rem;">
+                            <option value="all">Todos los jugadores</option>
+                        </select>
+                        <span style="font-size:.82rem;color:var(--text-muted);" id="levelup-status-text">Mostrando eventos recientes</span>
+                    </div>
+                    <div id="levelup-log-container" class="problem-list">
+                        <div class="empty-state"><p>No hay subidas de nivel registradas aún.</p></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- ═══════ TAB: OFICIALES ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: OFICIALES â•â•â•â•â•â•â• -->
         <div id="tab-officers" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Oficiales</h2>
@@ -529,7 +578,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: SALÓN DE LA FAMA ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: SAL“N DE LA FAMA â•â•â•â•â•â•â• -->
         <div id="tab-hall-of-fame" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Salón de la Fama</h2>
@@ -552,7 +601,7 @@
                         <label>Subir video directamente</label>
                         <div style="display:flex;gap:8px;align-items:center;">
                             <input type="file" id="hof-video-file" accept="video/*" style="flex:1;padding:6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-main);cursor:pointer;">
-                            <button class="btn btn-success" id="hof-upload-video-btn">⬆️ Subir</button>
+                            <button class="btn btn-success" id="hof-upload-video-btn">â¬†ï¸ Subir</button>
                         </div>
                         <div id="hof-upload-progress" style="display:none;margin-top:8px;">
                             <div style="background:var(--bg-secondary);border-radius:4px;height:8px;overflow:hidden;">
@@ -561,12 +610,12 @@
                             <span id="hof-upload-status" style="font-size:.8em;color:var(--text-muted);margin-top:4px;display:block;"></span>
                         </div>
                     </div>
-                    <div style="text-align:center;color:var(--text-muted);font-size:.85em;margin:8px 0;">— o pega una URL —</div>
+                    <div style="text-align:center;color:var(--text-muted);font-size:.85em;margin:8px 0;">â€” o pega una URL â€”</div>
                     <div class="form-group" style="margin-bottom:12px;">
-                        <label for="hof-main-video">URL del video (YouTube, Google Drive, enlace .mp4…)</label>
+                        <label for="hof-main-video">URL del video (YouTube, Google Drive, enlace .mp4â€¦)</label>
                         <div style="display:flex;gap:8px;">
                             <input class="input" type="text" id="hof-main-video" placeholder="Ej: https://www.youtube.com/watch?v=XXXXX" style="flex:1;">
-                            <button class="btn" id="hof-preview-video-btn">👁️ Vista previa</button>
+                            <button class="btn" id="hof-preview-video-btn">🏛️ Vista previa</button>
                         </div>
                     </div>
                     <div id="hof-video-preview" style="display:none;margin-top:12px;max-width:480px;">
@@ -603,7 +652,7 @@
                         <div class="form-group">
                             <label for="hof-player-select">Jugador inscrito</label>
                             <select class="input" id="hof-player-select">
-                                <option value="">— Seleccionar jugador —</option>
+                                <option value="">â€” Seleccionar jugador â€”</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -633,7 +682,7 @@
                         <label>Video individual del jugador (opcional)</label>
                         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
                             <input type="file" id="hof-entry-video-file" accept="video/*" style="flex:1;padding:6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-main);cursor:pointer;">
-                            <button class="btn btn-success" id="hof-entry-upload-btn">⬆️ Subir</button>
+                            <button class="btn btn-success" id="hof-entry-upload-btn">â¬†ï¸ Subir</button>
                         </div>
                         <div id="hof-entry-upload-progress" style="display:none;margin-bottom:8px;">
                             <div style="background:var(--bg-secondary);border-radius:4px;height:8px;overflow:hidden;">
@@ -641,7 +690,7 @@
                             </div>
                             <span id="hof-entry-upload-status" style="font-size:.8em;color:var(--text-muted);margin-top:4px;display:block;"></span>
                         </div>
-                        <div style="text-align:center;color:var(--text-muted);font-size:.85em;margin:4px 0;">— o pega una URL —</div>
+                        <div style="text-align:center;color:var(--text-muted);font-size:.85em;margin:4px 0;">â€” o pega una URL â€”</div>
                         <input class="input" type="text" id="hof-entry-video-url" placeholder="URL del video (YouTube, MP4...)" style="margin-top:4px;">
                     </div>
                     <div style="display:flex;gap:8px;margin-top:8px;">
@@ -652,7 +701,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: N8N / DISCORD ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: N8N / DISCORD â•â•â•â•â•â•â• -->
         <div id="tab-n8n" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">⚡ N8N &amp; Discord</h2>
@@ -664,7 +713,7 @@
                     <strong style="color:var(--accent);">¿Cómo configurar?</strong>
                     <ol style="margin-top:8px;padding-left:18px;line-height:1.8;color:var(--text-muted);">
                         <li>Crea una cuenta gratis en <a href="https://app.n8n.cloud" target="_blank" style="color:var(--accent);">app.n8n.cloud</a></li>
-                        <li>Crea un nuevo workflow e importa el JSON de abajo (<strong>Import → From JSON</strong>)</li>
+                        <li>Crea un nuevo workflow e importa el JSON de abajo (<strong>Import â†’ From JSON</strong>)</li>
                         <li>Abre el nodo <strong>Webhook</strong>, copia la URL de producción y pégala aquí abajo</li>
                         <li>Crea un Discord Webhook en tu canal y pégalo también</li>
                         <li>Activa el workflow en N8N (toggle Active)</li>
@@ -682,7 +731,7 @@
                         <input class="input" type="url" id="n8n-webhook-url" placeholder="https://tu-instancia.app.n8n.cloud/webhook/xxxxx">
                     </div>
                     <div class="form-group">
-                        <label for="n8n-discord-url">URL del Discord Webhook (opcional — para el flujo de parches)</label>
+                        <label for="n8n-discord-url">URL del Discord Webhook (opcional â€” para el flujo de parches)</label>
                         <input class="input" type="url" id="n8n-discord-url" placeholder="https://discord.com/api/webhooks/xxxxx/yyyyy">
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -695,9 +744,9 @@
 
             <!-- Workflow JSON export -->
             <div class="card">
-                <div class="card-header"><span class="card-title">📋 Workflow N8N — Importar en tu instancia</span></div>
+                <div class="card-header"><span class="card-title">📋 Workflow N8N â€” Importar en tu instancia</span></div>
                 <div class="card-body">
-                    <p style="color:var(--text-muted);font-size:.85em;margin-bottom:12px;">Copia este JSON y en N8N ve a <strong>Import → From JSON</strong>. Luego configura los nodos con tus credenciales de Discord.</p>
+                    <p style="color:var(--text-muted);font-size:.85em;margin-bottom:12px;">Copia este JSON y en N8N ve a <strong>Import â†’ From JSON</strong>. Luego configura los nodos con tus credenciales de Discord.</p>
                     <div style="position:relative;">
                         <button onclick="copyN8nWorkflow()" style="position:absolute;top:8px;right:8px;background:var(--accent);color:#000;border:none;border-radius:4px;padding:4px 10px;font-size:.75em;font-weight:700;cursor:pointer;">📋 Copiar</button>
                         <textarea id="n8n-workflow-json" readonly rows="14"
@@ -707,7 +756,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: ANALÍTICAS ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: ANALÍTICAS â•â•â•â•â•â•â• -->
         <div id="tab-analytics" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Analíticas</h2>
@@ -722,19 +771,19 @@
                 <div class="card-body">
                     <div class="stat-grid" id="analytics-stats">
                         <div class="stat-card">
-                            <div class="stat-val" id="analytics-total">—</div>
+                            <div class="stat-val" id="analytics-total">â€”</div>
                             <div class="stat-label">Visitas totales</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-val" id="analytics-today">—</div>
+                            <div class="stat-val" id="analytics-today">â€”</div>
                             <div class="stat-label">Hoy</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-val" id="analytics-week">—</div>
+                            <div class="stat-val" id="analytics-week">â€”</div>
                             <div class="stat-label">Últimos 7 días</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-val" id="analytics-avg">—</div>
+                            <div class="stat-val" id="analytics-avg">â€”</div>
                             <div class="stat-label">Promedio diario (7d)</div>
                         </div>
                     </div>
@@ -751,16 +800,16 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: PEDIDOS CARRY ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: PEDIDOS CARRY â•â•â•â•â•â•â• -->
         <div id="tab-boost-orders" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">⚔️ Pedidos de Carry</h2>
                 <div class="tab-actions">
                     <select class="input" id="boost-orders-filter" style="font-size:.82rem;padding:.35rem .7rem;" onchange="filterBoostOrders(this.value)">
                         <option value="all">Todos los estados</option>
-                        <option value="pending">⏳ Pendiente</option>
-                        <option value="claimed">🔒 Reclamado</option>
-                        <option value="in_progress">▶️ En progreso</option>
+                        <option value="pending">â³ Pendiente</option>
+                        <option value="claimed">ð”’ Reclamado</option>
+                        <option value="in_progress">â–¶ï¸ En progreso</option>
                         <option value="completed">✅ Completado</option>
                         <option value="cancelled">❌ Cancelado</option>
                     </select>
@@ -783,10 +832,10 @@
 
             <!-- Stats row -->
             <div class="stat-grid" id="boost-orders-stats" style="margin-bottom:1rem;">
-                <div class="stat-card"><div class="stat-val" id="bos-total">—</div><div class="stat-label">Total pedidos</div></div>
-                <div class="stat-card"><div class="stat-val" id="bos-pending">—</div><div class="stat-label">Pendientes</div></div>
-                <div class="stat-card"><div class="stat-val" id="bos-active">—</div><div class="stat-label">En curso</div></div>
-                <div class="stat-card"><div class="stat-val" id="bos-completed">—</div><div class="stat-label">Completados</div></div>
+                <div class="stat-card"><div class="stat-val" id="bos-total">â€”</div><div class="stat-label">Total pedidos</div></div>
+                <div class="stat-card"><div class="stat-val" id="bos-pending">â€”</div><div class="stat-label">Pendientes</div></div>
+                <div class="stat-card"><div class="stat-val" id="bos-active">â€”</div><div class="stat-label">En curso</div></div>
+                <div class="stat-card"><div class="stat-val" id="bos-completed">â€”</div><div class="stat-label">Completados</div></div>
             </div>
             <div class="card">
                 <div class="card-body" style="padding:0;">
@@ -815,10 +864,10 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: BOOSTERS ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: BOOSTERS â•â•â•â•â•â•â• -->
         <div id="tab-boost-boosters" class="tab-content">
             <div class="tab-header">
-                <h2 class="tab-title">🛡️ Boosters</h2>
+                <h2 class="tab-title">🏛️ Boosters</h2>
                 <div class="tab-actions">
                     <button class="btn" id="refresh-boosters-btn">🔄 Refresh</button>
                 </div>
@@ -826,7 +875,7 @@
             <!-- Aplicaciones pendientes -->
             <div class="card" style="margin-bottom:1rem;border-left:3px solid var(--warning);">
                 <div class="card-header">
-                    <span class="card-title">⏳ Aplicaciones Pendientes</span>
+                    <span class="card-title">â³ Aplicaciones Pendientes</span>
                     <span class="badge" id="pending-apps-count" style="background:rgba(234,179,8,.15);color:#eab308;border:1px solid rgba(234,179,8,.3);border-radius:12px;padding:.15rem .6rem;font-size:.75rem;font-weight:700;">0</span>
                 </div>
                 <div class="card-body" id="boost-applications-list">
@@ -862,7 +911,7 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: CLIENTES PORTAL ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: CLIENTES PORTAL â•â•â•â•â•â•â• -->
         <div id="tab-boost-clients" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">👥 Clientes del Portal</h2>
@@ -893,13 +942,12 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: RBG STRATEGIES ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: RBG STRATEGIES â•â•â•â•â•â•â• -->
         <div id="tab-rbg-strategies" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">🗺️ RBG Strategy Hub</h2>
                 <div class="tab-actions">
                     <button class="btn btn-primary" id="rbg-save-btn" onclick="saveRbgStrategy()">💾 Guardar estrategia</button>
-                    <a href="rbg-strategy.html" target="_blank" class="btn">👁️ Ver página pública</a>
                 </div>
             </div>
 
@@ -952,19 +1000,19 @@
             </div>
         </div>
 
-        <!-- ═══════ TAB: NOTICIAS DE PARCHE ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: NOTICIAS DE PARCHE â•â•â•â•â•â•â• -->
         <div id="tab-news" class="tab-content">
             <div class="admin-section-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 0;">
                 <h2>Noticias PvP</h2>
                 <div style="display:flex;gap:8px;align-items:center;">
-                    <span id="cronStatus" style="font-size:0.78rem;color:#8A7A5A;">—</span>
-                    <button class="btn btn-primary" id="btnImportNews">⬇️ Importar RSS</button>
+                    <span id="cronStatus" style="font-size:0.78rem;color:#8A7A5A;">â€”</span>
+                    <button class="btn btn-primary" id="btnImportNews">â¬‡ï¸ Importar RSS</button>
                 </div>
             </div>
 
             <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
                 <button class="pn-chip active" data-news-filter="all" style="padding:6px 14px;border-radius:4px;border:1px solid #3A3A3A;background:#242424;color:#8A7A5A;font-size:0.78rem;cursor:pointer;font-family:inherit;">Todos</button>
-                <button class="pn-chip" data-news-filter="pending" style="padding:6px 14px;border-radius:4px;border:1px solid #3A3A3A;background:#242424;color:#8A7A5A;font-size:0.78rem;cursor:pointer;font-family:inherit;">⏳ Pendientes</button>
+                <button class="pn-chip" data-news-filter="pending" style="padding:6px 14px;border-radius:4px;border:1px solid #3A3A3A;background:#242424;color:#8A7A5A;font-size:0.78rem;cursor:pointer;font-family:inherit;">â³ Pendientes</button>
                 <button class="pn-chip" data-news-filter="published" style="padding:6px 14px;border-radius:4px;border:1px solid #3A3A3A;background:#242424;color:#8A7A5A;font-size:0.78rem;cursor:pointer;font-family:inherit;">✅ Publicados</button>
                 <button class="pn-chip" data-news-filter="rejected" style="padding:6px 14px;border-radius:4px;border:1px solid #3A3A3A;background:#242424;color:#8A7A5A;font-size:0.78rem;cursor:pointer;font-family:inherit;">❌ Rechazados</button>
             </div>
@@ -972,7 +1020,7 @@
             <div id="adminNewsList"></div>
         </div>
 
-        <!-- ═══════ TAB: ERRORES ═══════ -->
+        <!-- â•â•â•â•â•â•â• TAB: ERRORES â•â•â•â•â•â•â• -->
         <div id="tab-errors" class="tab-content">
             <div class="tab-header">
                 <h2 class="tab-title">Errores</h2>
@@ -985,12 +1033,178 @@
             </div>
         </div>
 
+        <!-- ═══ TAB: CASINO ═══ -->
+        <div id="tab-casino" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">🎰 Sala de PandaCoins</h2>
+                <div class="tab-actions">
+                    <button class="btn" id="casino-refresh-btn">🔄 Refresh</button>
+                    <button class="btn btn-danger" id="casino-reset-btn">⚠️ Reset Estado</button>
+                </div>
+            </div>
+
+            <!-- Stats globales -->
+            <div class="stat-grid" id="casino-stats-grid">
+                <div class="stat-card"><div class="stat-val" id="cs-status">—</div><div class="stat-label">Estado Sala</div></div>
+                <div class="stat-card"><div class="stat-val" id="cs-round">—</div><div class="stat-label">Ronda Actual</div></div>
+                <div class="stat-card"><div class="stat-val" id="cs-users">—</div><div class="stat-label">Usuarios</div></div>
+                <div class="stat-card"><div class="stat-val" id="cs-seats">—</div><div class="stat-label">Asientos Activos</div></div>
+                <div class="stat-card"><div class="stat-val" id="cs-balance">—</div><div class="stat-label">Saldo Total</div></div>
+                <div class="stat-card"><div class="stat-val" id="cs-last">—</div><div class="stat-label">Último Resultado</div></div>
+            </div>
+
+            <!-- Configuración -->
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header"><h3>⚙️ Configuración</h3></div>
+                <div class="card-body">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">
+                        <label>Duración apuestas (s)
+                            <input type="number" class="input" id="cfg-betting_duration" min="5" max="120">
+                        </label>
+                        <label>Duración giro (s)
+                            <input type="number" class="input" id="cfg-spinning_duration" min="2" max="15">
+                        </label>
+                        <label>Duración resultado (s)
+                            <input type="number" class="input" id="cfg-result_duration" min="2" max="15">
+                        </label>
+                        <label>Apuesta mínima
+                            <input type="number" class="input" id="cfg-min_bet" min="1">
+                        </label>
+                        <label>Apuesta máxima
+                            <input type="number" class="input" id="cfg-max_bet" min="1">
+                        </label>
+                        <label>Asientos máximos
+                            <input type="number" class="input" id="cfg-max_seats" min="1" max="10">
+                        </label>
+                        <label>Apuestas por ronda
+                            <input type="number" class="input" id="cfg-max_bets_per_round" min="1" max="10">
+                        </label>
+                        <label>Saldo inicial
+                            <input type="number" class="input" id="cfg-initial_balance" min="0">
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" id="casino-save-config-btn" style="margin-top:12px;">💾 Guardar Config</button>
+                </div>
+            </div>
+
+            <!-- Usuarios -->
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header"><h3>👥 Usuarios y Saldos</h3></div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrap">
+                        <table class="data-table" id="casino-users-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Saldo</th>
+                                    <th>Apostado</th>
+                                    <th>Ganado</th>
+                                    <th>Rondas</th>
+                                    <th>Último login</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="casino-users-tbody">
+                                <tr><td colspan="7" class="empty-state"><p>Cargando...</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial rondas -->
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header"><h3>🎯 Historial de Rondas</h3></div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrap">
+                        <table class="data-table" id="casino-rounds-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Resultado</th>
+                                    <th>Ganadores</th>
+                                    <th>Apostado</th>
+                                    <th>Pagado</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="casino-rounds-tbody">
+                                <tr><td colspan="7" class="empty-state"><p>Cargando...</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header"><h3>🏆 Top 10 Ganadores</h3></div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrap">
+                        <table class="data-table" id="casino-leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nombre</th>
+                                    <th>Saldo</th>
+                                    <th>Total Apostado</th>
+                                    <th>Total Ganado</th>
+                                    <th>Rondas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="casino-leaderboard-tbody">
+                                <tr><td colspan="6" class="empty-state"><p>Cargando...</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas avanzadas -->
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header"><h3>📊 Estadísticas Avanzadas</h3></div>
+                <div class="card-body">
+                    <div class="stat-grid" id="casino-advanced-stats-grid">
+                        <div class="stat-card"><div class="stat-val" id="cs-rtp">—</div><div class="stat-label">RTP Real (%)</div></div>
+                        <div class="stat-card"><div class="stat-val" id="cs-house-net">—</div><div class="stat-label">Neto Casa</div></div>
+                        <div class="stat-card"><div class="stat-val" id="cs-most-freq">—</div><div class="stat-label">N° Más Frecuente</div></div>
+                        <div class="stat-card"><div class="stat-val" id="cs-total-bet-hist">—</div><div class="stat-label">Total Apostado (hist)</div></div>
+                        <div class="stat-card"><div class="stat-val" id="cs-total-rounds">—</div><div class="stat-label">Rondas Jugadas</div></div>
+                        <div class="stat-card"><div class="stat-val" id="cs-active-players">—</div><div class="stat-label">Jugadores Activos</div></div>
+                    </div>
+                    <!-- Distribución de colores -->
+                    <div style="margin-top:14px;">
+                        <div style="font-size:12px;color:var(--ink-dim);margin-bottom:6px;letter-spacing:0.04em;">Distribución de colores (resultados):</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <span class="badge badge-error" id="cs-dist-red">🔴 Rojo: —</span>
+                            <span class="badge" style="background:#2a2422;color:#fff;border:1px solid rgba(255,255,255,0.2);" id="cs-dist-black">⚫ Negro: —</span>
+                            <span class="badge badge-success" id="cs-dist-green">🟢 Verde: —</span>
+                        </div>
+                        <!-- Barra visual -->
+                        <div style="margin-top:8px;height:14px;border-radius:7px;overflow:hidden;display:flex;background:rgba(0,0,0,0.3);border:1px solid var(--border-gold-soft);">
+                            <div id="cs-bar-red" style="height:100%;background:var(--blood-bright);transition:width 0.4s ease;width:0;"></div>
+                            <div id="cs-bar-black" style="height:100%;background:#2a2422;border-left:1px solid rgba(255,255,255,0.2);transition:width 0.4s ease;width:0;"></div>
+                            <div id="cs-bar-green" style="height:100%;background:var(--emerald-bright);transition:width 0.4s ease;width:0;"></div>
+                        </div>
+                    </div>
+                    <!-- Frecuencia de números -->
+                    <div style="margin-top:14px;">
+                        <div style="font-size:12px;color:var(--ink-dim);margin-bottom:6px;letter-spacing:0.04em;">Frecuencia de números (top 10):</div>
+                        <div id="cs-number-freq" style="display:flex;flex-wrap:wrap;gap:4px;">
+                            <span style="font-size:11px;color:var(--ink-dim);opacity:0.6;">Sin datos suficientes.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 </div>
 
-<!-- ════════════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      MODAL (reutilizable)
-     ════════════════════════════════════════════════ -->
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div id="modal-overlay" class="modal-overlay">
     <div id="modal-content" class="modal-content">
         <div class="modal-header">

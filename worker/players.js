@@ -302,7 +302,10 @@ export async function syncPlayer(request, env, playerId) {
       }
     } catch (_) {}
 
+    // ── Detectar subida de nivel en el Battle Pass ──
+    const oldBp = player.battlepass || { level: 0, total_xp: 0 };
     player.battlepass = calculateBattlePass(player.pvp, healerOpts);
+    await recordLevelUpIfNeeded(player, oldBp, player.battlepass, healerOpts, profile, env);
 
     player.sync.last_update = new Date().toISOString();
     player.sync.last_success = new Date().toISOString();
@@ -418,7 +421,9 @@ export async function adjustPlayerXp(request, env, playerId) {
     }
   } catch (_) {}
 
+  const oldBpAdj = player.battlepass || { level: 0, total_xp: 0 };
   player.battlepass = calculateBattlePass(player.pvp, healerOpts);
+  await recordLevelUpIfNeeded(player, oldBpAdj, player.battlepass, healerOpts, null, env);
 
   await env.EXILIUM_KV.put(playerId, JSON.stringify(player));
   return player;
@@ -456,7 +461,9 @@ export async function grantPlayerTitle(request, env, playerId) {
     }
   } catch (_) {}
 
+  const oldBpTitle = player.battlepass || { level: 0, total_xp: 0 };
   player.battlepass = calculateBattlePass(player.pvp, healerOpts);
+  await recordLevelUpIfNeeded(player, oldBpTitle, player.battlepass, healerOpts, null, env);
 
   await env.EXILIUM_KV.put(playerId, JSON.stringify(player));
   return player;
@@ -509,4 +516,104 @@ export async function divorcePlayer(request, env, playerId) {
   await env.EXILIUM_KV.put(`${PLAYER_KEY_PREFIX}${p1.id}`, JSON.stringify(p1));
 
   return { success: true };
+}
+
+/**
+ * Función compartida: detecta si hubo subida de nivel y registra el evento en KV + webhook.
+ * Se llama desde syncPlayer(), adjustPlayerXp() y grantPlayerTitle().
+ * @param {object} player - datos del jugador (modificados in-place)
+ * @param {object} oldBp - battlepass antes del recalculo
+ * @param {object} newBp - battlepass después del recalculo
+ * @param {object|null} healerOpts - opciones de healer bonus
+ * @param {object|null} profile - perfil de Blizzard (puede ser null si no hay)
+ * @param {object} env - bindings
+ */
+async function recordLevelUpIfNeeded(player, oldBp, newBp, healerOpts, profile, env) {
+  if (!newBp || !oldBp) return;
+  if (newBp.level <= oldBp.level) return;
+
+  const xpGained = newBp.total_xp - oldBp.total_xp;
+  const oldBreakdown = oldBp.xp_breakdown || {};
+  const newBreakdown = newBp.xp_breakdown || {};
+  const bracketLabels = { from_rs: 'Solo Shuffle', from_r2: '2v2', from_r3: '3v3', from_rbg: 'RBG', from_bgs: 'Blitz', manual_bonus: 'Bonus Manual' };
+  let primarySource = 'Desconocida';
+  let maxDelta = 0;
+  for (const [key, label] of Object.entries(bracketLabels)) {
+    const oldVal = typeof oldBreakdown[key] === 'number' ? oldBreakdown[key] : 0;
+    const newVal = typeof newBreakdown[key] === 'number' ? newBreakdown[key] : 0;
+    const delta = newVal - oldVal;
+    if (delta > maxDelta) { maxDelta = delta; primarySource = label; }
+  }
+
+  const playerClass = profile?.class_name || player.class || '';
+  const playerRealm = player.realm_display || player.realm || '';
+  const playerAvatar = player.media?.avatar || '';
+
+  const levelupEvent = {
+    id: `${player.id}-${Date.now()}-${newBp.level}`,
+    player_id: player.id,
+    player_name: player.name,
+    player_class: playerClass,
+    player_realm: playerRealm,
+    player_avatar: playerAvatar,
+    old_level: oldBp.level,
+    new_level: newBp.level,
+    old_xp: oldBp.total_xp,
+    new_xp: newBp.total_xp,
+    xp_gained: Math.max(0, xpGained),
+    primary_source: primarySource,
+    healer_bonus: !!(healerOpts?.isHealer && healerOpts?.multiplier > 1),
+    healer_multiplier: healerOpts?.multiplier || 1,
+    timestamp: new Date().toISOString(),
+  };
+
+  // Guardar en KV (fire & forget)
+  try {
+    const LOG_KEY = 'logs:levelups';
+    const existing = await env.EXILIUM_KV.get(LOG_KEY, 'json') || [];
+    existing.unshift(levelupEvent);
+    if (existing.length > 1000) existing.length = 1000;
+    await env.EXILIUM_KV.put(LOG_KEY, JSON.stringify(existing));
+  } catch (_) {}
+
+  // Enviar webhook a N8N (fire & forget)
+  try {
+    const webhookUrl = await env.EXILIUM_KV.get('config:n8n_webhook_url');
+    if (webhookUrl) {
+      fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'levelup',
+          player_name: player.name,
+          player_class: playerClass,
+          player_spec: player.spec || '',
+          player_realm: playerRealm,
+          player_avatar: playerAvatar,
+          old_level: oldBp.level,
+          new_level: newBp.level,
+          xp_gained: Math.max(0, xpGained),
+          current_xp: newBp.total_xp,
+          rank_name: newBp.rank_name,
+          primary_source: primarySource,
+          healer_bonus: !!(healerOpts?.isHealer && healerOpts?.multiplier > 1),
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    }
+  } catch (_) {}
+}
+
+/**
+ * Obtiene el log de subidas de nivel del Battle Pass.
+ * Retorna los últimos `limit` eventos (default 100).
+ */
+export async function getLevelupLogs(env, limit = 100) {
+  try {
+    const raw = await env.EXILIUM_KV.get('logs:levelups', 'json');
+    if (!raw || !Array.isArray(raw)) return [];
+    return raw.slice(0, Math.min(limit, 1000));
+  } catch (_) {
+    return [];
+  }
 }

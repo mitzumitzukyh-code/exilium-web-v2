@@ -231,6 +231,7 @@ function switchTab(tabName) {
     case 'boost-clients': loadBoostClients(); break;
     case 'rbg-strategies': loadRbgTab(); break;
     case 'news': loadAdminNews(); loadCronStatus(); break;
+    case 'casino': loadCasinoData(); break;
   }
 }
 
@@ -450,7 +451,7 @@ function renderSyncTab() {
       if (!lastSync || t > lastSync) lastSync = t;
     }
     const status = p.sync?.sync_status || p.sync_status || '';
-    if (status === 'ok') okCount++;
+    if (status === 'ok' || status === 'api_bug_ss') okCount++;
     else if (status !== 'new' && status !== '') errorCount++;
   });
 
@@ -470,10 +471,10 @@ function renderSyncTab() {
   $('sync-ok-count').textContent = okCount;
   $('sync-error-count').textContent = errorCount;
 
-  // Problem players
+  // Problem players (excluir api_bug_ss que es un falso positivo de la API de Blizzard)
   const problems = state.players.filter(p => {
     const s = p.sync?.sync_status || p.sync_status || '';
-    return s !== 'ok' && s !== 'new' && s !== '';
+    return s !== 'ok' && s !== 'new' && s !== '' && s !== 'api_bug_ss';
   });
 
   const container = $('sync-problems');
@@ -1031,6 +1032,7 @@ async function loadBattlePassTab() {
   renderBpRewardsTable();
   renderBpPlayerProgress();
   loadHealerBonus();
+  loadLevelupLogs();
 }
 
 function renderBpStats() {
@@ -1102,6 +1104,137 @@ function renderBpPlayerProgress() {
       '<span style="font-size:.85em;color:var(--text-muted);">' + xp.toLocaleString() + ' XP</span>' +
     '</div>';
   }).join('');
+}
+
+// ── Level-up Logs (monitoreo de subidas de nivel) ──
+
+let levelupLogs = [];
+
+async function loadLevelupLogs() {
+  try {
+    levelupLogs = await apiCall('/admin/levelup-logs?limit=200');
+    if (!Array.isArray(levelupLogs)) levelupLogs = [];
+  } catch (_) {
+    levelupLogs = [];
+  }
+  populateLevelupFilter();
+  renderLevelupLogs();
+}
+
+function renderLevelupLogs() {
+  const container = $('levelup-log-container');
+  const filter = $('levelup-player-filter')?.value || 'all';
+  const badge = $('levelup-count-badge');
+  const statusText = $('levelup-status-text');
+
+  if (badge) badge.textContent = levelupLogs.length;
+
+  // ── Render stats ──
+  const now = Date.now();
+  const day24h = now - 86400000;
+  const day7d = now - 7 * 86400000;
+  const last24h = levelupLogs.filter(e => new Date(e.timestamp).getTime() > day24h);
+  const last7d = levelupLogs.filter(e => new Date(e.timestamp).getTime() > day7d);
+  const uniquePlayers = new Set(levelupLogs.map(e => e.player_id));
+
+  const st24h = $('lu-stats-24h');
+  const st7d = $('lu-stats-7d');
+  const stTotal = $('lu-stats-total');
+  const stUnique = $('lu-stats-unique');
+  if (st24h) st24h.textContent = last24h.length;
+  if (st7d) st7d.textContent = last7d.length;
+  if (stTotal) stTotal.textContent = levelupLogs.length;
+  if (stUnique) stUnique.textContent = uniquePlayers.size;
+
+  // ── Render chart (subidas por día últimos 14 días) ──
+  const chartContainer = $('levelup-chart');
+  const chartLabels = $('levelup-chart-labels');
+  if (chartContainer) {
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now - i * 86400000);
+      const key = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+      const count = levelupLogs.filter(e => e.timestamp.slice(0, 10) === key).length;
+      days.push({ key, label, count });
+    }
+    const maxCount = Math.max(1, ...days.map(d => d.count));
+    chartContainer.innerHTML = days.map(d => {
+      const h = Math.max(4, (d.count / maxCount) * 100);
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;">' +
+        '<span style="font-size:.65rem;color:var(--text-muted);margin-bottom:2px;font-family:var(--font-mono);">' + d.count + '</span>' +
+        '<div style="width:100%;height:' + h.toFixed(0) + '%;background:' + (d.count > 0 ? 'var(--accent)' : 'var(--bg-secondary)') + ';border-radius:3px 3px 0 0;min-height:4px;transition:height .3s;"></div>' +
+      '</div>';
+    }).join('');
+    if (chartLabels) {
+      chartLabels.innerHTML = days.map(d =>
+        '<div style="flex:1;text-align:center;font-size:.6rem;color:var(--text-muted);font-family:var(--font-mono);">' + d.label + '</div>'
+      ).join('');
+    }
+  }
+
+  let filtered = levelupLogs;
+  if (filter !== 'all') {
+    filtered = levelupLogs.filter(e => e.player_id === filter || e.player_name === filter);
+  }
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="empty-state"><p>' +
+      (levelupLogs.length === 0 ? 'No hay subidas de nivel registradas aún. Los eventos aparecerán tras la próxima sincronización con Blizzard.' : 'No hay eventos para este jugador.') +
+      '</p></div>';
+    if (statusText) statusText.textContent = levelupLogs.length > 0
+      ? 'Mostrando 0 de ' + levelupLogs.length + ' eventos (filtro activo)'
+      : 'Sin eventos registrados';
+    return;
+  }
+
+  const CLASS_COLORS_LOCAL = {
+    'WARRIOR':'#C69B3A','PALADIN':'#F48CBA','HUNTER':'#AAD372','ROGUE':'#FFF468',
+    'PRIEST':'#FFFFFF','DEATHKNIGHT':'#C41E3A','SHAMAN':'#0070DD','MAGE':'#3FC7EB',
+    'WARLOCK':'#8788EE','MONK':'#00FF98','DRUID':'#FF7C0A','DEMONHUNTER':'#A330C9','EVOKER':'#33937F',
+  };
+
+  if (statusText) statusText.textContent = 'Mostrando ' + filtered.length + ' de ' + levelupLogs.length + ' eventos';
+
+  container.innerHTML = filtered.map(e => {
+    const clsColor = CLASS_COLORS_LOCAL[e.player_class] || 'var(--text-muted)';
+    const avatarHtml = e.player_avatar
+      ? '<img src="' + escapeHtml(e.player_avatar) + '" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:6px;">'
+      : '<span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:var(--bg-secondary);vertical-align:middle;margin-right:6px;"></span>';
+    const healerBadge = e.healer_bonus
+      ? '<span style="display:inline-block;background:rgba(63,185,80,.15);color:#3fb950;border-radius:4px;padding:0 6px;font-size:.7rem;font-weight:700;margin-left:4px;">💚 x' + (e.healer_multiplier || 2) + '</span>'
+      : '';
+    const time = new Date(e.timestamp);
+    const timeStr = time.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+      ' ' + time.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+    return '<div class="problem-row" style="display:grid;grid-template-columns:180px 70px 70px 100px 1fr 130px;align-items:center;gap:6px;padding:8px 12px;">' +
+      '<span style="display:flex;align-items:center;gap:4px;">' +
+        avatarHtml +
+        '<span style="color:' + clsColor + ';font-weight:600;">' + escapeHtml(e.player_name) + '</span>' +
+      '</span>' +
+      '<span style="font-weight:600;color:var(--text-bright);">' + e.old_level + ' → <strong style="color:var(--success);font-size:1.1em;">' + e.new_level + '</strong></span>' +
+      '<span style="color:var(--text-muted);font-size:.82em;">+' + e.xp_gained.toLocaleString() + ' XP</span>' +
+      '<span style="font-size:.8em;color:var(--accent);">' + escapeHtml(e.primary_source || '—') + healerBadge + '</span>' +
+      '<span style="font-size:.8em;color:var(--text-muted);">' + timeStr + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+function filterLevelupLogs() {
+  renderLevelupLogs();
+}
+
+function populateLevelupFilter() {
+  const select = $('levelup-player-filter');
+  if (!select) return;
+  const currentVal = select.value;
+  // Obtener jugadores únicos de los logs
+  const players = {};
+  levelupLogs.forEach(e => { players[e.player_id] = e.player_name; });
+  const sorted = Object.entries(players).sort((a, b) => a[1].localeCompare(b[1]));
+  select.innerHTML = '<option value="all">Todos los jugadores</option>' +
+    sorted.map(([id, name]) => '<option value="' + escapeHtml(id) + '"' + (currentVal === id ? ' selected' : '') + '>' + escapeHtml(name) + '</option>').join('');
 }
 
 function openBpRewardModal(existing) {
@@ -2177,6 +2310,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Tab: Battle Pass - Healer Bonus
   $('save-healer-bonus-btn').addEventListener('click', saveHealerBonus);
 
+  // Tab: Battle Pass - Level-up Monitor
+  $('refresh-levelup-btn')?.addEventListener('click', loadLevelupLogs);
+  $('levelup-player-filter')?.addEventListener('change', filterLevelupLogs);
+
   // Tab: N8N
   $('n8n-save-btn').addEventListener('click', saveN8nConfig);
   $('n8n-test-btn').addEventListener('click', testN8nWebhook);
@@ -2204,12 +2341,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // ══════════════════════════════════════════════════════════
 
 const N8N_WORKFLOW_JSON = JSON.stringify({
-  "name": "Exilium Rating Milestones → Discord",
+  "name": "Exilium Webhooks → Discord (Milestones + Level Ups)",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "exilium-milestone",
+        "path": "exilium-webhook",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -2218,29 +2355,75 @@ const N8N_WORKFLOW_JSON = JSON.stringify({
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [240, 300],
-      "webhookId": "exilium-milestone"
+      "webhookId": "exilium-webhook"
+    },
+    {
+      "parameters": {
+        "dataType": "number",
+        "fieldName": "event",
+        "options": {
+          "rawData": true
+        },
+        "rules": [
+          {
+            "value1": "={{ $json.body.event }}",
+            "value2": "rating_milestone",
+            "output": "0"
+          }
+        ],
+        "fallbackOutput": "1"
+      },
+      "id": "switch-event",
+      "name": "¿Rating Milestone o Level Up?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 250]
     },
     {
       "parameters": {
         "mode": "manual",
         "assignments": {
           "assignments": [
-            { "id": "a1", "name": "player_name", "value": "={{ $json.body.player_name }}", "type": "string" },
-            { "id": "a2", "name": "player_class", "value": "={{ $json.body.player_class }}", "type": "string" },
-            { "id": "a3", "name": "player_realm", "value": "={{ $json.body.player_realm }}", "type": "string" },
-            { "id": "a4", "name": "bracket", "value": "={{ $json.body.bracket }}", "type": "string" },
-            { "id": "a5", "name": "rating", "value": "={{ $json.body.rating }}", "type": "number" },
-            { "id": "a6", "name": "milestone", "value": "={{ $json.body.milestone }}", "type": "number" },
-            { "id": "a7", "name": "message", "value": "=⚔️ **{{ $json.body.player_name }}** ({{ $json.body.player_class }} — {{ $json.body.player_realm }}) alcanzó **{{ $json.body.milestone }}** en **{{ $json.body.bracket }}**! Rating actual: **{{ $json.body.rating }}**", "type": "string" }
+            { "id": "rm1", "name": "player_name", "value": "={{ $json.body.player_name }}", "type": "string" },
+            { "id": "rm2", "name": "player_class", "value": "={{ $json.body.player_class }}", "type": "string" },
+            { "id": "rm3", "name": "player_realm", "value": "={{ $json.body.player_realm }}", "type": "string" },
+            { "id": "rm4", "name": "bracket", "value": "={{ $json.body.bracket }}", "type": "string" },
+            { "id": "rm5", "name": "rating", "value": "={{ $json.body.rating }}", "type": "number" },
+            { "id": "rm6", "name": "milestone", "value": "={{ $json.body.milestone }}", "type": "number" },
+            { "id": "rm7", "name": "message", "value": "=⚔️ **{{ $json.body.player_name }}** ({{ $json.body.player_class }} — {{ $json.body.player_realm }}) alcanzó **{{ $json.body.milestone }}** en **{{ $json.body.bracket }}**! Rating actual: **{{ $json.body.rating }}** 🏆", "type": "string" }
           ]
         },
         "options": {}
       },
-      "id": "set-message",
-      "name": "Prepare Message",
+      "id": "set-msg-milestone",
+      "name": "Msg: Rating Milestone",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [460, 300]
+      "position": [680, 200]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "lu1", "name": "player_name", "value": "={{ $json.body.player_name }}", "type": "string" },
+            { "id": "lu2", "name": "player_class", "value": "={{ $json.body.player_class }}", "type": "string" },
+            { "id": "lu3", "name": "player_realm", "value": "={{ $json.body.player_realm }}", "type": "string" },
+            { "id": "lu4", "name": "old_level", "value": "={{ $json.body.old_level }}", "type": "number" },
+            { "id": "lu5", "name": "new_level", "value": "={{ $json.body.new_level }}", "type": "number" },
+            { "id": "lu6", "name": "xp_gained", "value": "={{ $json.body.xp_gained }}", "type": "number" },
+            { "id": "lu7", "name": "rank_name", "value": "={{ $json.body.rank_name }}", "type": "string" },
+            { "id": "lu8", "name": "primary_source", "value": "={{ $json.body.primary_source }}", "type": "string" },
+            { "id": "lu9", "name": "message", "value": "=🎖️ **{{ $json.body.player_name }}** ({{ $json.body.player_class }} — {{ $json.body.player_realm }}) ha subido al **nivel {{ $json.body.new_level }}** ({{ $json.body.rank_name }}) en el **Pase de Batalla**! ⚡ +{{ $json.body.xp_gained }} XP {{ $json.body.healer_bonus ? '💚' : '' }}\n📊 Fuente principal: {{ $json.body.primary_source }}", "type": "string" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-msg-levelup",
+      "name": "Msg: Level Up",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [680, 400]
     },
     {
       "parameters": {
@@ -2255,7 +2438,7 @@ const N8N_WORKFLOW_JSON = JSON.stringify({
       "name": "Send to Discord",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300]
+      "position": [900, 300]
     },
     {
       "parameters": {
@@ -2266,12 +2449,19 @@ const N8N_WORKFLOW_JSON = JSON.stringify({
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [900, 300]
+      "position": [1100, 300]
     }
   ],
   "connections": {
-    "Webhook": { "main": [[{ "node": "Prepare Message", "type": "main", "index": 0 }]] },
-    "Prepare Message": { "main": [[{ "node": "Send to Discord", "type": "main", "index": 0 }]] },
+    "Webhook": { "main": [[{ "node": "¿Rating Milestone o Level Up?", "type": "main", "index": 0 }]] },
+    "¿Rating Milestone o Level Up?": {
+      "main": [
+        [{ "node": "Msg: Rating Milestone", "type": "main", "index": 0 }],
+        [{ "node": "Msg: Level Up", "type": "main", "index": 0 }]
+      ]
+    },
+    "Msg: Rating Milestone": { "main": [[{ "node": "Send to Discord", "type": "main", "index": 0 }]] },
+    "Msg: Level Up": { "main": [[{ "node": "Send to Discord", "type": "main", "index": 0 }]] },
     "Send to Discord": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
   },
   "active": false,
@@ -2877,3 +3067,368 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+// ══════════════════════════════════════════════════════════
+//  TAB: CASINO PANDACOINS
+// ══════════════════════════════════════════════════════════
+
+let casinoConfigCache = null;
+
+async function loadCasinoData() {
+  try {
+    const [stats, config, users, rounds, leaderboard, advStats] = await Promise.all([
+      apiCall('/admin/casino/stats'),
+      apiCall('/admin/casino/config'),
+      apiCall('/admin/casino/users'),
+      apiCall('/admin/casino/rounds'),
+      apiCall('/api/casino/leaderboard'),
+      apiCall('/admin/casino/advanced-stats'),
+    ]);
+    renderCasinoStats(stats.stats || stats);
+    renderCasinoConfig(config.config);
+    renderCasinoUsers(users.users || []);
+    renderCasinoRounds(rounds.rounds || []);
+    renderCasinoLeaderboard(leaderboard.leaderboard || []);
+    renderCasinoAdvancedStats(advStats.stats || {});
+  } catch (err) {
+    toast('Error cargando casino: ' + err.message, 'error');
+  }
+}
+
+function renderCasinoStats(s) {
+  const statusMap = { betting: '🟢 Apostando', spinning: '🔄 Girando', result: '🎯 Resultado' };
+  $('cs-status').textContent = statusMap[s.status] || s.status || '—';
+  $('cs-round').textContent = s.round_id ?? '—';
+  $('cs-users').textContent = s.total_users ?? '—';
+  $('cs-seats').textContent = s.active_seats ?? '—';
+  $('cs-balance').textContent = (s.total_balance ?? 0).toLocaleString('es-VE') + ' ₡';
+  $('cs-last').textContent = s.last_result !== null && s.last_result !== undefined ? s.last_result : '—';
+}
+
+function renderCasinoConfig(cfg) {
+  casinoConfigCache = cfg;
+  const fields = ['betting_duration', 'spinning_duration', 'result_duration', 'min_bet', 'max_bet', 'max_seats', 'max_bets_per_round', 'initial_balance'];
+  fields.forEach(f => {
+    const el = $('cfg-' + f);
+    if (el) el.value = cfg[f] ?? '';
+  });
+}
+
+function renderCasinoUsers(users) {
+  const tbody = $('casino-users-tbody');
+  if (!users || users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>No hay usuarios registrados</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u =>
+    '<tr>' +
+      '<td>' + escapeHtml(u.name) + '</td>' +
+      '<td>' + (u.balance || 0).toLocaleString('es-VE') + ' ₡</td>' +
+      '<td>' + (u.total_bet || 0).toLocaleString('es-VE') + '</td>' +
+      '<td style="color:#2f9c63;">' + (u.total_won || 0).toLocaleString('es-VE') + '</td>' +
+      '<td>' + (u.rounds_played || 0) + '</td>' +
+      '<td>' + (u.last_login ? timeAgo(u.last_login) : '—') + '</td>' +
+      '<td class="player-actions">' +
+        '<button class="btn btn-sm" onclick="adjustCasinoBalance(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.name) + '\')">💰 Ajustar</button>' +
+        '<button class="btn btn-sm" onclick="viewCasinoTransactions(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.name) + '\')">📋 Transacciones</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="kickCasinoPlayer(\'' + escapeForJsString(u.id) + '\')">🚫 Kick</button>' +
+      '</td>' +
+    '</tr>'
+  ).join('');
+}
+
+function renderCasinoRounds(rounds) {
+  const tbody = $('casino-rounds-tbody');
+  if (!rounds || rounds.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Aún no hay rondas jugadas</p></td></tr>';
+    return;
+  }
+  const colorEmoji = { red: '🔴', black: '⚫', green: '🟢' };
+  tbody.innerHTML = rounds.slice(0, 30).map(r =>
+    '<tr>' +
+      '<td>#' + r.round_id + '</td>' +
+      '<td>' + (colorEmoji[r.color] || '') + ' ' + r.result + '</td>' +
+      '<td>' + (r.winners && r.winners.length
+        ? r.winners.map(w => escapeHtml(w.name) + ' (+' + w.won + ')').join(', ')
+        : '<span style="opacity:.5;">—</span>') + '</td>' +
+      '<td>' + (r.total_bet != null ? (r.total_bet).toLocaleString('es-VE') + ' ₡' : '<span style="opacity:.5;">—</span>') + '</td>' +
+      '<td>' + (r.total_win != null ? (r.total_win).toLocaleString('es-VE') + ' ₡' : '<span style="opacity:.5;">—</span>') + '</td>' +
+      '<td>' + (r.ts ? timeAgo(new Date(r.ts).toISOString()) : '—') + '</td>' +
+      '<td class="player-actions">' +
+        '<button class="btn btn-sm" onclick="viewCasinoRoundDetail(' + r.round_id + ')">🔍 Detalle</button>' +
+      '</td>' +
+    '</tr>'
+  ).join('');
+}
+
+window.adjustCasinoBalance = function(userId, name) {
+  openModal('Ajustar saldo — ' + name,
+    '<div style="display:flex;flex-direction:column;gap:12px;">' +
+      '<p>Usa valores positivos para añadir PandaCoins, negativos para quitar.</p>' +
+      '<input type="number" class="input" id="adj-delta" placeholder="Ej: 500 o -200" autofocus>' +
+      '<input type="text" class="input" id="adj-reason" placeholder="Motivo (opcional)" maxlength="200">' +
+      '<button class="btn btn-primary" id="adj-confirm-btn">✓ Confirmar ajuste</button>' +
+    '</div>'
+  );
+  setTimeout(() => {
+    const btn = $('adj-confirm-btn');
+    if (btn) btn.addEventListener('click', async () => {
+      const delta = parseInt($('adj-delta').value, 10);
+      const reason = $('adj-reason').value.trim();
+      if (!Number.isFinite(delta)) { toast('Cantidad inválida', 'error'); return; }
+      try {
+        btn.disabled = true; btn.textContent = '⏳';
+        await apiCall('/admin/casino/users/' + userId + '/balance', 'POST', { delta, reason });
+        toast('Saldo ajustado', 'success');
+        closeModal();
+        loadCasinoData();
+      } catch (err) {
+        toast('Error: ' + err.message, 'error');
+        btn.disabled = false; btn.textContent = '✓ Confirmar ajuste';
+      }
+    });
+  }, 50);
+};
+
+window.kickCasinoPlayer = async function(userId) {
+  if (!confirm('¿Expulsar a este jugador del asiento?')) return;
+  try {
+    await apiCall('/admin/casino/kick/' + userId, 'POST');
+    toast('Jugador expulsado', 'success');
+    loadCasinoData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+};
+
+// ─── Leaderboard ───
+function renderCasinoLeaderboard(leaderboard) {
+  const tbody = $('casino-leaderboard-tbody');
+  if (!leaderboard || leaderboard.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Sin datos todavía</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = leaderboard.slice(0, 10).map((u, i) =>
+    '<tr>' +
+      '<td>' + (i + 1) + '</td>' +
+      '<td>' + escapeHtml(u.name) + '</td>' +
+      '<td>' + (u.balance || 0).toLocaleString('es-VE') + ' ₡</td>' +
+      '<td>' + (u.total_bet || 0).toLocaleString('es-VE') + '</td>' +
+      '<td style="color:#2f9c63;">' + (u.total_won || 0).toLocaleString('es-VE') + '</td>' +
+      '<td>' + (u.rounds_played || 0) + '</td>' +
+    '</tr>'
+  ).join('');
+}
+
+// ─── Transacciones por usuario ───
+window.viewCasinoTransactions = async function(userId, name) {
+  openModal('📋 Transacciones — ' + name,
+    '<div id="tx-loading" style="padding:20px;text-align:center;color:var(--ink-dim);">Cargando transacciones…</div>'
+  );
+  try {
+    const res = await apiCall('/admin/casino/transactions/' + userId);
+    renderCasinoTransactions(res.transactions || []);
+  } catch (err) {
+    $('modal-body').innerHTML = '<p style="color:#c2362f;">Error: ' + escapeHtml(err.message) + '</p>';
+  }
+};
+
+function renderCasinoTransactions(txList) {
+  const body = $('modal-body');
+  if (!txList || txList.length === 0) {
+    body.innerHTML = '<p style="color:var(--ink-dim);text-align:center;padding:20px;">Este jugador no tiene transacciones registradas.</p>';
+    return;
+  }
+  const typeLabel = {
+    round_payout: '🎰 Ronda',
+    admin_adjust: '⚙️ Admin',
+  };
+  const rows = txList.slice(0, 50).map(tx => {
+    let detail = '';
+    let amountColor = 'var(--ink-dim)';
+    let amountText = '';
+    if (tx.type === 'round_payout') {
+      const won = (tx.win || 0) > 0;
+      amountText = (won ? '+' : '') + (tx.payout != null ? tx.payout : (tx.win || 0)) + ' ₡';
+      amountColor = won ? '#2f9c63' : '#c2362f';
+      detail = 'Apostado ' + (tx.bet || 0) + ' · Ganado ' + (tx.win || 0) + ' · Resultado: ' + (tx.result != null ? tx.result : '—');
+    } else if (tx.type === 'admin_adjust') {
+      amountText = (tx.delta >= 0 ? '+' : '') + tx.delta + ' ₡';
+      amountColor = tx.delta >= 0 ? '#2f9c63' : '#c2362f';
+      detail = escapeHtml(tx.reason || 'Sin motivo');
+    }
+    return '<tr>' +
+      '<td><span class="badge badge-muted">' + (typeLabel[tx.type] || tx.type) + '</span></td>' +
+      '<td style="color:' + amountColor + ';font-weight:600;">' + amountText + '</td>' +
+      '<td style="font-size:11px;color:var(--ink-dim);">' + detail + '</td>' +
+      '<td>' + (tx.balance_after != null ? tx.balance_after.toLocaleString('es-VE') + ' ₡' : '—') + '</td>' +
+      '<td style="font-size:11px;color:var(--ink-dim);">' + (tx.ts ? timeAgo(new Date(tx.ts).toISOString()) : '—') + '</td>' +
+    '</tr>';
+  }).join('');
+  body.innerHTML =
+    '<div class="table-wrap" style="max-height:50vh;overflow:auto;">' +
+      '<table class="data-table">' +
+        '<thead><tr><th>Tipo</th><th>Cantidad</th><th>Detalle</th><th>Balance tras</th><th>Fecha</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+    '</div>';
+}
+
+// ─── Detalle de ronda ───
+window.viewCasinoRoundDetail = async function(roundId) {
+  openModal('🔍 Ronda #' + roundId,
+    '<div id="rd-loading" style="padding:20px;text-align:center;color:var(--ink-dim);">Cargando detalle…</div>'
+  );
+  try {
+    const res = await apiCall('/admin/casino/round/' + roundId);
+    renderCasinoRoundDetail(roundId, res);
+  } catch (err) {
+    $('modal-body').innerHTML = '<p style="color:#c2362f;">Error: ' + escapeHtml(err.message) + '</p>';
+  }
+};
+
+function renderCasinoRoundDetail(roundId, data) {
+  const body = $('modal-body');
+  const summary = data.summary;
+  const colorEmoji = { red: '🔴', black: '⚫', green: '🟢' };
+
+  if (!summary) {
+    body.innerHTML = '<p style="color:var(--ink-dim);text-align:center;padding:20px;">No hay datos de detalle para esta ronda (puede ser anterior a la actualización).</p>';
+    return;
+  }
+
+  let html =
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">' +
+      '<div><strong>Resultado:</strong> ' + (colorEmoji[summary.color] || '') + ' <span style="font-size:18px;font-weight:700;color:var(--gold-pale);">' + summary.result + '</span></div>' +
+      '<div><strong>Total apostado:</strong> ' + (summary.total_bet || 0).toLocaleString('es-VE') + ' ₡</div>' +
+      '<div><strong>Total pagado:</strong> ' + (summary.total_win || 0).toLocaleString('es-VE') + ' ₡</div>' +
+      '<div><strong>Fecha:</strong> ' + (summary.ts ? timeAgo(new Date(summary.ts).toISOString()) : '—') + '</div>' +
+    '</div>';
+
+  if (summary.seats_detail && summary.seats_detail.length > 0) {
+    const betLabelMap = {
+      'color:red': 'Rojo', 'color:black': 'Negro',
+      'parity:even': 'Par', 'parity:odd': 'Impar',
+      'half:low': '1-18', 'half:high': '19-36',
+      'dozen:1': 'Docena 1', 'dozen:2': 'Docena 2', 'dozen:3': 'Docena 3',
+      'col:1': 'Col 1', 'col:2': 'Col 2', 'col:3': 'Col 3',
+    };
+    function betLabel(key) {
+      if (!key) return '—';
+      if (key.startsWith('number:')) return 'N° ' + key.split(':')[1];
+      return betLabelMap[key] || key;
+    }
+    const rows = summary.seats_detail.map(s =>
+      '<tr>' +
+        '<td>' + escapeHtml(s.name) + '</td>' +
+        '<td>' + (s.bets && s.bets.length
+          ? s.bets.map(b => betLabel(b.key) + ' (' + b.amount + ')').join(', ')
+          : '<span style="opacity:.5;">— sin apuestas —</span>') + '</td>' +
+        '<td>' + (s.total_bet || 0) + ' ₡</td>' +
+        '<td style="color:' + (s.won ? '#2f9c63' : '#c2362f') + ';font-weight:600;">' + (s.won ? '+' : '') + (s.total_win || 0) + ' ₡</td>' +
+        '<td>' + (s.won
+          ? '<span class="badge badge-success">Ganó</span>'
+          : (s.total_bet > 0 ? '<span class="badge badge-error">Perdió</span>' : '<span class="badge badge-muted">—</span>')) +
+        '</td>' +
+      '</tr>'
+    ).join('');
+    html +=
+      '<div class="table-wrap" style="max-height:45vh;overflow:auto;">' +
+        '<table class="data-table">' +
+          '<thead><tr><th>Jugador</th><th>Apuestas</th><th>Apostado</th><th>Ganancia neta</th><th>Resultado</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+      '</div>';
+  } else {
+    html += '<p style="color:var(--ink-dim);text-align:center;">Esta ronda no tiene detalle de apuestas por jugador (formato anterior).</p>';
+  }
+
+  body.innerHTML = html;
+}
+
+// ─── Estadísticas avanzadas ───
+function renderCasinoAdvancedStats(s) {
+  if (!s) return;
+  $('cs-rtp').textContent = s.rtp != null ? s.rtp + '%' : '—';
+  $('cs-house-net').textContent = s.total_house_net != null ? s.total_house_net.toLocaleString('es-VE') + ' ₡' : '—';
+  $('cs-most-freq').textContent = s.most_frequent_number != null
+    ? s.most_frequent_number + ' (' + (s.most_frequent_count || 0) + 'x)'
+    : '—';
+  $('cs-total-bet-hist').textContent = (s.total_bet || 0).toLocaleString('es-VE') + ' ₡';
+  $('cs-total-rounds').textContent = s.total_rounds != null ? s.total_rounds : '—';
+  $('cs-active-players').textContent = s.active_players != null ? s.active_players : '—';
+
+  // Distribución de colores
+  const dist = s.color_distribution || {};
+  const total = (dist.red || 0) + (dist.black || 0) + (dist.green || 0);
+  $('cs-dist-red').textContent = '🔴 Rojo: ' + (dist.red || 0) + ' (' + (dist.red_pct || 0) + '%)';
+  $('cs-dist-black').textContent = '⚫ Negro: ' + (dist.black || 0) + ' (' + (dist.black_pct || 0) + '%)';
+  $('cs-dist-green').textContent = '🟢 Verde: ' + (dist.green || 0) + ' (' + (dist.green_pct || 0) + '%)';
+  if (total > 0) {
+    $('cs-bar-red').style.width = ((dist.red || 0) / total * 100) + '%';
+    $('cs-bar-black').style.width = ((dist.black || 0) / total * 100) + '%';
+    $('cs-bar-green').style.width = ((dist.green || 0) / total * 100) + '%';
+  }
+
+  // Frecuencia de números (top 10)
+  const freq = s.number_frequency || {};
+  const freqEntries = Object.entries(freq)
+    .map(([n, c]) => ({ n: Number(n), c }))
+    .sort((a, b) => b.c - a.c)
+    .slice(0, 10);
+  const freqEl = $('cs-number-freq');
+  if (freqEntries.length === 0) {
+    freqEl.innerHTML = '<span style="font-size:11px;color:var(--ink-dim);opacity:0.6;">Sin datos suficientes.</span>';
+  } else {
+    const colorDot = { red: '🔴', black: '⚫', green: '🟢' };
+    // Color lookup local (para no depender de casino.js en admin)
+    const REDS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+    function colorOf(n) { return n === 0 ? 'green' : (REDS.has(n) ? 'red' : 'black'); }
+    freqEl.innerHTML = freqEntries.map(e =>
+      '<span class="badge" style="background:rgba(212,175,55,0.1);border:1px solid var(--border-gold-soft);color:var(--gold-pale);">' +
+        (colorDot[colorOf(e.n)] || '⚪') + ' ' + e.n + ' <span style="opacity:0.6;">(' + e.c + 'x)</span>' +
+      '</span>'
+    ).join('');
+  }
+}
+
+// Event listeners del casino (bind al final para asegurar que el DOM existe)
+(function bindCasinoEvents() {
+  function bind(id, evt, fn) {
+    const el = id ? document.getElementById(id) : null;
+    if (el) el.addEventListener(evt, fn);
+  }
+  // Usamos un pequeño delay para que el DOM esté parseado
+  setTimeout(() => {
+    bind('casino-refresh-btn', 'click', loadCasinoData);
+    bind('casino-save-config-btn', 'click', saveCasinoConfig);
+    bind('casino-reset-btn', 'click', resetCasinoState);
+  }, 100);
+})();
+
+async function saveCasinoConfig() {
+  const cfg = {};
+  ['betting_duration', 'spinning_duration', 'result_duration', 'min_bet', 'max_bet', 'max_seats', 'max_bets_per_round', 'initial_balance'].forEach(f => {
+    const v = parseInt($('cfg-' + f).value, 10);
+    if (Number.isFinite(v)) cfg[f] = v;
+  });
+  try {
+    await apiCall('/admin/casino/config', 'PUT', cfg);
+    toast('Configuración guardada', 'success');
+    loadCasinoData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function resetCasinoState() {
+  if (!confirm('⚠️ Esto reembolsará todas las apuestas pendientes y reiniciará la sala. ¿Continuar?')) return;
+  if (!confirm('Última confirmación: ¿resetear el estado del casino?')) return;
+  try {
+    await apiCall('/admin/casino/reset-state', 'POST');
+    toast('Estado reseteado', 'success');
+    loadCasinoData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}

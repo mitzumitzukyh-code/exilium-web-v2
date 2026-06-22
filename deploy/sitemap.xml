@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://exilium-battlepass.pages.dev/</loc>
@@ -25,12 +25,6 @@
         <priority>0.6</priority>
     </url>
     <url>
-        <loc>https://exilium-battlepass.pages.dev/zona-vip.html</loc>
-        <lastmod>2026-06-14</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-    </url>
-    <url>
         <loc>https://exilium-battlepass.pages.dev/terms.html</loc>
         <lastmod>2026-06-14</lastmod>
         <changefreq>monthly</changefreq>
@@ -43,9 +37,9 @@
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://exilium-battlepass.pages.dev/casino-preview.html</loc>
-        <lastmod>2026-06-14</lastmod>
+        <loc>https://exilium-battlepass.pages.dev/sala-pandacoins.html</loc>
+        <lastmod>2026-06-22</lastmod>
         <changefreq>weekly</changefreq>
-        <priority>0.5</priority>
+        <priority>0.7</priority>
     </url>
 </urlset>
