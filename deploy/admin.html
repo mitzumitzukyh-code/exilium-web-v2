@@ -1039,7 +1039,7 @@
                 <h2 class="tab-title">🎰 Sala de PandaCoins</h2>
                 <div class="tab-actions">
                     <button class="btn" id="casino-refresh-btn">🔄 Refresh</button>
-                    <button class="btn btn-danger" id="casino-reset-btn">⚠️ Reset Estado</button>
+                    <button class="btn btn-danger" id="casino-reset-btn">⚠️ Reiniciar Estado</button>
                 </div>
             </div>
 
@@ -1114,7 +1114,12 @@
 
             <!-- Historial rondas -->
             <div class="card" style="margin-top:16px;">
-                <div class="card-header"><h3>🎯 Historial de Rondas</h3></div>
+                <div class="card-header">
+                    <h3>🎯 Historial de Rondas</h3>
+                    <div class="tab-actions">
+                        <button class="btn btn-danger" id="casino-clear-rounds-btn">🗑️ Limpiar historial</button>
+                    </div>
+                </div>
                 <div class="card-body" style="padding:0;">
                     <div class="table-wrap">
                         <table class="data-table" id="casino-rounds-table">
@@ -1151,10 +1156,11 @@
                                     <th>Total Apostado</th>
                                     <th>Total Ganado</th>
                                     <th>Rondas</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="casino-leaderboard-tbody">
-                                <tr><td colspan="6" class="empty-state"><p>Cargando...</p></td></tr>
+                                <tr><td colspan="7" class="empty-state"><p>Cargando...</p></td></tr>
                             </tbody>
                         </table>
                     </div>

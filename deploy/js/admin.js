@@ -3132,6 +3132,7 @@ function renderCasinoUsers(users) {
         '<button class="btn btn-sm" onclick="adjustCasinoBalance(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.name) + '\')">💰 Ajustar</button>' +
         '<button class="btn btn-sm" onclick="viewCasinoTransactions(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.name) + '\')">📋 Transacciones</button>' +
         '<button class="btn btn-sm btn-danger" onclick="kickCasinoPlayer(\'' + escapeForJsString(u.id) + '\')">🚫 Kick</button>' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteCasinoUser(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.name) + '\')">🗑️ Eliminar</button>' +
       '</td>' +
     '</tr>'
   ).join('');
@@ -3201,11 +3202,23 @@ window.kickCasinoPlayer = async function(userId) {
   }
 };
 
+window.deleteCasinoUser = async function(userId, userName) {
+  if (!confirm('¿Eliminar permanentemente a "' + userName + '"? Esta acción no se puede deshacer.')) return;
+  if (!confirm('¿Estás seguro? Se borrarán todas sus estadísticas y saldo.')) return;
+  try {
+    await apiCall('/admin/casino/users/' + userId + '/delete', 'POST');
+    toast('Usuario "' + userName + '" eliminado', 'success');
+    loadCasinoData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+};
+
 // ─── Leaderboard ───
 function renderCasinoLeaderboard(leaderboard) {
   const tbody = $('casino-leaderboard-tbody');
   if (!leaderboard || leaderboard.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Sin datos todavía</p></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Sin datos todavía</p></td></tr>';
     return;
   }
   tbody.innerHTML = leaderboard.slice(0, 10).map((u, i) =>
@@ -3216,6 +3229,9 @@ function renderCasinoLeaderboard(leaderboard) {
       '<td>' + (u.total_bet || 0).toLocaleString('es-VE') + '</td>' +
       '<td style="color:#2f9c63;">' + (u.total_won || 0).toLocaleString('es-VE') + '</td>' +
       '<td>' + (u.rounds_played || 0) + '</td>' +
+      '<td class="player-actions">' +
+        '<button class="btn btn-sm btn-danger" onclick="deleteCasinoUser(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.name) + '\')">🗑️</button>' +
+      '</td>' +
     '</tr>'
   ).join('');
 }
@@ -3403,6 +3419,7 @@ function renderCasinoAdvancedStats(s) {
     bind('casino-refresh-btn', 'click', loadCasinoData);
     bind('casino-save-config-btn', 'click', saveCasinoConfig);
     bind('casino-reset-btn', 'click', resetCasinoState);
+    bind('casino-clear-rounds-btn', 'click', clearCasinoRounds);
   }, 100);
 })();
 
@@ -3427,6 +3444,18 @@ async function resetCasinoState() {
   try {
     await apiCall('/admin/casino/reset-state', 'POST');
     toast('Estado reseteado', 'success');
+    loadCasinoData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function clearCasinoRounds() {
+  if (!confirm('⚠️ ¿Eliminar todo el historial de rondas? Esta acción no se puede deshacer.')) return;
+  if (!confirm('Última confirmación: ¿borrar todas las rondas del historial?')) return;
+  try {
+    await apiCall('/admin/casino/clear-rounds', 'POST');
+    toast('Historial eliminado', 'success');
     loadCasinoData();
   } catch (err) {
     toast('Error: ' + err.message, 'error');

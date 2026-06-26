@@ -28,6 +28,10 @@ export function payoutMultiplier(betKey) {
   if (betKey.startsWith('number:')) return 35;
   if (betKey.startsWith('col:') || betKey.startsWith('dozen:')) return 2;
   if (betKey.startsWith('color:') || betKey.startsWith('parity:') || betKey.startsWith('half:')) return 1;
+  if (betKey.startsWith('street:')) return 11;
+  if (betKey.startsWith('split:')) return 17;
+  if (betKey.startsWith('corner:')) return 8;
+  if (betKey.startsWith('sixline:')) return 5;
   return 0;
 }
 
@@ -35,6 +39,19 @@ export function payoutMultiplier(betKey) {
 export function checkWin(resultNumber, betKey) {
   if (betKey.startsWith('number:')) {
     return parseInt(betKey.split(':')[1], 10) === resultNumber;
+  }
+  if (betKey.startsWith('split:') || betKey.startsWith('corner:')) {
+    const nums = betKey.split(':')[1].split(',').map(Number);
+    return nums.includes(resultNumber);
+  }
+  if (betKey.startsWith('street:')) {
+    const s = parseInt(betKey.split(':')[1], 10);
+    const lo = (s - 1) * 3 + 1;
+    return resultNumber >= lo && resultNumber <= lo + 2;
+  }
+  if (betKey.startsWith('sixline:')) {
+    const [start, end] = betKey.split(':')[1].split('-').map(Number);
+    return resultNumber >= start && resultNumber <= end;
   }
   if (resultNumber === 0) return false; // el 0 solo gana si apostaste al 0 directo
   if (betKey === 'color:red') return colorOf(resultNumber) === 'red';
@@ -93,6 +110,12 @@ const DEFAULT_CONFIG = {
 
 const CHAT_MAX = 30;
 const ROUNDS_HISTORY = 50;
+// M2 — Rate-limit de chat con VENTANA DESLIZANTE (no fija).
+// Antes, con ventana fija de 30s, un usuario podía mandar 5 mensajes en t=29.9s
+// y otros 5 en t=30.1s (10 en 0.2s). La ventana deslizante cuenta cuántos
+// mensajes hay en los últimos 30s reales, sin importar dónde caiga el límite.
+const CHAT_RATE_LIMIT = 5;
+const CHAT_RATE_WINDOW_MS = 30_000;
 
 async function getConfig(env) {
   const cfg = await env.EXILIUM_KV.get('casino:config', 'json');
@@ -115,6 +138,7 @@ async function getState(env) {
     result_ends_at: null,
     last_result: null,
     last_spin_at: null,
+    _version: 0,              // contador para detectar transiciones concurrentes
   };
   await env.EXILIUM_KV.put('casino:state', JSON.stringify(fresh));
   return fresh;
@@ -122,6 +146,23 @@ async function getState(env) {
 
 async function setState(env, state) {
   await env.EXILIUM_KV.put('casino:state', JSON.stringify(state));
+}
+
+/**
+ * Intenta transicionar el estado atómicamente.
+ * Vuelve a leer el estado desde KV y verifica que la versión coincida.
+ * Si no coincide, otro proceso ya transicionó — se retorna el estado actual.
+ */
+async function tryTransitionState(env, newState, expectedVersion) {
+  // Re-leer estado actual para verificar que nadie más transicionó
+  const current = await env.EXILIUM_KV.get('casino:state', 'json');
+  if (!current || current._version !== expectedVersion) {
+    // Otro proceso ya cambió el estado — omitir esta transición
+    return current || newState;
+  }
+  newState._version = (expectedVersion || 0) + 1;
+  await env.EXILIUM_KV.put('casino:state', JSON.stringify(newState));
+  return newState;
 }
 
 async function getSeats(env) {
@@ -209,8 +250,10 @@ export async function tickStateMachine(env) {
         round.result_index = resultIndex;
         await setRound(env, state.round_id, round);
       }
-      await setState(env, state);
-      return state;
+      // Usar tryTransitionState para evitar race conditions
+      const expectedVersion = state._version;
+      const newState = await tryTransitionState(env, state, expectedVersion);
+      return newState;
     }
 
     // Si timer expiró pero no hay apuestas: extender la ronda (reiniciar timer)
@@ -223,6 +266,24 @@ export async function tickStateMachine(env) {
 
   if (state.status === 'spinning') {
     if (now >= state.spinning_ends_at) {
+      // Verificar que no hayamos sido transicionados ya (seguridad extra)
+      const expectedVersion = state._version;
+
+      // C1 — GUARDA DE IDEMPOTENCIA: si esta ronda ya fue resuelta por otro
+      // proceso concurrente, NO pagamos de nuevo. Esto mitiga el doble pago
+      // cuando varios clientes pollean justo al expirar spinning_ends_at.
+      // (Para una garantía 100% a prueba de concurrencia extrema → Durable Objects, fase 2.)
+      const resolvedFlag = await env.EXILIUM_KV.get(`casino:round:${state.round_id}:resolved`);
+      if (resolvedFlag) {
+        // Otro proceso ya resolvió y pagó. Avanzar a 'result' sin volver a pagar.
+        state.status = 'result';
+        state.result_ends_at = now + cfg.result_duration * 1000;
+        return await tryTransitionState(env, state, expectedVersion);
+      }
+      // Marcar la ronda como resuelta INMEDIATAMENTE (antes de pagar) para que
+      // cualquier proceso concurrente que llegue después vea el flag.
+      await env.EXILIUM_KV.put(`casino:round:${state.round_id}:resolved`, String(now));
+
       // Resolver todas las apuestas y pagar
       const resultNumber = state.result_number;
       const seats = await getSeats(env);
@@ -311,13 +372,16 @@ export async function tickStateMachine(env) {
 
       state.status = 'result';
       state.result_ends_at = now + cfg.result_duration * 1000;
-      await setState(env, state);
-      return state;
+      // Usar tryTransitionState para evitar race conditions
+      const newState = await tryTransitionState(env, state, expectedVersion);
+      return newState;
     }
   }
 
   if (state.status === 'result') {
     if (now >= state.result_ends_at) {
+      const expectedVersion = state._version;
+      const finishedRoundId = state.round_id; // ronda que termina (para limpiar su flag)
       // Nueva ronda
       state.status = 'betting';
       state.round_id = state.round_id + 1;
@@ -331,8 +395,11 @@ export async function tickStateMachine(env) {
       for (const s of seats) s.last_result = null;
       await setSeats(env, seats);
       await setRound(env, state.round_id, { bets: [], result: null, resolved: false });
-      await setState(env, state);
-      return state;
+      // C1 — limpiar el flag de idempotencia de la ronda que terminó (no acumular keys)
+      await env.EXILIUM_KV.delete(`casino:round:${finishedRoundId}:resolved`);
+      // Usar tryTransitionState para evitar race conditions
+      const newState = await tryTransitionState(env, state, expectedVersion);
+      return newState;
     }
   }
 
@@ -434,6 +501,22 @@ export async function handleSeat(request, env, session, action) {
   let seats = await getSeats(env);
 
   if (action === 'stand') {
+    const mySeat = seats.find(s => s.user_id === session.user_id);
+    // Reembolsar apuestas si estamos en fase de apuestas
+    if (mySeat && mySeat.bets && mySeat.bets.length > 0 && state.status === 'betting') {
+      const refund = mySeat.bets.reduce((t, b) => t + (Number(b.amount) || 0), 0);
+      const user = await getUser(env, session.user_id);
+      if (user) {
+        user.balance += refund;
+        await setUser(env, user);
+        await appendTransaction(env, user.id, {
+          type: 'stand_refund',
+          refund,
+          balance_after: user.balance,
+          ts: Date.now(),
+        });
+      }
+    }
     seats = seats.filter(s => s.user_id !== session.user_id);
     await setSeats(env, seats);
     return { ok: true, message: 'Te has levantado del asiento.' };
@@ -523,24 +606,119 @@ export async function handlePlaceBet(request, env, session) {
     return { error: 'Saldo insuficiente.' };
   }
 
-  // Debitar del saldo AHORA (se reembolsa o suma al resolver)
+  // A2 — Debitar el saldo ANTES de registrar la apuesta.
+  // Antes se guardaba la apuesta primero y se debitaba después, lo que dejaba
+  // una ventana donde una apuesta estaba registrada sin haberse cobrado. Si el
+  // giro ocurría en esa ventana (o fallaba setUser), el usuario apostaba "gratis".
+  // Ahora: cobrar → registrar. Si falla el registro, se reembolsa el débito.
   user.balance -= totalNew;
-  await setUser(env, user);
+  try {
+    await setUser(env, user);
+  } catch (err) {
+    // Si falla el guardado del saldo, restaurar y abortar (no hay apuesta registrada)
+    user.balance += totalNew;
+    return { error: 'Error al procesar la apuesta. Intenta de nuevo.' };
+  }
 
-  // Añadir apuestas al asiento
-  seats[seatIdx].bets = [...existingBets, ...validated];
-  seats[seatIdx].ready = false; // reset ready si añade más apuestas
-  await setSeats(env, seats);
+  // Registrar apuestas en el asiento DESPUÉS de haber cobrado
+  const newBets = [...existingBets, ...validated];
+  seats[seatIdx].bets = newBets;
+  seats[seatIdx].ready = false;
+  try {
+    await setSeats(env, seats);
+  } catch (err) {
+    // Si falla el registro de la apuesta, reembolsar el débito ya hecho
+    user.balance += totalNew;
+    await setUser(env, user);
+    return { error: 'Error al procesar la apuesta. Intenta de nuevo.' };
+  }
 
   return {
     ok: true,
     message: 'Apuesta colocada.',
     balance: user.balance,
-    bets: seats[seatIdx].bets,
+    bets: newBets,
   };
 }
 
-function isValidBetKey(key) {
+// ─────────────────────────────────────────────────────────────────────
+//  Validación de apuestas internas (split/corner/sixline) — C3
+//  Antes se aceptaba CUALQUIER rango (p.ej. sixline:1-36), lo que permitía
+//  un exploit: pagar 6× y ganar con ~97% de probabilidad. Ahora validamos
+//  que las apuestas internas correspondan a combinaciones REALES del tapete.
+//  Funciones PURAS → testeable.
+// ─────────────────────────────────────────────────────────────────────
+
+/** true si n está en 1..36 */
+function isTableNumber(n) {
+  return Number.isInteger(n) && n >= 1 && n <= 36;
+}
+
+/**
+ * Una apuesta split es VÁLIDA solo si los 2 números son ADYACENTES en el tapete.
+ *   - Adyacencia vertical: misma columna, n y n+3 (ej. 1-4, 34-31? no)
+ *   - Adyacencia horizontal: n y n+1 PERO dentro de la MISMA docena-fila
+ *     (filas del tapete: [1,2,3], [4,5,6] ... [34,35,36]; adyacencia solo
+ *      si comparten (n-1)/3 === (m-1)/3)
+ */
+export function isValidSplit(a, b) {
+  if (!isTableNumber(a) || !isTableNumber(b)) return false;
+  const lo = Math.min(a, b), hi = Math.max(a, b);
+  if (lo === hi) return false;
+  const diff = hi - lo;
+  if (diff === 3) return true;                          // vertical (misma columna)
+  if (diff === 1) {
+    // horizontal: misma fila del tapete (bloque de 3 consecutivos)
+    return Math.floor((lo - 1) / 3) === Math.floor((hi - 1) / 3);
+  }
+  return false;
+}
+
+/**
+ * Una apuesta corner (4 números) es válida si forma un bloque 2×2 en el tapete.
+ *   bloque = {n, n+1, n+3, n+4} donde n y n+1 están en la misma fila del tapete
+ *   y n+3, n+4 en la siguiente fila, sin cruzar el borde derecho (columna 3).
+ */
+export function isValidCorner(nums) {
+  if (!Array.isArray(nums) || nums.length !== 4) return false;
+  if (!nums.every(isTableNumber)) return false;
+  const s = [...new Set(nums)];
+  if (s.length !== 4) return false;                     // sin duplicados
+  s.sort((x, y) => x - y);
+  const [a, b, c, d] = s;
+  // debe ser bloque 2x2: {n, n+1, n+3, n+4}
+  if (!(b === a + 1 && c === a + 3 && d === a + 4)) return false;
+  // a y a+1 deben estar en la misma fila del tapete (no cruzar borde derecho)
+  return Math.floor((a - 1) / 3) === Math.floor((a) / 3); // a no es múltiplo de 3 (no en col 3)
+}
+
+/**
+ * Una apuesta street (fila horizontal de 3) es válida para filas 1..12 del tapete.
+ *   street:s = {(s-1)*3+1, (s-1)*3+2, (s-1)*3+3}, s en 1..12
+ */
+export function isValidStreet(streetIndex) {
+  return Number.isInteger(streetIndex) && streetIndex >= 1 && streetIndex <= 12;
+}
+
+/**
+ * Una apuesta six line (2 streets adyacentes verticalmente) es válida solo si:
+ *   - streetIndex en 1..11
+ *   - cubre {streetIndex, streetIndex+1} → fila superior e inferior adyacentes
+ * El formato sixline:start-end NO debe aceptar rangos arbitrarios: start y end
+ * DEBEN ser exactamente el principio y fin de las dos streets (start-end==5).
+ */
+export function isValidSixLine(start, end) {
+  if (!isTableNumber(start) || !isTableNumber(end)) return false;
+  if (end <= start) return false;
+  // six line válido = {n, n+1, n+2, n+3, n+4, n+5}, n en 1..31, n%3===1 (inicio de street)
+  if (end - start !== 5) return false;
+  if (!isValidStreet(Math.floor((start - 1) / 3) + 1)) return false;
+  if ((start - 1) % 3 !== 0) return false;              // start debe ser 1,4,7,...,31
+  return end <= 36;
+}
+
+/** Wrapper original con validación estricta */
+export function isValidBetKey(key) {
   if (typeof key !== 'string') return false;
   // number:0..36 | col:1..3 | dozen:1..3 | color:red|black | parity:even|odd | half:low|high
   if (/^number:(\d+)$/.test(key)) {
@@ -552,6 +730,15 @@ function isValidBetKey(key) {
   if (key === 'color:red' || key === 'color:black') return true;
   if (key === 'parity:even' || key === 'parity:odd') return true;
   if (key === 'half:low' || key === 'half:high') return true;
+  // Apuestas internas con validación REAL de adyacencia (C3)
+  const mSplit = key.match(/^split:(\d+),(\d+)$/);
+  if (mSplit) return isValidSplit(+mSplit[1], +mSplit[2]);
+  const mCorner = key.match(/^corner:(\d+),(\d+),(\d+),(\d+)$/);
+  if (mCorner) return isValidCorner([+mCorner[1], +mCorner[2], +mCorner[3], +mCorner[4]]);
+  const mStreet = key.match(/^street:(\d+)$/);
+  if (mStreet) return isValidStreet(+mStreet[1]);
+  const mSix = key.match(/^sixline:(\d+)-(\d+)$/);
+  if (mSix) return isValidSixLine(+mSix[1], +mSix[2]);
   return false;
 }
 
@@ -621,19 +808,29 @@ export async function handleSendChat(request, env, session) {
   const message = String(body.message || '').trim().slice(0, 200);
   if (!message) return { error: 'Mensaje vacío.' };
 
-  // Rate limit: máx 5 mensajes por usuario en 30s
+  // M2 — Rate limit con VENTANA DESLIZANTE: guardamos los timestamps de los
+  // últimos mensajes del usuario y contamos cuántos caen dentro de la ventana.
+  const now = Date.now();
   const rlKey = `casino:chat_rl:${session.user_id}`;
-  const rl = await env.EXILIUM_KV.get(rlKey, 'json') || { count: 0 };
-  if (rl.count >= 5) return { error: 'Demasiados mensajes. Espera un momento.' };
-  rl.count++;
-  await env.EXILIUM_KV.put(rlKey, JSON.stringify(rl), { expirationTtl: 30 });
+  const rl = (await env.EXILIUM_KV.get(rlKey, 'json')) || { timestamps: [] };
+  if (!Array.isArray(rl.timestamps)) rl.timestamps = [];
+  // Purgar timestamps fuera de la ventana deslizante
+  const cutoff = now - CHAT_RATE_WINDOW_MS;
+  rl.timestamps = rl.timestamps.filter(ts => ts > cutoff);
+  if (rl.timestamps.length >= CHAT_RATE_LIMIT) {
+    return { error: 'Demasiados mensajes. Espera un momento.' };
+  }
+  // Registrar este mensaje en la ventana deslizante
+  rl.timestamps.push(now);
+  // TTL de 35s: no necesitamos conservar nada más viejo que la ventana
+  await env.EXILIUM_KV.put(rlKey, JSON.stringify(rl), { expirationTtl: 35 });
 
   const chat = await getChat(env);
   chat.push({
     user_id: session.user_id,
     name: session.name,
     message,
-    ts: Date.now(),
+    ts: now,
   });
   // Mantener últimos CHAT_MAX mensajes
   await env.EXILIUM_KV.put('casino:chat', JSON.stringify(chat.slice(-CHAT_MAX)));
@@ -654,16 +851,31 @@ export async function handleGetLeaderboard(env) {
   for (const id of index) {
     const u = await getUser(env, id);
     if (u) {
-      users.push({ name: u.name, balance: u.balance, total_won: u.total_won || 0, rounds_played: u.rounds_played || 0 });
+      users.push({ id: u.id, name: u.name, balance: u.balance, total_won: u.total_won || 0, rounds_played: u.rounds_played || 0 });
     }
   }
   users.sort((a, b) => b.total_won - a.total_won);
   const top = users.slice(0, 10);
   await env.EXILIUM_KV.put('casino:leaderboard', JSON.stringify({
     list: top,
-    expires_at: Date.now() + 5 * 60 * 1000, // 5 min
+    expires_at: Date.now() + 5 * 60 * 1000,
   }));
   return { ok: true, leaderboard: top };
+}
+
+/** GET /api/casino/players — lista pública de jugadores registrados (para ticker) */
+export async function handleGetPlayers(env, limit = 50) {
+  const index = await env.EXILIUM_KV.get('casino:user_index', 'json') || [];
+  const players = [];
+  // Limitar a los primeros N para evitar iteración completa con muchos usuarios
+  const slice = index.slice(0, Math.min(limit, index.length));
+  for (const id of slice) {
+    const u = await getUser(env, id);
+    if (u) {
+      players.push({ id: u.id, name: u.name, balance: u.balance, avatar_url: u.avatar_url || null });
+    }
+  }
+  return { ok: true, players };
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -748,7 +960,24 @@ export async function handleAdminGetStats(env) {
 }
 
 export async function handleAdminKick(env, userId) {
+  const state = await getState(env);
   let seats = await getSeats(env);
+  const kickedSeat = seats.find(s => s.user_id === userId);
+  // Reembolsar apuestas si estamos en fase de apuestas
+  if (kickedSeat && kickedSeat.bets && kickedSeat.bets.length > 0 && state.status === 'betting') {
+    const refund = kickedSeat.bets.reduce((t, b) => t + (Number(b.amount) || 0), 0);
+    const user = await getUser(env, userId);
+    if (user) {
+      user.balance += refund;
+      await setUser(env, user);
+      await appendTransaction(env, userId, {
+        type: 'kick_refund',
+        refund,
+        balance_after: user.balance,
+        ts: Date.now(),
+      });
+    }
+  }
   const before = seats.length;
   seats = seats.filter(s => s.user_id !== userId);
   await setSeats(env, seats);
@@ -770,6 +999,15 @@ export async function handleAdminResetState(env) {
   }
   await setSeats(env, seats);
   const cfg = await getConfig(env);
+  // M5 — El estado reseteado debe llevar _version (y limpiar campos de resultado)
+  // para que el locking por versión de tryTransitionState funcione correctamente
+  // tras un reset. Sin _version, la primera transición podía compararse contra
+  // undefined y comportarse de forma inconsistente.
+  const currentState = await env.EXILIUM_KV.get('casino:state', 'json');
+  // Limpiar flag de idempotencia de la ronda que se abandona (C1)
+  if (currentState && currentState.round_id) {
+    await env.EXILIUM_KV.delete(`casino:round:${currentState.round_id}:resolved`);
+  }
   await setState(env, {
     status: 'betting',
     round_id: 1,
@@ -778,8 +1016,23 @@ export async function handleAdminResetState(env) {
     result_ends_at: null,
     last_result: null,
     last_spin_at: null,
+    result_number: null,
+    result_index: null,
+    _version: (currentState && typeof currentState._version === 'number')
+      ? currentState._version + 1
+      : 0,
   });
+  // Inicializar la nueva ronda 1 limpia
+  await setRound(env, 1, { bets: [], result: null, resolved: false });
   return { ok: true, message: 'Estado reseteado.' };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  ADMIN — Limpiar historial de rondas
+// ─────────────────────────────────────────────────────────────────────
+export async function handleAdminClearCasinoRounds(env) {
+  await env.EXILIUM_KV.delete('casino:rounds_history');
+  return { ok: true, message: 'Historial de rondas eliminado.' };
 }
 
 // ─────────────────────────────────────────────────────────────────────

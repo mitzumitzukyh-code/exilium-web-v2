@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import {
   WHEEL_SEQUENCE, RED_NUMBERS, colorOf,
   payoutMultiplier, checkWin, resolveBets,
+  isValidBetKey, isValidSplit, isValidCorner, isValidStreet, isValidSixLine,
 } from '../worker/casino.js';
 
 // ─────────────────────────────────────────────────────────────────────
