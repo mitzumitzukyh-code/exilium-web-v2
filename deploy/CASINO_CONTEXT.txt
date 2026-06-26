@@ -1,0 +1,239 @@
+╔══════════════════════════════════════════════════════════════╗
+║              EXILIUM CASINO — CONTEXTO GENERAL               ║
+║         Sistema de entretenimiento PandaCoins v1.0           ║
+╚══════════════════════════════════════════════════════════════╝
+
+================================================================
+ 1. ¿QUÉ ES EL CASINO EXILIUM?
+================================================================
+
+El Casino Exilium es un sistema de entretenimiento interno para
+los miembros de la guild Exilium en World of Warcraft. Usa una
+moneda virtual llamada PandaCoins (🪙) que se puede comprar y
+vender con oro del juego a razón de 1 PandaCoin = 5,000 oro.
+
+Actualmente existe como preview visual (casino-preview.html) en
+el frontend de Cloudflare Pages, completamente del lado del
+cliente (HTML + CSS + JS vanilla), sin backend.
+
+URL: https://exilium-battlepass.pages.dev/casino-preview
+
+
+================================================================
+ 2. COMPONENTES ACTUALES
+================================================================
+
+┌─────────────────────┬────────────────────────────────────────┐
+│ Componente          │ Estado actual                          │
+├─────────────────────┼────────────────────────────────────────┤
+│ Ruleta 🎰           │ Funcional (6 resultados)               │
+│ Bono diario 🎁      │ Funcional (+300/día, cooldown 24h)    │
+│ Compra PandaCoins   │ Simulado (frontend solamente)          │
+│ Venta PandaCoins    │ Simulado (frontend, comisión 5%)       │
+│ Historial 📜        │ Funcional (últimos 8 movimientos)      │
+│ Reglas 📋           │ Estáticas                              │
+│ Racha 🔥            │ Se actualiza en vivo                   │
+│ Límite de giros     │ 12 giros/día                           │
+│ Jackpot             │ Se incrementa 5% con premios mayores   │
+│ Equivalencia oro    │ En vivo en el wallet                    │
+└─────────────────────┴────────────────────────────────────────┘
+
+
+================================================================
+ 3. MECÁNICA DE LA RULETA
+================================================================
+
+La ruleta tiene 10 sectores con colores alternos (dorado/verde
+oscuro). El jugador selecciona una apuesta entre 4 opciones:
+
+  • 100 🪙
+  • 250 🪙
+  • 500 🪙
+  • 1,000 🪙
+
+La animación dura ~5 segundos y el resultado se determina por
+probabilidades predefinidas:
+
+┌─────────────────┬──────────┬─────────────┐
+│ Resultado       │ Multipl. │ Probabilidad │
+├─────────────────┼──────────┼─────────────┤
+│ Sin premio 😔   │   x0     │   34%       │
+│ x1 🟡           │   x1     │   28%       │
+│ x2 🟢           │   x2     │   20%       │
+│ x3 🔵           │   x3     │   11%       │
+│ x5 💎           │   x5     │    5%       │
+│ JACKPOT 👑      │  x10     │    2%       │
+└─────────────────┴──────────┴─────────────┘
+
+RTP (Retorno al Jugador): ~92%
+
+
+================================================================
+ 4. SISTEMA PANDAcoins
+================================================================
+
+  • 1 🪙 PandaCoin = 5,000 oro de WoW
+  • Compra: el jugador entrega oro y recibe PandaCoins
+  • Venta: el jugador vende PandaCoins y recibe oro
+  • Comisión de guild en ventas: 5%
+  • Bono diario gratuito: +300 PandaCoins (cada 24h)
+  • Límite de giros diario: 12
+
+
+================================================================
+ 5. LIMITACIONES ACTUALES (sólo frontend)
+================================================================
+
+  [✗] Sin persistencia — al recargar se pierde saldo, racha,
+      historial y progreso
+  [✗] Sin backend — compras/ventas no impactan el perfil real
+  [✗] Sin autenticación — cualquiera juega sin vincular a su
+      personaje de WoW
+  [✗] Sin conexión al Battle Pass — el casino está aislado del
+      sistema de progresión principal
+  [✗] La ruleta no muestra etiquetas de premio en los sectores
+  [✗] Sin medidas anti-abuso del lado servidor
+
+
+================================================================
+ 6. MEJORAS PROPUESTAS PARA INTEGRACIÓN REAL
+================================================================
+
+  ┌─────────────────────────────────────────────────────────┐
+  │ 6.1 BACKEND (Worker + KV)                               │
+  └─────────────────────────────────────────────────────────┘
+
+  Endpoints necesarios en el worker (worker/casino.js):
+
+    GET    /api/casino/balance    → saldo del jugador
+    POST   /api/casino/spin       → registrar giro, actualizar
+    POST   /api/casino/daily      → reclamar bono diario
+    POST   /api/casino/buy        → comprar con oro (del perfil)
+    POST   /api/casino/sell       → vender (sumar oro al perfil)
+    GET    /api/casino/history    → historial persistente
+    GET    /api/casino/jackpot    → pool del jackpot semanal
+
+  KV Keys propuestas:
+
+    casino:balance:{playerId}       → saldo actual
+    casino:history:{playerId}       → array de movimientos
+    casino:daily:{playerId}         → timestamp último bono
+    casino:spins:{playerId}:{fecha} → contador de giros hoy
+    casino:jackpot_pool             → pool del jackpot semanal
+
+  ┌─────────────────────────────────────────────────────────┐
+  │ 6.2 VINCULAR AL PERFIL DEL JUGADOR                      │
+  └─────────────────────────────────────────────────────────┘
+
+    • Cada miembro de la guild tiene saldo PandaCoins en KV
+    • Las compras descuentan oro real del perfil
+    • Las ventas añaden oro real al perfil
+    • Autenticación mediante token de admin/sesión
+
+  ┌─────────────────────────────────────────────────────────┐
+  │ 6.3 INTEGRACIÓN CON BATTLE PASS                         │
+  └─────────────────────────────────────────────────────────┘
+
+    • Misiones semanales: "Gana 3 veces en la ruleta" → XP
+    • Logros: "Acumula 50,000 PandaCoins" → título especial
+    • Recompensas: niveles del BP otorgan PandaCoins gratis
+    • Rango casino basado en acumulado histórico:
+
+        0 - 1,000      → Novato
+        1,000 - 5,000  → Apostador
+        5,000 - 20,000 → Veterano
+        20,000 - 50,000→ Leyenda
+        50,000+        → Magnate
+
+  ┌─────────────────────────────────────────────────────────┐
+  │ 6.4 MÁS JUEGOS FUNCIONALES                               │
+  └─────────────────────────────────────────────────────────┘
+
+    🎲 Duelo de Dados
+       Dos jugadores apuestan la misma cantidad, tiran 2d6,
+       el mayor gana el bote menos comisión.
+
+    📦 Cofre Misterioso
+       Gastas PandaCoins para abrir un cofre con rareza
+       aleatoria: Común (60%) → Raro (25%) → Épico (12%)
+       → Legendario (3%). Cada rareza da premio distinto.
+
+    🏆 Jackpot Semanal
+       Pool acumulado entre toda la guild. Los jugadores
+       compran tickets con PandaCoins. Sorteo automático
+       cada domingo 20:00 servidor.
+
+    🔥 Racha de Gloria
+       Multiplicador progresivo por victorias consecutivas
+       sin perder: x1 → x2 → x3 → x5 → x10.
+
+  ┌─────────────────────────────────────────────────────────┐
+  │ 6.5 MEJORAS VISUALES                                    │
+  └─────────────────────────────────────────────────────────┘
+
+    • Etiquetas de texto en cada sector de la ruleta
+    • Animación de confeti al ganar Jackpot
+    • Efecto de sonido opcional (giro + victoria)
+    • Historial con timestamp real y filtro por fecha
+    • Tabla de líderes (top jugadores con más PandaCoins)
+
+  ┌─────────────────────────────────────────────────────────┐
+  │ 6.6 MEDIDAS ANTI-ABUSO                                  │
+  └─────────────────────────────────────────────────────────┘
+
+    ✅ Límite de giros diario (12)
+    ✅ Cooldown de bono diario (24h)
+    ✅ Comisión de guild al vender (5%)
+    ❌ Pendiente: límite de compra diaria (ej: 10,000 🪙/día)
+    ❌ Pendiente: log de auditoría para el admin
+    ❌ Pendiente: validación del lado servidor en cada request
+
+
+================================================================
+ 7. ARQUITECTURA PROPUESTA
+================================================================
+
+  ┌──────────────┐       ┌──────────────────┐       ┌─────────┐
+  │  Frontend    │       │    Backend        │       │   KV    │
+  │ casino.html  │──┬──▶│ worker/casino.js  │──┬──▶│ ═══════ │
+  │ (Pages)      │  │   │ (Cloudflare Wkr)  │  │   │ balances │
+  └──────────────┘  │   └──────────────────┘  │   │ history  │
+                    │   Con bindings:         │   │ daily    │
+                    │   • EXILIUM_KV          │   │ spins    │
+                    │   • (auth token)        │   │ jackpot  │
+                    └─────────────────────────┘   └─────────┘
+
+
+================================================================
+ 8. ARCHIVOS RELACIONADOS
+================================================================
+
+  Frontend:
+    deploy/casino-preview.html    → Preview actual del casino
+
+  Backend (worker):
+    worker/index.js               → Router principal
+    worker/players.js             → CRUD de jugadores (saldo)
+
+  Config:
+    wrangler.toml                 → KV namespace bindings
+    deploy/CASINO_CONTEXT.txt     → Este archivo
+
+
+================================================================
+ 9. HISTORIAL DE CAMBIOS
+================================================================
+
+  v1.0 — 2026-06-18
+    • Creación inicial del casino preview
+    • Diseño premium alineado con la web Exilium
+    • Ruleta con 6 resultados y animación
+    • Bono diario con cooldown de 24h
+    • Conversión PandaCoins ↔ oro (1 🪙 = 5,000 oro)
+    • Compra/venta con comisión de guild (5%)
+    • Tabs interactivas: Historial, Reglas, Convertir
+    • Equivalencia en oro en tiempo real en el wallet
+    • Límite de 12 giros diarios
+    • Jackpot acumulado que crece con premios grandes
+
+================================================================

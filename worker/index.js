@@ -37,15 +37,18 @@ import {
 import { runNewsCron } from './news-cron.js';
 import {
   handleCasinoRegister, handleCasinoLogin, handleCasinoLogout, handleCasinoMe,
-  verifyCasinoSession, handleAdminGetCasinoUsers,
+  verifyCasinoSession, handleAdminGetCasinoUsers, handleAdminDeleteCasinoUser,
 } from './casino-auth.js';
+import {
+  handleCasinoDiscordAuth, handleCasinoDiscordCallback, handleCasinoDiscordExchange,
+} from './discord-auth.js';
 import {
   tickStateMachine, getCasinoState,
   handleSeat, handlePlaceBet, handleMarkReady, handleClearBets, handleSendChat,
-  handleGetLeaderboard,
+  handleGetLeaderboard, handleGetPlayers,
   handleAdminGetConfig, handleAdminPutConfig, handleAdminAdjustBalance,
   handleAdminGetRounds, handleAdminGetTransactions, handleAdminGetStats,
-  handleAdminKick, handleAdminResetState,
+  handleAdminKick, handleAdminResetState, handleAdminClearCasinoRounds,
   handleAdminGetRound, handleAdminGetAdvancedStats,
 } from './casino.js';
 const CORS_HEADERS = {
@@ -90,9 +93,13 @@ async function handleRequest(request, env, ctx) {
   }
 
   if (method === 'GET' && path.startsWith('/api/players/')) {
-    const playerId = decodeURIComponent(path.split('/')[3]);
-    const player = await getPlayer(request, env, `player:${playerId}`);
-    return player ? jsonResponse(player) : jsonResponse({ error: 'Jugador no encontrado' }, 404);
+    try {
+      const playerId = decodeURIComponent(path.split('/')[3]);
+      const player = await getPlayer(request, env, `player:${playerId}`);
+      return player ? jsonResponse(player) : jsonResponse({ error: 'Jugador no encontrado' }, 404);
+    } catch (err) {
+      return jsonResponse({ error: err.message }, 500);
+    }
   }
 
   if (method === 'GET' && path === '/api/announcement') {
@@ -117,28 +124,48 @@ async function handleRequest(request, env, ctx) {
   }
 
   if (method === 'GET' && path === '/api/battlepass-config') {
-    const raw = await env.EXILIUM_KV.get('config:battlepass_rewards');
-    return cachedJsonResponse(raw ? JSON.parse(raw) : { rewards: [] }, 300);
+    try {
+      const raw = await env.EXILIUM_KV.get('config:battlepass_rewards');
+      return cachedJsonResponse(raw ? JSON.parse(raw) : { rewards: [] }, 300);
+    } catch (err) {
+      return cachedJsonResponse({ rewards: [] }, 300);
+    }
   }
 
   if (method === 'GET' && path === '/api/officers') {
-    const officers = await getOfficersEnriched(env);
-    return cachedJsonResponse(officers, 120);
+    try {
+      const officers = await getOfficersEnriched(env);
+      return cachedJsonResponse(officers, 120);
+    } catch (err) {
+      return cachedJsonResponse([], 120);
+    }
   }
 
   if (method === 'GET' && path === '/api/hall-of-fame') {
-    const raw = await env.EXILIUM_KV.get('config:hall_of_fame', 'json');
-    return cachedJsonResponse(raw || { entries: [] }, 120);
+    try {
+      const raw = await env.EXILIUM_KV.get('config:hall_of_fame', 'json');
+      return cachedJsonResponse(raw || { entries: [] }, 120);
+    } catch (err) {
+      return cachedJsonResponse({ entries: [] }, 120);
+    }
   }
 
   if (method === 'GET' && path === '/api/boost-banner') {
-    const val = await env.EXILIUM_KV.get('config:boost_banner_visible');
-    return cachedJsonResponse({ visible: val !== 'false' }, 60);
+    try {
+      const val = await env.EXILIUM_KV.get('config:boost_banner_visible');
+      return cachedJsonResponse({ visible: val !== 'false' }, 60);
+    } catch (err) {
+      return cachedJsonResponse({ visible: true }, 60);
+    }
   }
 
   if (method === 'GET' && path === '/api/rbg-strategies') {
-    const raw = await env.EXILIUM_KV.get('config:rbg_strategies', 'json');
-    return cachedJsonResponse(raw || [], 60);
+    try {
+      const raw = await env.EXILIUM_KV.get('config:rbg_strategies', 'json');
+      return cachedJsonResponse(raw || [], 60);
+    } catch (err) {
+      return cachedJsonResponse([], 60);
+    }
   }
 
   // ── News públicas ──
@@ -152,10 +179,13 @@ async function handleRequest(request, env, ctx) {
 
   // ── Public Comments ──
   if (method === 'GET' && path === '/api/comments') {
-    const raw = await env.EXILIUM_KV.get('public:comments', 'json') || [];
-    // Strip IP addresses before returning to clients (privacy)
-    const safe = raw.map(({ ip, ...rest }) => rest);
-    return jsonResponse(safe);
+    try {
+      const raw = await env.EXILIUM_KV.get('public:comments', 'json') || [];
+      const safe = raw.map(({ ip, ...rest }) => rest);
+      return jsonResponse(safe);
+    } catch (err) {
+      return jsonResponse([]);
+    }
   }
 
   if (method === 'POST' && path === '/api/comments') {
@@ -201,8 +231,12 @@ async function handleRequest(request, env, ctx) {
 
   // ── Page Like (general) ──
   if (method === 'GET' && path === '/api/page-likes') {
-    const raw = await env.EXILIUM_KV.get('public:page_likes', 'json');
-    return jsonResponse(raw || { total: 0 });
+    try {
+      const raw = await env.EXILIUM_KV.get('public:page_likes', 'json');
+      return jsonResponse(raw || { total: 0 });
+    } catch (err) {
+      return jsonResponse({ total: 0 });
+    }
   }
 
   if (method === 'POST' && path === '/api/page-likes') {
@@ -233,8 +267,12 @@ async function handleRequest(request, env, ctx) {
   }
 
   if (method === 'GET' && path === '/api/guild-ranking') {
-    const data = await getGuildRanking(env);
-    return cachedJsonResponse(data, 300);
+    try {
+      const data = await getGuildRanking(env);
+      return cachedJsonResponse(data, 300);
+    } catch (err) {
+      return cachedJsonResponse({ ranking: [] }, 300);
+    }
   }
 
   // Page view tracking (público, sin auth)
@@ -790,6 +828,19 @@ async function handleRequest(request, env, ctx) {
 
   // ── Casino — Rutas públicas (auth opcional, sesiones dedicadas) ──
   // Auth del casino: register/login/logout no requieren sesión previa
+
+  // Discord OAuth
+  if (method === 'GET' && path === '/api/casino/auth/discord') {
+    return await handleCasinoDiscordAuth(request, env);
+  }
+  if (method === 'GET' && path === '/api/casino/auth/discord/callback') {
+    return await handleCasinoDiscordCallback(request, env);
+  }
+  if (method === 'POST' && path === '/api/casino/auth/discord/exchange') {
+    const result = await handleCasinoDiscordExchange(request, env);
+    return jsonResponse(result, result.status || (result.error ? 400 : 200));
+  }
+
   if (method === 'POST' && path === '/api/casino/auth/register') {
     const result = await handleCasinoRegister(request, env);
     return jsonResponse(result, result.error ? 400 : 201);
@@ -815,6 +866,11 @@ async function handleRequest(request, env, ctx) {
     if (method === 'GET' && path === '/api/casino/leaderboard') {
       const result = await handleGetLeaderboard(env);
       return cachedJsonResponse(result, 60);
+    }
+
+    if (method === 'GET' && path === '/api/casino/players') {
+      const result = await handleGetPlayers(env);
+      return jsonResponse(result);
     }
 
     // Los siguientes endpoints requieren sesión del casino
@@ -865,6 +921,12 @@ async function handleRequest(request, env, ctx) {
   if (path.startsWith('/admin/casino/')) {
     if (!(await handleAdminAuth(request, env))) {
       return jsonResponse({ error: 'Unauthorized' }, 401);
+    }
+
+    if (method === 'POST' && path.match(/^\/admin\/casino\/users\/[^/]+\/delete$/)) {
+      const userId = path.split('/')[4];
+      const result = await handleAdminDeleteCasinoUser(env, userId);
+      return jsonResponse(result, result.status || (result.error ? 400 : 200));
     }
 
     if (method === 'GET' && path === '/admin/casino/users') {
@@ -923,6 +985,11 @@ async function handleRequest(request, env, ctx) {
 
     if (method === 'POST' && path === '/admin/casino/reset-state') {
       const result = await handleAdminResetState(env);
+      return jsonResponse(result);
+    }
+
+    if (method === 'POST' && path === '/admin/casino/clear-rounds') {
+      const result = await handleAdminClearCasinoRounds(env);
       return jsonResponse(result);
     }
   }
@@ -986,6 +1053,24 @@ export default {
     if (event.cron === '0 */6 * * *') {
       const results = await runNewsCron(env);
       console.log('[CRON] News import:', JSON.stringify(results));
+    }
+
+    // C2 — Avanzar el motor del casino cada minuto aunque no haya tráfico de
+    // polling. Antes, tickStateMachine solo se ejecutaba dentro de cada request,
+    // por lo que con todos los jugadores desconectados la sala se congelaba en
+    // 'spinning' o 'result' indefinidamente (rondas atascadas, apuestas colgadas).
+    if (event.cron === '* * * * *') {
+      ctx.waitUntil(
+        (async () => {
+          try {
+            await tickStateMachine(env);
+            console.log('[CRON] Casino state machine tick OK');
+          } catch (err) {
+            console.error('[CRON] Casino tick error:', err);
+            await logError(err, 'casino_cron', env);
+          }
+        })()
+      );
     }
   },
 };

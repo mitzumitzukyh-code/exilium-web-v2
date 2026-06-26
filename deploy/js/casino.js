@@ -1,6 +1,6 @@
 // deploy/js/casino.js
 // Sala de PandaCoins — Frontend multijugador con polling.
-// v5.0 — Mobile-first, 1 giro compartido, 5 asientos, chat, ruleta animada.
+// v6.0 — Layout Playtech, ruleta canvas PNG, multijugador KV.
 
 (function(){
   "use strict";
@@ -8,6 +8,10 @@
   const API_BASE = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev';
   const TOKEN_KEY = 'exilium_casino_token';
   const TUTORIAL_KEY = 'exilium_casino_tutorial_dismissed';
+  const CACHE_HISTORY_KEY = 'exilium_casino_history_cache';
+  const CACHE_CONFIG_KEY = 'exilium_casino_config_cache';
+  const CACHE_USER_KEY = 'exilium_casino_user_cache';
+  const CACHE_TS_KEY = 'exilium_casino_cache_ts';
 
   // Secuencia europea (debe coincidir con el servidor)
   const WHEEL_SEQUENCE = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
@@ -19,7 +23,7 @@
   }
 
   const BET_LABELS = {
-    'color:red':'Rojo','color:black':'Negro',
+    'color:red':'♦ Rojo','color:black':'♦ Negro',
     'parity:even':'Par','parity:odd':'Impar',
     'half:low':'1-18','half:high':'19-36',
     'dozen:1':'1ª Docena','dozen:2':'2ª Docena','dozen:3':'3ª Docena',
@@ -60,12 +64,13 @@
 
   function cacheEls(){
     [
-      'balancePill','balanceValue','sessionPill','sessionName','logoutBtn','hcToggle',
+      'balancePill','balanceValue','totalBetValue',
+      'sessionPill','sessionName','logoutBtn','hcToggle',
       'timerCircle','timerText','statusLine','historyStrip',
       'resultCallout','rcStatus','rcNumber','rcSwatch',
-      'wheelGroup','ballGroup','dragonGuardLeft','dragonGuardRight',
-      'chipsRow','betValue','tableGrid','tableOutside','myBetsList',
-      'clearBetBtn','readyBtn','soundToggle','soundLabel',
+      'chipsRow','betValue','tableGrid','tableColumns','tableDozens','tableOutside','myBetsList',
+      'clearBetBtn','readyBtn','readyBtnLabel','soundToggle','soundLabel',
+      'limitMin','limitMax','limitMaxBets',
       'seatsGrid','sitBtn','standBtn','seatsHelp',
       'chatList','chatInput','chatSend',
       'helpBtn','tutorialOverlay','tutorialCloseBtn','tutorialDontShow',
@@ -73,6 +78,7 @@
       'loginName','loginPass','loginError','loginBtn',
       'regName','regPass','regPass2','regError','registerBtn',
       'switchToRegister','switchToLogin',
+      'discordLoginBtn','discordRegisterBtn','authCloseBtn','dashboardCloseBtn','dashboardBtn',
       'tickerTrack',
       'betsHeader','seatsHeader','chatHeader','panelBets','panelSeats','panelChat',
     ].forEach(id => { els[id] = $(id); });
@@ -108,143 +114,139 @@
     else localStorage.removeItem(TOKEN_KEY);
   }
 
-  // ─────────── Construir ruleta SVG ───────────
-  const CX = 200, CY = 200, R_OUT = 188, R_NUM = 158, R_IN = 96;
-  const segAngle = 360 / WHEEL_SEQUENCE.length;
-  const svgns = 'http://www.w3.org/2000/svg';
-
-  function polar(cx, cy, r, deg){
-    const a = (deg - 90) * Math.PI / 180;
-    return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+  // ─────────── Ruleta canvas (casino-wheel.js) ───────────
+  function initWheel(){
+    if(typeof CasinoWheel !== 'undefined'){
+      CasinoWheel.init('rouletteContainer');
+      const ro = new ResizeObserver(() => {
+        if(typeof CasinoWheel.resize === 'function') CasinoWheel.resize();
+      });
+      const el = document.getElementById('rouletteContainer');
+      if(el) ro.observe(el);
+    }
   }
 
-  function buildWheel(){
-    const g = els.wheelGroup;
-    if(!g) return;
-    g.innerHTML = '';
-    WHEEL_SEQUENCE.forEach((num, i) => {
-      const startAngle = i * segAngle;
-      const endAngle = startAngle + segAngle;
-      const [x1,y1] = polar(CX,CY,R_OUT,startAngle);
-      const [x2,y2] = polar(CX,CY,R_OUT,endAngle);
-      const [x3,y3] = polar(CX,CY,R_IN,endAngle);
-      const [x4,y4] = polar(CX,CY,R_IN,startAngle);
-      const path = document.createElementNS(svgns,'path');
-      path.setAttribute('d', `M ${x1} ${y1} A ${R_OUT} ${R_OUT} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${R_IN} ${R_IN} 0 0 0 ${x4} ${y4} Z`);
-      const c = colorOf(num);
-      const fill = c === 'red' ? '#8b1a1a' : c === 'green' ? '#1f6b45' : '#15110f';
-      path.setAttribute('fill', fill);
-      path.setAttribute('stroke', 'rgba(212,175,55,0.25)');
-      path.setAttribute('stroke-width', '0.6');
-      g.appendChild(path);
-
-      const midAngle = startAngle + segAngle/2;
-      const [tx,ty] = polar(CX, CY, R_NUM, midAngle);
-      const text = document.createElementNS(svgns,'text');
-      text.setAttribute('x', tx); text.setAttribute('y', ty);
-      text.setAttribute('fill', '#f0e3c4');
-      text.setAttribute('font-family', "'Cinzel', serif");
-      text.setAttribute('font-weight', '700');
-      text.setAttribute('font-size', '12.5');
-      text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('dominant-baseline', 'middle');
-      text.setAttribute('transform', `rotate(${midAngle}, ${tx}, ${ty})`);
-      text.textContent = num;
-      g.appendChild(text);
+  function spinWheelTo(resultIndex, callback){
+    if(typeof CasinoWheel === 'undefined') return;
+    const dur = state.config ? state.config.spinning_duration * 1000 : 5200;
+    const scaled = Math.max(3500, Math.min(6000, dur * 1.15));
+    let tickCount = 0;
+    const tickInterval = setInterval(() => {
+      tick(0.05);
+      if(++tickCount > 14) clearInterval(tickInterval);
+    }, 90);
+    if(els.readyBtn) els.readyBtn.disabled = true;
+    CasinoWheel.spinTo(resultIndex, scaled, () => {
+      clearInterval(tickInterval);
+      tick(0.08);
+      if(els.readyBtn) els.readyBtn.disabled = false;
+      if(callback) callback();
     });
-    // anillo divisorio
-    const innerCircle = document.createElementNS(svgns,'circle');
-    innerCircle.setAttribute('cx', CX); innerCircle.setAttribute('cy', CY);
-    innerCircle.setAttribute('r', R_IN);
-    innerCircle.setAttribute('fill', 'none');
-    innerCircle.setAttribute('stroke', 'rgba(212,175,55,0.3)');
-    innerCircle.setAttribute('stroke-width', '1');
-    g.appendChild(innerCircle);
   }
 
-  // ─────────── Construir tablero ───────────
+  // ─────────── Construir tapete de apuestas (estilo casino real) ───────────
   function buildTable(){
+    // 1) Cero (separado, a la izquierda como en ruleta real)
+    // El botón del cero ya está en el HTML estático (felt-zero).
+
+    // 2) Grid de números 1-36 (3 filas x 12 columnas)
     const grid = els.tableGrid;
     grid.innerHTML = '';
-
-    const zero = document.createElement('button');
-    zero.className = 'table-zero';
-    zero.type = 'button';
-    zero.dataset.bet = 'number:0';
-    zero.textContent = '0';
-    grid.appendChild(zero);
-
+    // Orden real del tapete: fila superior = 3,6,9...; media = 2,5,8...; inferior = 1,4,7...
     for(let row = 0; row < 3; row++){
       for(let col = 0; col < 12; col++){
         const n = col*3 + (3 - row);
         const btn = document.createElement('button');
-        btn.className = 'table-num ' + colorOf(n);
+        btn.className = 'felt-num ' + colorOf(n);
         btn.type = 'button';
-        btn.style.gridColumn = String(col + 2);
-        btn.style.gridRow = String(row + 1);
         btn.dataset.bet = 'number:' + n;
         btn.textContent = n;
         grid.appendChild(btn);
       }
     }
 
+    // 3) Columnas 2to1 (a la derecha del grid de números)
+    const cols = els.tableColumns;
+    cols.innerHTML = '';
     for(let row = 0; row < 3; row++){
       const colBtn = document.createElement('button');
-      colBtn.className = 'table-col-btn';
+      colBtn.className = 'felt-col';
       colBtn.type = 'button';
-      colBtn.style.gridColumn = '14';
-      colBtn.style.gridRow = String(row + 1);
       colBtn.dataset.bet = 'col:' + (3 - row);
-      colBtn.textContent = '2:1';
-      grid.appendChild(colBtn);
+      colBtn.textContent = '2to1';
+      cols.appendChild(colBtn);
     }
 
-    grid.addEventListener('click', (e) => {
-      const btn = e.target.closest('.table-num, .table-zero, .table-col-btn');
-      if(!btn) return;
-      toggleBetSelection(btn.dataset.bet, btn);
-    });
+    // Listener unificado para números + cero + columnas
+    const feltTable = document.querySelector('.felt-table');
+    if(feltTable && !feltTable.dataset.boundNums){
+      feltTable.addEventListener('click', (e) => {
+        const btn = e.target.closest('.felt-num, .felt-zero, .felt-col');
+        if(!btn) return;
+        toggleBetSelection(btn.dataset.bet, btn);
+      });
+      feltTable.dataset.boundNums = '1';
+    }
 
-    // Exteriores
-    const wrap = els.tableOutside;
-    wrap.innerHTML = '';
-    const spacer = document.createElement('div');
-    spacer.className = 'outside-spacer';
-    wrap.appendChild(spacer);
-
-    const defs = [
-      { bet:'dozen:1', label:'1ª' },
-      { bet:'dozen:2', label:'2ª' },
-      { bet:'dozen:3', label:'3ª' },
-      { bet:'half:low', label:'1-18' },
-      { bet:'parity:even', label:'Par' },
-      { bet:'color:red', label:'R', swatch:'red' },
-      { bet:'color:black', label:'N', swatch:'black' },
-      { bet:'parity:odd', label:'Impar' },
-      { bet:'half:high', label:'19-36' },
-    ];
-
-    defs.forEach(def => {
+    // 4) Docenas (1st 12, 2nd 12, 3rd 12)
+    const dozens = els.tableDozens;
+    dozens.innerHTML = '';
+    [
+      { bet:'dozen:1', label:'1st 12', title:'Números 1 – 12' },
+      { bet:'dozen:2', label:'2nd 12', title:'Números 13 – 24' },
+      { bet:'dozen:3', label:'3rd 12', title:'Números 25 – 36' },
+    ].forEach(def => {
       const btn = document.createElement('button');
-      btn.className = 'outside-btn';
+      btn.className = 'felt-dozen';
       btn.type = 'button';
       btn.dataset.bet = def.bet;
-      if(def.swatch){
-        const sw = document.createElement('span');
-        sw.className = 'swatch ' + def.swatch;
-        btn.appendChild(sw);
+      btn.textContent = def.label;
+      if (def.title) btn.title = def.title;
+      dozens.appendChild(btn);
+    });
+
+    // 5) Apuestas exteriores (1 - 18, Par, Rojo, Negro, Impar, 19 - 36)
+    const wrap = els.tableOutside;
+    wrap.innerHTML = '';
+    const defs = [
+      { bet:'half:low', label:'1 - 18' },
+      { bet:'parity:even', label:'Par' },
+      { bet:'color:red', isRedDiamond: true },
+      { bet:'color:black', isBlackDiamond: true },
+      { bet:'parity:odd', label:'Impar' },
+      { bet:'half:high', label:'19 - 36' },
+    ];
+    defs.forEach(def => {
+      const btn = document.createElement('button');
+      btn.className = 'felt-outside';
+      btn.type = 'button';
+      btn.dataset.bet = def.bet;
+
+      if(def.isRedDiamond){
+        // Diamante rojo: relleno oscuro con borde rojo
+        btn.innerHTML = '<svg class="felt-diamond-svg" viewBox="0 0 40 30" aria-hidden="true"><polygon points="20,2 38,15 20,28 2,15" fill="#7a0000" stroke="#fff" stroke-width="1.5"/></svg>';
+      } else if(def.isBlackDiamond){
+        // Diamante negro: relleno negro con borde blanco
+        btn.innerHTML = '<svg class="felt-diamond-svg" viewBox="0 0 40 30" aria-hidden="true"><polygon points="20,2 38,15 20,28 2,15" fill="#111" stroke="#fff" stroke-width="1.5"/></svg>';
+      } else {
+        const label = document.createElement('span');
+        label.textContent = def.label;
+        btn.appendChild(label);
       }
-      const label = document.createElement('span');
-      label.textContent = def.label;
-      btn.appendChild(label);
       wrap.appendChild(btn);
     });
 
-    wrap.addEventListener('click', (e) => {
-      const btn = e.target.closest('.outside-btn');
-      if(!btn) return;
-      toggleBetSelection(btn.dataset.bet, btn);
-    });
+    // Listener unificado para docenas + exteriores
+    const feltExtras = document.querySelector('.felt-dozens, .felt-outside');
+    const feltWrap = document.querySelector('.felt-table');
+    if(feltWrap && !feltWrap.dataset.bound){
+      feltWrap.addEventListener('click', (e) => {
+        const btn = e.target.closest('.felt-dozen, .felt-outside');
+        if(!btn) return;
+        toggleBetSelection(btn.dataset.bet, btn);
+      });
+      feltWrap.dataset.bound = '1';
+    }
   }
 
   function toggleBetSelection(betKey, btnEl){
@@ -257,58 +259,95 @@
       flashStatus('Siéntate primero para poder apostar.');
       return;
     }
+    // Contar apuestas confirmadas en el servidor + pendientes locales
+    const confirmed = (state.mySeat && state.mySeat.bets) || [];
     const maxBets = state.config ? state.config.max_bets_per_round : 3;
+    if(confirmed.length + state.pendingBets.length >= maxBets){
+      // Verificar si es un toggle-off (quitar selección pendiente local)
+      const idx = state.pendingBets.findIndex(b => b.bet_key === betKey);
+      if(idx >= 0){
+        state.pendingBets.splice(idx, 1);
+        btnEl.classList.remove('selected');
+        renderMyBets();
+        return;
+      }
+      flashStatus(`Máximo ${maxBets} apuestas por ronda.`);
+      return;
+    }
     const idx = state.pendingBets.findIndex(b => b.bet_key === betKey);
     if(idx >= 0){
-      // Quitar selección existente
+      // Quitar selección existente (solo local — el dinero ya fue debitado si fue enviada)
       state.pendingBets.splice(idx, 1);
       btnEl.classList.remove('selected');
     } else {
-      if(state.pendingBets.length >= maxBets){
-        flashStatus(`Máximo ${maxBets} apuestas por ronda.`);
+      // Verificar si ya existe en confirmadas del servidor
+      if(confirmed.some(b => b.bet_key === betKey)){
+        flashStatus('Ya apostaste a eso esta ronda.');
         return;
       }
-      state.pendingBets.push({ bet_key: betKey, amount: state.betValue });
+      const newBet = { bet_key: betKey, amount: state.betValue };
+      state.pendingBets.push(newBet);
       btnEl.classList.add('selected');
+      // Enviar SOLO esta apuesta nueva al servidor (no reenviar todas)
+      submitSingleBet(newBet);
     }
     renderMyBets();
-    // Confirmar inmediatamente con el servidor (apuesta en vivo)
-    submitBetsToServer();
   }
 
   function clearSelectionsUI(){
-    document.querySelectorAll('.table-num.selected, .table-zero.selected, .table-col-btn.selected, .outside-btn.selected')
+    document.querySelectorAll('.felt-num.selected, .felt-zero.selected, .felt-col.selected, .felt-dozen.selected, .felt-outside.selected')
       .forEach(b => b.classList.remove('selected'));
   }
 
   function flashStatus(msg){
-    els.statusLine.textContent = msg;
-    els.statusLine.style.color = 'var(--blood-bright)';
-    setTimeout(() => { els.statusLine.style.color = ''; }, 2000);
+    setStatusMessage(msg);
+    if(els.statusLine) els.statusLine.style.color = '#ff8a80';
+    setTimeout(() => { if(els.statusLine) els.statusLine.style.color = ''; }, 2000);
   }
 
   // ─────────── Enviar apuestas al servidor ───────────
-  let submitInFlight = false;
-  async function submitBetsToServer(){
-    if(submitInFlight) return;
-    if(!state.mySeat || state.pendingBets.length === 0) return;
-    submitInFlight = true;
-    const betsToSend = [...state.pendingBets];
-    const res = await api('/api/casino/bet', 'POST', { bets: betsToSend });
-    submitInFlight = false;
+  let submitQueue = [];
+  let submitBusy = false;
+  async function processSubmitQueue(){
+    if(submitBusy || submitQueue.length === 0) return;
+    submitBusy = true;
+    const bet = submitQueue.shift();
+    const res = await api('/api/casino/bet', 'POST', { bets: [bet] });
+    submitBusy = false;
     if(res.error){
       flashStatus(res.error);
-      // Si falla (ej. saldo insuficiente), revertir selecciones locales
-      state.pendingBets = [];
+      // Si falla, quitar de pendientes locales y de la UI
+      const idx = state.pendingBets.findIndex(b => b.bet_key === bet.bet_key);
+      if(idx >= 0) state.pendingBets.splice(idx, 1);
       clearSelectionsUI();
+      syncSelectionsUI();
       renderMyBets();
-      return;
+    } else {
+      // Actualizar saldo local
+      if(state.me && typeof res.balance === 'number'){
+        updateBalance(res.balance);
+      }
+      // Quitar de pendientes locales (ya está en el servidor)
+      const idx = state.pendingBets.findIndex(b => b.bet_key === bet.bet_key);
+      if(idx >= 0) state.pendingBets.splice(idx, 1);
+      renderMyBets();
     }
-    // Actualizar saldo local
-    if(state.me && typeof res.balance === 'number'){
-      updateBalance(res.balance);
-    }
-    // El servidor confirma las apuestas; mantenemos las locales como espejo
+    // Procesar siguiente en cola
+    processSubmitQueue();
+  }
+  function submitSingleBet(bet){
+    submitQueue.push(bet);
+    processSubmitQueue();
+  }
+
+  /** Sincroniza la UI de selecciones con las apuestas confirmadas del servidor */
+  function syncSelectionsUI(){
+    const confirmed = (state.mySeat && state.mySeat.bets) || [];
+    const confirmedKeys = new Set(confirmed.map(b => b.bet_key));
+    document.querySelectorAll('.felt-num, .felt-zero, .felt-col, .felt-dozen, .felt-outside').forEach(btn => {
+      const key = btn.dataset.bet;
+      if(confirmedKeys.has(key)) btn.classList.add('selected');
+    });
   }
 
   async function clearAllBets(){
@@ -320,6 +359,7 @@
     renderMyBets();
     if(typeof res.balance === 'number') updateBalance(res.balance);
     els.readyBtn.classList.remove('active');
+    if(els.readyBtnLabel) els.readyBtnLabel.textContent = 'LISTO';
     toast('Apuestas quitadas');
   }
 
@@ -332,7 +372,7 @@
     const res = await api('/api/casino/ready', 'POST');
     if(res.error){ flashStatus(res.error); return; }
     els.readyBtn.classList.add('active');
-    els.readyBtn.textContent = '✓ Listo!';
+    if(els.readyBtnLabel) els.readyBtnLabel.textContent = '¡LISTO!';
     toast('¡Listo! Esperando a los demás.');
   }
 
@@ -361,17 +401,29 @@
     if(!state.me) return;
     const old = state.me.balance;
     state.me.balance = newBal;
-    els.balanceValue.textContent = newBal.toLocaleString('es-VE');
-    if(newBal > old){
-      els.balanceValue.classList.remove('balance-down');
-      els.balanceValue.classList.add('balance-up');
-    } else if(newBal < old){
-      els.balanceValue.classList.remove('balance-up');
-      els.balanceValue.classList.add('balance-down');
+    const formatted = newBal.toLocaleString('es-VE');
+    if(els.balanceValue) els.balanceValue.textContent = formatted;
+    if(els.balanceValue){
+      if(newBal > old){
+        els.balanceValue.classList.remove('balance-down');
+        els.balanceValue.classList.add('balance-up');
+      } else if(newBal < old){
+        els.balanceValue.classList.remove('balance-up');
+        els.balanceValue.classList.add('balance-down');
+      }
+      setTimeout(() => {
+        els.balanceValue.classList.remove('balance-up','balance-down');
+      }, 1300);
     }
-    setTimeout(() => {
-      els.balanceValue.classList.remove('balance-up','balance-down');
-    }, 1300);
+  }
+
+  function getTotalBet(){
+    const confirmed = (state.mySeat && state.mySeat.bets) || [];
+    return confirmed.reduce((s, b) => s + (Number(b.amount) || 0), 0);
+  }
+
+  function updateTotalBet(){
+    if(els.totalBetValue) els.totalBetValue.textContent = getTotalBet().toLocaleString('es-VE');
   }
 
   function renderSeats(){
@@ -420,9 +472,9 @@
   function renderMyBets(){
     const list = els.myBetsList;
     if(!list) return;
-    // Mostrar las apuestas confirmadas del servidor (mySeat.bets) + pendientes locales
+    // Mostrar apuestas confirmadas del servidor + pendientes locales (ambas)
     const confirmed = (state.mySeat && state.mySeat.bets) || [];
-    const all = confirmed.length > 0 ? confirmed : state.pendingBets;
+    const all = confirmed.concat(state.pendingBets.filter(p => !confirmed.some(c => c.bet_key === p.bet_key)));
     if(all.length === 0){
       list.innerHTML = '<span style="font-size:11px;color:var(--ink-dim);opacity:0.6;">Selecciona en el tablero.</span>';
       return;
@@ -433,6 +485,7 @@
       const swatch = color ? '<span class="swatch ' + (color === 'red' ? 'red' : color === 'black' ? 'black' : 'green') + '"></span>' : '';
       return '<span class="my-bet-chip">' + swatch + escapeHtml(betLabel(key)) + ' · ' + b.amount + '</span>';
     }).join('');
+    updateTotalBet();
   }
 
   function renderChat(){
@@ -454,33 +507,39 @@
   function renderHistory(){
     const strip = els.historyStrip;
     if(!strip) return;
-    if(state.history.length === 0){
-      strip.innerHTML = '<span class="history-empty">Aún no hay tiradas.</span>';
+    const items = state.history.slice(0, 10);
+    if(items.length === 0){
+      strip.innerHTML = '<span class="history-empty">—</span>';
       return;
     }
-    strip.innerHTML = state.history.slice(0, 12).map(h => {
+    let html = items.map(h => {
       const c = h.color || colorOf(h.result);
       return '<span class="hist-chip ' + c + '">' + h.result + '</span>';
     }).join('');
+    const pad = 10 - items.length;
+    for(let i = 0; i < pad; i++) html += '<span class="hist-chip empty" aria-hidden="true"></span>';
+    strip.innerHTML = html;
   }
 
   function renderTicker(){
     const track = els.tickerTrack;
     if(!track) return;
-    // Generar items desde el historial de rondas (ganadores)
     const items = [];
     state.history.forEach(h => {
       if(h.winners && h.winners.length){
         h.winners.forEach(w => {
-          items.push('<span class="ticker-item"><span class="ti-dot"></span><span class="ti-name">' + escapeHtml(w.name) + '</span> ganó +' + w.won + ' ₡</span>');
+          const wonAmt = w.won || w.amount || w.payout || 0;
+          items.push('<span class="ticker-item"><span class="ti-dot"></span><span class="ti-name">' + escapeHtml(w.name) + '</span> ganó +' + wonAmt + ' ₡</span>');
         });
+      } else if(h.name && h.amount){
+        // Fallback: datos planos en el historial
+        items.push('<span class="ticker-item"><span class="ti-dot"></span><span class="ti-name">' + escapeHtml(h.name) + '</span> ganó +' + (h.amount || 0) + ' ₡</span>');
       }
     });
     if(items.length === 0){
       track.innerHTML = '<span class="ticker-item"><span class="ti-name">Sala abierta</span> — Entra y apuesta</span>';
       return;
     }
-    // Duplicar para loop infinito
     track.innerHTML = items.concat(items).join('');
   }
 
@@ -518,53 +577,6 @@
     }
   }
 
-  // ─────────── Animación de giro de ruleta ───────────
-  let currentWheelAngle = 0;
-  let spinningNow = false;
-
-  function spinWheelTo(resultIndex, callback){
-    if(spinningNow) return;
-    spinningNow = true;
-
-    // Calcular ángulo objetivo (igual que la versión anterior)
-    const segCenter = resultIndex * segAngle + segAngle/2;
-    const targetMod = ((360 - segCenter) % 360 + 360) % 360;
-    const idleMod = ((currentWheelAngle % 360) + 360) % 360;
-    let deltaToTarget = targetMod - idleMod;
-    if(deltaToTarget < 0) deltaToTarget += 360;
-
-    const extraTurns = 6 + Math.floor(Math.random() * 3);
-    const wheelFinalAngle = currentWheelAngle + extraTurns * 360 + deltaToTarget;
-
-    const ballExtraTurns = 9 + Math.floor(Math.random() * 3);
-    const ballFinalAngle = ballExtraTurns * 360;
-
-    const duration = state.config ? state.config.spinning_duration * 1000 : 4000;
-
-    // Tick sounds
-    let tickCount = 0;
-    const tickInterval = setInterval(() => {
-      tick(0.05);
-      tickCount++;
-      if(tickCount > 14) clearInterval(tickInterval);
-    }, 90);
-
-    requestAnimationFrame(() => {
-      els.wheelGroup.style.transition = 'transform ' + (duration/1000) + 's cubic-bezier(0.12, 0.7, 0.18, 1)';
-      els.wheelGroup.style.transform = 'rotate(' + wheelFinalAngle + 'deg)';
-      els.ballGroup.style.transition = 'transform ' + (duration/1000 + 0.4) + 's cubic-bezier(0.1, 0.4, 0.15, 1)';
-      els.ballGroup.style.transform = 'rotate(' + ballFinalAngle + 'deg)';
-    });
-
-    setTimeout(() => {
-      clearInterval(tickInterval);
-      tick(0.08);
-      currentWheelAngle = wheelFinalAngle % 360;
-      spinningNow = false;
-      if(callback) callback();
-    }, duration + 200);
-  }
-
   // ─────────── Resultado ───────────
   function showResult(number, won){
     const c = colorOf(number);
@@ -572,13 +584,9 @@
     els.rcSwatch.className = 'rc-swatch ' + c;
     els.rcStatus.textContent = won ? '¡Ganaste!' : 'Sin premio';
     els.resultCallout.className = 'result-callout show ' + (won ? 'win' : 'lose');
-    els.dragonGuardLeft && els.dragonGuardLeft.classList.toggle('is-win', won);
-    els.dragonGuardRight && els.dragonGuardRight.classList.toggle('is-win', won);
     fanfare(won);
     setTimeout(() => {
       els.resultCallout.classList.remove('show');
-      els.dragonGuardLeft && els.dragonGuardLeft.classList.remove('is-win');
-      els.dragonGuardRight && els.dragonGuardRight.classList.remove('is-win');
     }, 4000);
   }
 
@@ -601,12 +609,22 @@
     state.history = data.history || [];
     if(data.me){
       state.me = data.me;
+      if(els.balancePill) els.balancePill.style.display = '';
+      updateBalance(data.me.balance);
+    } else if(els.balancePill){
       els.balancePill.style.display = '';
-      els.balanceValue.textContent = data.me.balance.toLocaleString('es-VE');
+      if(els.balanceValue) els.balanceValue.textContent = '—';
+    }
+
+    if(data.config){
+      if(els.limitMin) els.limitMin.textContent = (data.config.min_bet || 50).toLocaleString('es-VE');
+      if(els.limitMax) els.limitMax.textContent = (data.config.max_bet || 1000).toLocaleString('es-VE');
+      if(els.limitMaxBets) els.limitMaxBets.textContent = String(data.config.max_bets_per_round || 3);
     }
 
     renderSeats();
     renderMyBets();
+    syncSelectionsUI();
     renderChat();
     renderHistory();
     renderTicker();
@@ -621,51 +639,53 @@
     const resultIndex = data.state.result_index;
 
     if(curStatus === 'spinning' && prevStatus !== 'spinning'){
-      // Inició el giro → animar
-      els.statusLine.innerHTML = 'La rueda <strong>acelera</strong>…';
-      // Limpiar selecciones UI
+      setStatusMessage('NO HAY MÁS APUESTAS');
       clearSelectionsUI();
       state.pendingBets = [];
-      // Animar
-      if(resultIndex != null){
-        spinWheelTo(resultIndex);
+      if(resultIndex != null && !(typeof CasinoWheel !== 'undefined' && CasinoWheel.isAnimating && CasinoWheel.isAnimating())){
+        spinWheelTo(resultIndex, () => {
+          // animación completada
+        });
       }
     } else if(curStatus === 'result' && prevStatus !== 'result'){
-      // Resultado disponible
       if(resultNumber != null){
-        // ¿Gané yo?
         let myWin = false;
         if(state.mySeat && state.mySeat.last_result){
           myWin = state.mySeat.last_result.won;
         }
         showResult(resultNumber, myWin);
-        const c = colorOf(resultNumber);
-        els.statusLine.innerHTML = '<strong>' + resultNumber + '</strong> (' + c + '). ' +
-          (myWin ? '¡Ganaste!' : 'Sin premio esta vez.');
+        setStatusMessage('RESULTADO: ' + resultNumber + ' (' + colorOf(resultNumber) + ')' +
+          (myWin ? ' — ¡GANASTE!' : ''));
       }
     } else if(curStatus === 'betting' && prevStatus && prevStatus !== 'betting'){
-      // Nueva ronda
-      els.statusLine.innerHTML = 'Nueva ronda #' + curRound + '. ¡Elige tu apuesta!';
+      setStatusMessage('HAGA SUS APUESTAS, POR FAVOR');
       els.readyBtn.classList.remove('active');
-      els.readyBtn.textContent = '✓ Listo';
+      if(els.readyBtnLabel) els.readyBtnLabel.textContent = 'LISTO';
       clearSelectionsUI();
       state.pendingBets = [];
       renderMyBets();
     } else if(curStatus === 'betting'){
-      // Mensaje genérico
-      if(!prevStatus){
-        els.statusLine.innerHTML = 'Ronda #' + curRound + '. Elige ficha y apuesta.';
-      }
+      if(!prevStatus) setStatusMessage('HAGA SUS APUESTAS, POR FAVOR');
+    } else if(curStatus === 'spinning'){
+      setStatusMessage('LA RULETA GIRA…');
     }
 
     state.lastStatus = curStatus;
     state.lastRoundId = curRound;
 
-    // Botón ready según mySeat
     if(state.mySeat){
       els.readyBtn.classList.toggle('active', !!state.mySeat.ready);
-      els.readyBtn.textContent = state.mySeat.ready ? '✓ Listo!' : '✓ Listo';
+      if(els.readyBtnLabel){
+        els.readyBtnLabel.textContent = state.mySeat.ready ? '¡LISTO!' : 'LISTO';
+      }
     }
+    if(els.readyBtn){
+      els.readyBtn.disabled = curStatus === 'spinning' || curStatus === 'result';
+    }
+  }
+
+  function setStatusMessage(msg){
+    if(els.statusLine) els.statusLine.textContent = msg;
   }
 
   function startPolling(){
@@ -693,13 +713,21 @@
     if(!msg) return;
     if(!state.me){ showAuth(); return; }
     els.chatInput.value = '';
+    // Optimistic UI: agregar localmente primero
+    if(state.me && state.me.name){
+      state.chat.push({ name: state.me.name, message: msg, system: false });
+      renderChat();
+    }
     const res = await api('/api/casino/chat', 'POST', { message: msg });
     if(res.error){
       flashStatus(res.error);
-      els.chatInput.value = msg; // restaurar
+      // Revertir optimistic
+      state.chat.pop();
+      renderChat();
+      els.chatInput.value = msg;
       return;
     }
-    // Refrescar inmediatamente para ver nuestro mensaje
+    // Refrescar para obtener el orden real del servidor
     await refreshState();
   }
 
@@ -761,6 +789,12 @@
     state.me = user;
     els.sessionPill.style.display = 'flex';
     els.sessionName.textContent = user.name;
+    if(els.sessionIcon) els.sessionIcon.textContent = '';
+    if(els.sessionAvatar){
+      els.sessionAvatar.style.display = '';
+      els.sessionAvatar.src = user.avatar_url || 'assets/logo.png';
+      els.sessionAvatar.alt = 'Avatar de ' + user.name;
+    }
     els.balancePill.style.display = '';
     updateBalance(user.balance);
     // Mostrar tutorial si es primera vez
@@ -770,8 +804,8 @@
     refreshState();
   }
 
-  function logout(){
-    api('/api/casino/auth/logout', 'POST');
+  async function logout(){
+    await api('/api/casino/auth/logout', 'POST');
     setToken(null);
     state.me = null;
     state.mySeat = null;
@@ -779,6 +813,48 @@
     els.sessionPill.style.display = 'none';
     els.balancePill.style.display = 'none';
     showAuth();
+  }
+
+  function doDiscordAuth(){
+    // Redirige al endpoint OAuth del worker; el worker redirige a Discord
+    // y Discord devuelve al callback, que a su vez redirige al frontend con ?token=
+    const redirectBack = encodeURIComponent(window.location.href.split('?')[0]);
+    window.location.href = API_BASE + '/api/casino/auth/discord?redirect=' + redirectBack;
+  }
+
+  /** Maneja el retorno del callback de Discord (?token= o ?error=) */
+  function handleOAuthCallback(){
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const error = params.get('error');
+    if(token){
+      // Limpiar la URL para que no quede el token visible
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setToken(token);
+      api('/api/casino/me').then(res => {
+        if(res.user && !res.error){
+          applySession(res.user);
+        } else {
+          setToken(null);
+          showAuth();
+          setTimeout(() => { if(els.loginError) els.loginError.textContent = 'Error al verificar la sesión de Discord.'; }, 400);
+        }
+      });
+      return true;
+    }
+    if(error){
+      window.history.replaceState({}, document.title, window.location.pathname);
+      showAuth();
+      const msg = {
+        'missing_code': 'Discord no devolvió un código de autorización.',
+        'guild_required': 'Debes ser miembro del servidor de Discord de Exilium.',
+        'no_guild_token': 'No se pudo verificar tu membresía en Discord.',
+        'discord_error': 'Error al comunicarse con Discord. Intenta de nuevo.',
+      }[error] || 'Error de autenticación con Discord.';
+      setTimeout(() => { if(els.loginError) els.loginError.textContent = msg; }, 400);
+      return true;
+    }
+    return false;
   }
 
   // ─────────── Tutorial ───────────
@@ -854,7 +930,7 @@
   // ─────────── Init ───────────
   function init(){
     cacheEls();
-    buildWheel();
+    initWheel();
     buildTable();
 
     // Fichas
@@ -918,19 +994,39 @@
     els.loginPass.addEventListener('keydown', (e) => { if(e.key === 'Enter') doLogin(); });
     els.regPass2.addEventListener('keydown', (e) => { if(e.key === 'Enter') doRegister(); });
 
+    // Discord OAuth
+    if(els.discordLoginBtn) els.discordLoginBtn.addEventListener('click', doDiscordAuth);
+    if(els.discordRegisterBtn) els.discordRegisterBtn.addEventListener('click', doDiscordAuth);
+
+    // Botones cerrar modales
+    if(els.authCloseBtn) els.authCloseBtn.addEventListener('click', hideAuth);
+    if(els.dashboardCloseBtn) els.dashboardCloseBtn.addEventListener('click', () => {
+      const overlay = document.getElementById('dashboardOverlay');
+      if(overlay) overlay.classList.remove('show');
+    });
+    if(els.dashboardBtn) els.dashboardBtn.addEventListener('click', () => {
+      const overlay = document.getElementById('dashboardOverlay');
+      if(overlay) overlay.classList.add('show');
+    });
+
+    // Manejar callback OAuth (Discord devuelve ?token= o ?error=)
+    const handledOAuth = handleOAuthCallback();
+
     // Verificar sesión existente
-    if(state.token){
-      // Validar con /me
-      api('/api/casino/me').then(res => {
-        if(res.ok){
-          applySession(res.user);
-        } else {
-          setToken(null);
-          showAuth();
-        }
-      });
-    } else {
-      showAuth();
+    if(!handledOAuth){
+      if(state.token){
+        // Validar con /me
+        api('/api/casino/me').then(res => {
+          if(res.user && !res.error){
+            applySession(res.user);
+          } else {
+            setToken(null);
+            showAuth();
+          }
+        });
+      } else {
+        showAuth();
+      }
     }
 
     // Iniciar polling SIEMPRE (para ver la sala aunque no estés logueado)

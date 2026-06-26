@@ -91,19 +91,104 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- DATA FETCHING ---
-    function safeFetch(url, fallback) {
-        return fetch(url).then(res => res.ok ? res.json() : fallback).catch(() => fallback);
+    // Sistema de caché de 2 capas:
+    // 1. Caché fresca (expira 2h) para datos rápidos
+    // 2. Snapshot permanente (nunca expira) para cuando KV falla
+    // Cuando el servidor está caído o KV excedió límites, se usa la snapshot
+    const CACHE_PREFIX = 'exilium_cache_';
+    const SNAP_PREFIX = 'exilium_snap_';
+    const CACHE_KEYS = {
+        players: CACHE_PREFIX + 'players',
+        announcement: CACHE_PREFIX + 'announcement',
+        officers: CACHE_PREFIX + 'officers',
+        guildRanking: CACHE_PREFIX + 'guild_ranking',
+        hallOfFame: CACHE_PREFIX + 'hof',
+        boostBanner: CACHE_PREFIX + 'boost_banner',
+    };
+    const SNAP_KEYS = {
+        players: SNAP_PREFIX + 'players',
+        announcement: SNAP_PREFIX + 'announcement',
+        officers: SNAP_PREFIX + 'officers',
+        guildRanking: SNAP_PREFIX + 'guild_ranking',
+        hallOfFame: SNAP_PREFIX + 'hof',
+        boostBanner: SNAP_PREFIX + 'boost_banner',
+    };
+
+    function cacheSave(key, snapKey, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() }));
+            // Siempre actualizar snapshot permanente
+            localStorage.setItem(snapKey, JSON.stringify({ data, ts: Date.now() }));
+        } catch (_) {}
+    }
+
+    function cacheLoad(key, snapKey) {
+        try {
+            // 1. Intentar caché fresca
+            const raw = localStorage.getItem(key);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed.ts && Date.now() - parsed.ts <= 2 * 60 * 60 * 1000) {
+                    return parsed.data;
+                }
+            }
+            // 2. Fallback a snapshot permanente
+            const snapRaw = localStorage.getItem(snapKey);
+            if (snapRaw) {
+                const snapParsed = JSON.parse(snapRaw);
+                if (snapParsed.data) {
+                    usingCachedData = true;
+                    return snapParsed.data;
+                }
+            }
+            return null;
+        } catch (_) { return null; }
+    }
+
+    let usingCachedData = false;
+
+    function showOfflineBanner() {
+        if (!selectors.announcementBanner) return;
+        const existing = document.getElementById('offline-cache-banner');
+        if (existing) return;
+        const banner = document.createElement('div');
+        banner.id = 'offline-cache-banner';
+        banner.style.cssText = 'background:#5c3a1e;border:1px solid #d4af37;color:#f5ecd8;text-align:center;padding:8px 16px;font-size:13px;font-family:var(--font-ui,Inter,sans-serif);position:relative;z-index:9999;';
+        banner.textContent = '⚠️ Límite de API alcanzado — mostrando última instantánea. Los datos pueden no estar al día.';
+        document.body.prepend(banner);
+    }
+
+    function cachedFetch(url, fallback, cacheKey, snapKey) {
+        return fetch(url).then(function(res) {
+            if (res.ok) return res.json().then(function(data) {
+                usingCachedData = false;
+                cacheSave(cacheKey, snapKey, data);
+                return data;
+            });
+            // API respondió con error → usar snapshot
+            var cached = cacheLoad(cacheKey, snapKey);
+            if (cached) showOfflineBanner();
+            return cached || fallback;
+        }).catch(function() {
+            // Error de red / timeout → usar snapshot
+            var cached = cacheLoad(cacheKey, snapKey);
+            if (cached) showOfflineBanner();
+            return cached || fallback;
+        });
     }
 
     async function fetchData() {
-        const [playersRes, announcementRes, officersRes, guildRankingRes, hofRes, boostBannerRes] = await Promise.all([
-            safeFetch(`${API_URL}/players`, []),
-            safeFetch(`${API_URL}/announcement`, { message: null }),
-            safeFetch(`${API_URL}/officers`, []),
-            safeFetch(`${API_URL}/guild-ranking`, { ranking: [] }),
-            safeFetch(`${API_URL}/hall-of-fame`, { entries: [] }),
-            safeFetch(`${API_URL}/boost-banner`, { visible: true }),
+        var results = await Promise.all([
+            cachedFetch(`${API_URL}/players`, [], CACHE_KEYS.players, SNAP_KEYS.players),
+            cachedFetch(`${API_URL}/announcement`, { message: null }, CACHE_KEYS.announcement, SNAP_KEYS.announcement),
+            cachedFetch(`${API_URL}/officers`, [], CACHE_KEYS.officers, SNAP_KEYS.officers),
+            cachedFetch(`${API_URL}/guild-ranking`, { ranking: [] }, CACHE_KEYS.guildRanking, SNAP_KEYS.guildRanking),
+            cachedFetch(`${API_URL}/hall-of-fame`, { entries: [] }, CACHE_KEYS.hallOfFame, SNAP_KEYS.hallOfFame),
+            cachedFetch(`${API_URL}/boost-banner`, { visible: true }, CACHE_KEYS.boostBanner, SNAP_KEYS.boostBanner),
         ]);
+        var playersRes = results[0], announcementRes = results[1],
+            officersRes = results[2], guildRankingRes = results[3],
+            hofRes = results[4], boostBannerRes = results[5];
         state.players = Array.isArray(playersRes) ? playersRes : [];
         state.announcement = announcementRes;
         state.officers = Array.isArray(officersRes) ? officersRes : [];
