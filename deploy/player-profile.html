@@ -7,7 +7,7 @@
     <title>Perfil — Exilium Battle Pass</title>
     <meta name="description" content="Perfil de jugador en Exilium Battle Pass. Consulta XP, rango y estadísticas PvP.">
     <meta name="robots" content="noindex, follow">
-    <link rel="canonical" href="https://exilium-battlepass.pages.dev/player-profile.html">
+    <link rel="canonical" href="https://www.guild-exilium.com/player-profile.html">
     <link rel="icon" href="assets/logo.png" type="image/png">
     <link rel="stylesheet" href="css/main.css">
     <style>
@@ -77,7 +77,7 @@
     <script src="js/xp-engine.js"></script>
     <script>
     (function() {
-        const API_URL = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev/api';
+        const API_URL = 'https://api.guild-exilium.com/api';
         const EMBLEM_MAP = { 'EXILIADO':'assets/emblema_1.png','INICIADO':'assets/emblema_1.png','PENITENTE':'assets/emblema_2.png','SOMBRA':'assets/emblema_3.png','APÓSTATA':'assets/emblema_4.png','ROMPEJURAMENTOS':'assets/emblema_5.png','HEREJE':'assets/emblema_6.png','PROFETA':'assets/emblema_7.png','EXARCA':'assets/emblema_8.png' };
         const RANK_COLORS = { 'EXILIADO':'#9a8878','INICIADO':'#9a8878','PENITENTE':'#7a9abb','SOMBRA':'#8888cc','APÓSTATA':'#cc6644','ROMPEJURAMENTOS':'#dd4444','HEREJE':'#ee2222','PROFETA':'#ff8800','EXARCA':'#d4a017' };
         const BRACKET_NAMES = { rs:'Solo Shuffle', r2:'Arena 2v2', r3:'Arena 3v3', rbg:'RBG', bgs:'Blitz' };
@@ -163,7 +163,7 @@
                     loadRewardsConfig()
                 ]);
                 if (!playerRes || playerRes.error) {
-                    container.innerHTML = '<div class="profile-loading">⚠️ Jugador no encontrado: ' + playerId + '</div>';
+                    container.innerHTML = '<div class="profile-loading">⚠️ Jugador no encontrado: ' + escH(playerId) + '</div>';
                     return;
                 }
                 renderProfile(playerRes, container, rewardsData);
@@ -174,6 +174,9 @@
 
         function stripDiacritics(str) {
             return str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : str;
+        }
+        function escH(s) {
+            return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
         }
 
         function renderProfile(player, container, rewardsData) {

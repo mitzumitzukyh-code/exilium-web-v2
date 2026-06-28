@@ -4,7 +4,7 @@
    ══════════════════════════════════════════════════════════ */
 
 // ── Config ───────────────────────────────────────────────
-const API_URL = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+const API_URL = 'https://api.guild-exilium.com';
 
 // ── State ────────────────────────────────────────────────
 let state = {

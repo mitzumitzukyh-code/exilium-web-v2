@@ -7,20 +7,20 @@
     <title>Exilium Boosting — PvP Carries WoW | Arena, RBG &amp; Gladiator Boost</title>
     <meta name="description" content="Los mejores carries de PvP en WoW. Arena 2v2, 3v3, Solo Shuffle, RBG, Gladiator Boost y más. Precios en USD y Oro de WoW.">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://exilium-battlepass.pages.dev/boosting.html">
+    <link rel="canonical" href="https://www.guild-exilium.com/boosting.html">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://exilium-battlepass.pages.dev/boosting.html">
+    <meta property="og:url" content="https://www.guild-exilium.com/boosting.html">
     <meta property="og:title" content="Exilium Boosting — PvP Carries WoW | Arena, RBG &amp; Gladiator Boost">
     <meta property="og:description" content="Los mejores carries de PvP en WoW. Arena 2v2, 3v3, Solo Shuffle, RBG, Gladiator Boost y más. Precios en USD y Oro de WoW.">
-    <meta property="og:image" content="https://exilium-battlepass.pages.dev/assets/og-image.jpg">
+    <meta property="og:image" content="https://www.guild-exilium.com/assets/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="Exilium">
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:title" content="Exilium Boosting — PvP Carries WoW | Arena, RBG &amp; Gladiator Boost">
     <meta property="twitter:description" content="Los mejores carries de PvP en WoW. Arena 2v2, 3v3, Solo Shuffle, RBG, Gladiator Boost y más.">
-    <meta property="twitter:image" content="https://exilium-battlepass.pages.dev/assets/og-image.jpg">
-    <link rel="preconnect" href="https://exilium-blizzard.mitzumitzukyhs.workers.dev">
+    <meta property="twitter:image" content="https://www.guild-exilium.com/assets/og-image.jpg">
+    <link rel="preconnect" href="https://api.guild-exilium.com">
     <link rel="icon" href="assets/logo.png" type="image/png">
     <link rel="stylesheet" href="css/boosting.css">
     <script type="application/ld+json">
@@ -29,8 +29,8 @@
       "@type": "Service",
       "name": "Exilium Boosting Services",
       "description": "Carries de PvP en World of Warcraft. Arena, RBG, Solo Shuffle y Gladiator Boost.",
-      "provider": { "@type": "Organization", "name": "Exilium Guild", "url": "https://exilium-battlepass.pages.dev" },
-      "url": "https://exilium-battlepass.pages.dev/boosting.html",
+      "provider": { "@type": "Organization", "name": "Exilium Guild", "url": "https://www.guild-exilium.com" },
+      "url": "https://www.guild-exilium.com/boosting.html",
       "areaServed": "Worldwide",
       "serviceType": "WoW PvP Boosting"
     }
@@ -824,7 +824,7 @@ async function gateLogin() {
 
     btn.disabled = true; btn.textContent = '...';
     try {
-        const res  = await fetch('https://exilium-blizzard.mitzumitzukyhs.workers.dev/api/boost/login', {
+        const res  = await fetch('https://api.guild-exilium.com/api/boost/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
@@ -908,7 +908,8 @@ function sortServices(val) {
     } else {
         cards.sort((a, b) => a.dataset.original - b.dataset.original);
     }
-    cards.forEach((c, i) => { c.dataset.original = i; grid.appendChild(c); });
+    // No reescribir dataset.original (eso destruía el orden original tras ordenar por precio).
+    cards.forEach(c => grid.appendChild(c));
 }
 
 // Guardar orden original

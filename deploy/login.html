@@ -7,7 +7,7 @@
     <title>Exilium Boosting · Portal del Cliente</title>
     <meta name="description" content="Inicia sesión o regístrate para acceder al portal de carry services de Exilium.">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://exilium-battlepass.pages.dev/login.html">
+    <link rel="canonical" href="https://www.guild-exilium.com/login.html">
     <link rel="icon" href="assets/logo.png" type="image/png">
     <link rel="stylesheet" href="css/portal.css">
     <style>
@@ -201,7 +201,7 @@
 </div>
 
 <script>
-const API = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+const API = 'https://api.guild-exilium.com';
 
 function showTab(tab) {
     document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
@@ -247,7 +247,9 @@ async function doLogin() {
             return;
         }
         const redirect = new URLSearchParams(location.search).get('redirect') || 'dashboard.html';
-        window.location.href = redirect;
+        // Evitar open-redirect: solo permitir rutas internas relativas, no URLs externas.
+        const safe = /^https?:|^\/\//i.test(redirect) ? 'dashboard.html' : redirect;
+        window.location.href = safe;
     } catch (_) {
         setAlert('login-alert', 'Error de conexión. Inténtalo más tarde.');
     } finally {

@@ -2,6 +2,15 @@ name = "exilium-blizzard"
 main = "worker/index.js"
 compatibility_date = "2024-01-01"
 
+# Mantener la URL ...workers.dev activa (el frontend la sigue usando hasta la migración).
+workers_dev = true
+
+# Dominio propio de la API (la zona guild-exilium.com está en la cuenta de Cloudflare).
+# El worker sigue accesible también por ...workers.dev.
+routes = [
+  { pattern = "api.guild-exilium.com", custom_domain = true }
+]
+
 [triggers]
 crons = ["*/30 * * * *", "0 */6 * * *", "* * * * *"]
 

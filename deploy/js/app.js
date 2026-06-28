@@ -4,7 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    const API_URL = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev/api';
+    const API_URL = 'https://api.guild-exilium.com/api';
     let state = { players: [], announcement: null, officers: [], hallOfFame: { entries: [] } };
 
     // Track page view (fire & forget)

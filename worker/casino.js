@@ -118,10 +118,9 @@ const CHAT_RATE_LIMIT = 5;
 const CHAT_RATE_WINDOW_MS = 30_000;
 
 async function getConfig(env) {
-  // KV-FIX: la config solo cambia por el admin (rara vez). Cacheamos en el edge
-  // (cacheTtl 120s) para que las múltiples lecturas por poll no cuenten como lecturas
-  // facturadas. La escritura del admin (handleAdminPutConfig) la invalida en <=120s.
-  const cfg = await env.EXILIUM_KV.get('casino:config', { type: 'json', cacheTtl: 120 });
+  // La config solo cambia por el admin (rara vez). cacheTtl mínimo de KV = 60s; lo usamos
+  // para no encarecer lecturas (antes 120s, ahora los cambios del admin aplican en <=60s).
+  const cfg = await env.EXILIUM_KV.get('casino:config', { type: 'json', cacheTtl: 60 });
   return { ...DEFAULT_CONFIG, ...(cfg || {}) };
 }
 
@@ -423,10 +422,9 @@ export async function getCasinoState(env, session) {
   const state = await getState(env);
   const seats = await getSeats(env);
   const chat = await getChat(env);
-  // KV-FIX: el historial de rondas solo cambia al cerrar una ronda. Para la vista de
-  // polling lo cacheamos en el edge (cacheTtl 45s). El append (appendRoundToHistory)
-  // sigue leyendo SIN cache, así no se pierden entradas.
-  const history = (await env.EXILIUM_KV.get('casino:rounds_history', { type: 'json', cacheTtl: 45 })) || [];
+  // Workers Paid: leemos el historial SIEMPRE fresco (sin cacheTtl) para que los
+  // "Últimos números" aparezcan al instante. (El cacheTtl de KV no admite <60s.)
+  const history = (await env.EXILIUM_KV.get('casino:rounds_history', 'json')) || [];
 
   // Información del usuario actual (si logueado)
   let me = null;
@@ -842,8 +840,9 @@ export async function handleSendChat(request, env, session) {
   }
   // Registrar este mensaje en la ventana deslizante
   rl.timestamps.push(now);
-  // TTL de 35s: no necesitamos conservar nada más viejo que la ventana
-  await env.EXILIUM_KV.put(rlKey, JSON.stringify(rl), { expirationTtl: 35 });
+  // TTL mínimo de Cloudflare KV = 60s (valores <60 lanzan excepción → 500).
+  // La ventana real (30s) se aplica por el filtro de `cutoff`; el TTL solo limpia el registro.
+  await env.EXILIUM_KV.put(rlKey, JSON.stringify(rl), { expirationTtl: 60 });
 
   const chat = await getChat(env);
   chat.push({

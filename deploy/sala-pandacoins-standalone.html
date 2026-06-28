@@ -66,7 +66,7 @@
           <h2 style="font-family:'Cinzel',serif; font-weight:600; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#e9d4a0;">Chat de sala</h2>
           <span style="margin-left:auto; font-size:10px; color:#8aa37a; letter-spacing:.08em;"><span id="online">0</span> en línea</span>
         </div>
-        <div id="chat" class="exi-scroll" style="flex:1; min-height:0; max-height:120px; overflow-y:auto; padding:8px 10px; display:flex; flex-direction:column; gap:6px;"></div>
+        <div id="chat" class="exi-scroll" style="flex:1; min-height:0; overflow-y:auto; padding:8px 10px; display:flex; flex-direction:column; gap:6px;"></div>
         <div style="display:flex; gap:7px; padding:10px 12px; border-top:1px solid rgba(240,165,46,.18);">
           <input id="chatinput" type="text" maxlength="160" placeholder="Escribe a la guild…" style="flex:1; min-width:0; background:rgba(0,0,0,.4); border:1px solid rgba(240,165,46,.22); border-radius:8px; padding:8px 10px; color:#f3ead6; font-family:'Inter',sans-serif; font-size:12px; outline:none;">
           <button id="chatsend" type="button" style="flex-shrink:0; background:linear-gradient(180deg,#f7c168,#f0a52e 60%,#b97916); color:#2a1a06; border:none; border-radius:8px; padding:8px 14px; font-weight:800; font-size:12px; cursor:pointer; box-shadow:0 4px 12px -4px rgba(240,165,46,.6);">Enviar</button>
@@ -151,11 +151,147 @@
   </section>
 </div>
 
+<!-- ███ Diagnóstico de errores · se activa con ?debug=1 (persiste). Tecla «`» abre/cierra el panel. ?debug=0 lo apaga. ███ -->
+<script>
+window.EXIDBG=(function(){
+  var LS_LOG='exi_dbg_log', FLAG='exi_debug', MAX=300;
+  var enabled=false;
+  try{
+    var q=new URLSearchParams(location.search);
+    if(q.has('debug')){ enabled=q.get('debug')!=='0'; localStorage.setItem(FLAG, enabled?'1':'0'); }
+    else enabled=localStorage.getItem(FLAG)==='1';
+  }catch(e){}
+
+  var buf=[];
+  try{ var s=JSON.parse(localStorage.getItem(LS_LOG)||'[]'); if(Array.isArray(s)) buf=s; }catch(e){}
+  var saveT=null;
+  function persist(){ if(saveT) return; saveT=setTimeout(function(){ saveT=null; try{ localStorage.setItem(LS_LOG, JSON.stringify(buf.slice(-MAX))); }catch(e){} }, 500); }
+
+  var COLORS={error:'#cf6a64', warn:'#f0c56b', info:'#7fb2e8', net:'#54d18a', event:'#caa15a', debug:'#9c8156'};
+  function fmtTime(ms){ var d=new Date(ms); function p(n,l){ n=String(n); while(n.length<(l||2)) n='0'+n; return n; } return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds())+'.'+p(d.getMilliseconds(),3); }
+  function escH(s){ return String(s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+
+  function log(level, tag, msg, data){
+    var e={ t:Date.now(), level:level||'info', tag:tag||'', msg:(msg==null?'':String(msg)), data:(data===undefined?undefined:data) };
+    buf.push(e); if(buf.length>MAX+60) buf=buf.slice(-MAX);
+    persist();
+    if(enabled && window.console){
+      var fn = level==='error'?console.error:(level==='warn'?console.warn:console.log);
+      try{ fn('%c[EXI:'+e.tag+']','color:'+(COLORS[e.level]||'#aaa')+';font-weight:bold', e.msg, e.data!==undefined?e.data:''); }catch(_){}
+    }
+    if(panelOpen) renderPanel();
+    if(level==='error'||level==='warn') updateBadge();
+    return e;
+  }
+
+  // ── Toasts (siempre visibles, también sin modo debug) ──
+  var toastWrap=null, lastToast={};
+  function ensureWrap(){ if(toastWrap) return toastWrap; if(!document.body) return null;
+    toastWrap=document.createElement('div');
+    toastWrap.style.cssText='position:fixed; right:14px; bottom:14px; z-index:9800; display:flex; flex-direction:column; gap:8px; max-width:min(360px,86vw); pointer-events:none; font-family:Inter,sans-serif;';
+    document.body.appendChild(toastWrap); return toastWrap; }
+  function toast(msg, type, ttl){
+    var w=ensureWrap(); if(!w){ setTimeout(function(){ toast(msg,type,ttl); },150); return; }
+    type=type||'error';
+    var col=type==='error'?'#cf6a64':(type==='warn'?'#f0c56b':'#54d18a');
+    var card=document.createElement('div');
+    card.style.cssText='pointer-events:auto; position:relative; background:linear-gradient(180deg,#1a120c,#0c0807); border:1px solid '+col+'; border-left:4px solid '+col+'; border-radius:10px; padding:9px 30px 9px 12px; color:#f3ead6; font-size:12px; line-height:1.45; box-shadow:0 12px 30px -10px rgba(0,0,0,.85); opacity:0; transform:translateY(8px); transition:opacity .2s,transform .2s; word-break:break-word;';
+    var h=document.createElement('div'); h.style.cssText='color:'+col+'; font-weight:700; font-size:11px; margin-bottom:2px;'; h.textContent=type==='error'?'⚠ Error':(type==='warn'?'⚠ Aviso':'✓ OK');
+    var b=document.createElement('div'); b.textContent=msg;
+    var x=document.createElement('button'); x.type='button'; x.textContent='×'; x.style.cssText='position:absolute; top:4px; right:8px; background:none; border:none; color:#9c8156; cursor:pointer; font-size:15px; line-height:1;';
+    var dead=false; function kill(){ if(dead) return; dead=true; card.style.opacity='0'; card.style.transform='translateY(8px)'; setTimeout(function(){ if(card.parentNode) card.parentNode.removeChild(card); }, 220); }
+    x.onclick=kill; card.appendChild(h); card.appendChild(b); card.appendChild(x); w.appendChild(card);
+    requestAnimationFrame(function(){ card.style.opacity='1'; card.style.transform='translateY(0)'; });
+    setTimeout(kill, ttl||7000);
+  }
+
+  function friendlyPath(p){
+    if(p.indexOf('/chat')>=0) return 'Chat';
+    if(p.indexOf('/clear')>=0) return 'Limpiar apuestas';
+    if(p.indexOf('/bet')>=0) return 'Apuesta';
+    if(p.indexOf('/ready')>=0) return 'Confirmar (Listo)';
+    if(p.indexOf('/seat')>=0) return 'Asiento';
+    if(p.indexOf('/state')>=0) return 'Estado de la mesa';
+    if(p.indexOf('/auth')>=0) return 'Login Discord';
+    return 'Servidor';
+  }
+  function dedup(key){ var t=Date.now(); if(lastToast[key] && t-lastToast[key]<4000) return false; lastToast[key]=t; return true; }
+  function reportHttp(method,path,status,data,raw){
+    if(status===401 && path.indexOf('/state')>=0) return; // sesión caducada en polls: silencioso
+    if(!dedup(method+' '+path+' '+status)) return;
+    var srv=(data&&(data.error||data.message)) || (raw?String(raw).slice(0,180):'');
+    toast(friendlyPath(path)+' falló ('+status+')'+(srv?': '+srv:''),'error');
+  }
+  function reportNet(method,path){
+    if(!dedup('net '+path)) return;
+    toast(friendlyPath(path)+': sin conexión con el servidor','error');
+  }
+
+  // ── Panel de debug + lanzador (solo si enabled) ──
+  var panel=null, panelBody=null, panelOpen=false, launcher=null, errBadge=null, errCount=0;
+  function updateBadge(){ errCount++; if(!errBadge) return; errBadge.style.display='inline-block'; errBadge.textContent=errCount; }
+  function buildPanel(){
+    if(panel||!document.body) return;
+    panel=document.createElement('div');
+    panel.style.cssText='position:fixed; left:0; right:0; bottom:0; height:44vh; z-index:9900; background:rgba(8,6,5,.98); border-top:2px solid #f0a52e; box-shadow:0 -16px 40px rgba(0,0,0,.7); display:none; flex-direction:column; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; color:#e6dcc6;';
+    var bar=document.createElement('div'); bar.style.cssText='display:flex; align-items:center; gap:8px; padding:6px 12px; border-bottom:1px solid rgba(240,165,46,.25); background:rgba(20,14,10,.95); flex-shrink:0;';
+    var ttl=document.createElement('strong'); ttl.textContent='🐞 EXI Debug'; ttl.style.color='#f0a52e';
+    var cnt=document.createElement('span'); cnt.id='exi-dbg-cnt'; cnt.style.cssText='color:#9c8156; margin-right:auto;';
+    function mkBtn(txt){ var b=document.createElement('button'); b.type='button'; b.textContent=txt; b.style.cssText='background:rgba(240,165,46,.12); border:1px solid rgba(240,165,46,.4); color:#f0a52e; border-radius:7px; padding:4px 10px; cursor:pointer; font-size:11px;'; return b; }
+    var bCopy=mkBtn('Copiar'), bClr=mkBtn('Limpiar'), bClose=mkBtn('Cerrar ✕');
+    bCopy.onclick=function(){ var txt=buf.map(rowText).join('\n'); try{ navigator.clipboard.writeText(txt); bCopy.textContent='¡Copiado!'; setTimeout(function(){bCopy.textContent='Copiar';},1200); }catch(e){} };
+    bClr.onclick=function(){ buf=[]; try{ localStorage.removeItem(LS_LOG); }catch(e){} errCount=0; if(errBadge){ errBadge.style.display='none'; } renderPanel(); };
+    bClose.onclick=function(){ togglePanel(false); };
+    bar.appendChild(ttl); bar.appendChild(cnt); bar.appendChild(bCopy); bar.appendChild(bClr); bar.appendChild(bClose);
+    panelBody=document.createElement('div'); panelBody.className='exi-scroll'; panelBody.style.cssText='flex:1; min-height:0; overflow:auto; padding:6px 10px;';
+    panel.appendChild(bar); panel.appendChild(panelBody); document.body.appendChild(panel);
+  }
+  function rowText(e){ var d=e.data!==undefined?('  '+(typeof e.data==='string'?e.data:JSON.stringify(e.data))):''; return fmtTime(e.t)+' ['+e.level+'] '+e.tag+' '+e.msg+d; }
+  function renderPanel(){
+    if(!panelBody) return;
+    var atBottom=(panelBody.scrollHeight-panelBody.scrollTop-panelBody.clientHeight)<40;
+    var rows=buf.slice(-220).map(function(e){
+      var col=COLORS[e.level]||'#ccc';
+      var data=e.data!==undefined?'<span style="color:#7a6a4d;">  '+escH(typeof e.data==='string'?e.data:JSON.stringify(e.data))+'</span>':'';
+      return '<div style="padding:1px 0; border-bottom:1px solid rgba(255,255,255,.04);"><span style="color:#6a5c42;">'+fmtTime(e.t)+'</span> <span style="color:'+col+'; font-weight:700;">'+escH(e.tag||e.level)+'</span> <span>'+escH(e.msg)+'</span>'+data+'</div>';
+    }).join('');
+    panelBody.innerHTML=rows||'<span style="color:#6a5c42;">— sin registros —</span>';
+    var c=document.getElementById('exi-dbg-cnt'); if(c) c.textContent=buf.length+' registros';
+    if(atBottom) panelBody.scrollTop=panelBody.scrollHeight;
+  }
+  function togglePanel(open){ if(!panel) buildPanel(); if(!panel) return; panelOpen=(open===undefined?!panelOpen:open); panel.style.display=panelOpen?'flex':'none'; if(panelOpen) renderPanel(); }
+  function buildLauncher(){
+    if(launcher||!document.body) return;
+    launcher=document.createElement('button'); launcher.type='button';
+    launcher.style.cssText='position:fixed; left:12px; bottom:12px; z-index:9700; background:linear-gradient(180deg,#1a120c,#0c0807); border:1px solid #f0a52e; color:#f0a52e; border-radius:20px; padding:7px 13px; font-size:12px; font-family:Inter,sans-serif; font-weight:700; cursor:pointer; box-shadow:0 8px 20px -8px rgba(0,0,0,.8);';
+    launcher.textContent='🐞 Debug';
+    errBadge=document.createElement('span'); errBadge.style.cssText='display:none; margin-left:6px; background:#cf6a64; color:#1a120c; border-radius:10px; padding:0 6px; font-size:10px;';
+    launcher.appendChild(errBadge);
+    launcher.onclick=function(){ togglePanel(); };
+    document.body.appendChild(launcher);
+  }
+
+  // errores JS globales
+  window.addEventListener('error', function(ev){ if(ev.message && ev.message.indexOf('ResizeObserver loop')>=0){ log('warn','resize-observer', ev.message); return; } log('error','js-error', ev.message, { file:ev.filename, line:ev.lineno, col:ev.colno }); if(enabled) toast('JS: '+ev.message,'error'); });
+  window.addEventListener('unhandledrejection', function(ev){ var r=ev.reason; log('error','promise', (r&&r.message)||String(r), r&&r.stack); if(enabled) toast('Promesa rechazada: '+((r&&r.message)||r),'error'); });
+
+  function mount(){ if(!document.body){ setTimeout(mount,60); return; }
+    if(enabled){ buildLauncher(); buildPanel(); }
+    document.addEventListener('keydown', function(e){ if(enabled && e.key==='`'){ togglePanel(); } });
+  }
+  mount();
+  if(enabled) log('info','debug','Modo debug ACTIVO. Pulsa «`» para abrir/cerrar el panel. ?debug=0 lo desactiva.');
+
+  return { enabled:enabled, log:log, event:function(tag,msg,data){ log('event',tag,msg,data); },
+           toast:toast, reportHttp:reportHttp, reportNet:reportNet, open:function(){ togglePanel(true); } };
+})();
+</script>
+
 <script>
 // ════════════════════════════════════════════════════════════════════
 //  Sala de PandaCoins — Ruleta Exilium Guild (web limpia, cableada)
 // ════════════════════════════════════════════════════════════════════
-const API='https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+const API='https://api.guild-exilium.com';
 const EURO=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
 const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 const CELL_BORDER='1.5px solid rgba(240,165,46,.5)';
@@ -179,20 +315,38 @@ const S={
   chip:50, pendingBets:{}, wheelDeg:0, result:null,
   stats:{ wins:0, losses:0, net:0 }, statusLine:'Conectando con la mesa…',
 };
-let _offset=0, _endsAt=null, _spunRound=null, _resolvedRound=null, _busy=false, _pt=null;
+let _offset=0, _endsAt=null, _spunRound=null, _resolvedRound=null, _busy=false, _pt=null, _lastDbgStatus=null, _wheelSettled=true, _pendingSound=null;
 
 async function api(path,opts){
   opts=opts||{}; const headers=Object.assign({},opts.headers||{});
   const tk=token(); if(tk) headers['Authorization']='Bearer '+tk;
   if(opts.body) headers['Content-Type']='application/json';
-  let res; try{ res=await fetch(API+path,{ method:opts.method||'GET', headers, body:opts.body?JSON.stringify(opts.body):undefined }); }
-  catch(e){ return { ok:false, status:0, data:{} }; }
-  let data=null; try{ data=await res.json(); }catch(e){}
+  const method=opts.method||'GET';
+  const DBG=window.EXIDBG;
+  const t0=(window.performance&&performance.now)?performance.now():Date.now();
+  const ms=()=>Math.round(((window.performance&&performance.now)?performance.now():Date.now())-t0);
+  if(DBG) DBG.log('debug','api→', method+' '+path, opts.body!==undefined?opts.body:undefined);
+  let res, netErr=null;
+  try{ res=await fetch(API+path,{ method, headers, body:opts.body?JSON.stringify(opts.body):undefined }); }
+  catch(e){ netErr=e; }
+  if(netErr){
+    if(DBG){ DBG.log('error','api✗', method+' '+path+' — sin conexión ('+ms()+'ms)', String(netErr&&netErr.message||netErr)); DBG.reportNet(method,path); }
+    return { ok:false, status:0, data:{}, raw:null, error:'network' };
+  }
+  let data=null, raw=null;
+  try{ raw=await res.text(); data=raw?JSON.parse(raw):null; }catch(e){ /* respuesta vacía o no-JSON */ }
   if(res.status===401){ try{ localStorage.removeItem('exi_tk'); }catch(e){} S.loggedIn=false; }
-  return { ok:res.ok, status:res.status, data:data||{} };
+  if(DBG){
+    DBG.log(res.ok?'net':'error','api'+(res.ok?'✓':'✗'), method+' '+path+' → '+res.status+' ('+ms()+'ms)', data!=null?data:(raw||''));
+    if(!res.ok) DBG.reportHttp(method,path,res.status,data,raw);
+  }
+  return { ok:res.ok, status:res.status, data:data||{}, raw:raw };
 }
 
-function pollInterval(){ if(S.status==='spinning') return 1200; if(S.status==='result') return 1500; return 2600; }
+// Workers Paid: polling más ágil (antes 1200/1500/2600). Sondeo más frecuente = chat,
+// asientos y apuestas de otros se ven casi al momento. El tick del motor también corre
+// en cada request, así que las rondas avanzan con más precisión.
+function pollInterval(){ if(S.status==='spinning') return 900; if(S.status==='result') return 1100; return 1500; }
 function schedule(){ clearTimeout(_pt); if(document.hidden) return; _pt=setTimeout(()=>poll(false), pollInterval()); }
 async function poll(immediate){
   if(document.hidden && !immediate){ schedule(); return; }
@@ -207,10 +361,16 @@ function applyState(d){
   S.serverSeats=Array.isArray(d.seats)?d.seats:[];
   S.history=(Array.isArray(d.history)?d.history:[]).map(h=>(typeof h==='number'?h:h.result));
   const me=d.me||null; S.mySeat=d.my_seat||null;
+  // El servidor envía last_result en el asiento (seats[is_me]), no en my_seat: lo adjuntamos
+  // para que la detección de victoria/derrota, estadísticas y sonido funcionen.
+  const _meSeat=S.serverSeats.find(x=>x&&x.is_me);
+  if(S.mySeat) S.mySeat.last_result=_meSeat?_meSeat.last_result:null;
   S.loggedIn=!!token(); S.balance=me?me.balance:null;
   S.status=st.status; S.roundId=st.round_id;
   S.resultNumber=st.result_number; S.resultIndex=st.result_index;
   S.chat=Array.isArray(d.chat)?d.chat:[];
+
+  if(window.EXIDBG && st.status!==_lastDbgStatus){ EXIDBG.event('estado', (_lastDbgStatus||'—')+' → '+st.status+' (ronda '+st.round_id+', result_number='+(st.result_number==null?'·':st.result_number)+', result_index='+(st.result_index==null?'·':st.result_index)+')'); _lastDbgStatus=st.status; }
 
   if(st.status==='betting') _endsAt=st.betting_ends_at;
   else if(st.status==='spinning') _endsAt=st.spinning_ends_at;
@@ -221,6 +381,7 @@ function applyState(d){
   if(st.status==='result' && S.mySeat && S.mySeat.last_result && _resolvedRound!==st.round_id){
     _resolvedRound=st.round_id; const lr=S.mySeat.last_result; const net=(lr.total_win||0)-(lr.total_bet||0);
     S.stats={ wins:S.stats.wins+(lr.won?1:0), losses:S.stats.losses+(lr.won?0:1), net:S.stats.net+net };
+    _pendingSound=lr.won?'win':'lose'; flushSound(); // suena al terminar el giro (ver flushSound)
   }
 
   S.result=null;
@@ -234,6 +395,8 @@ function applyState(d){
       glow: isWin?'0 0 30px rgba(47,156,99,.55)':'0 0 22px rgba(240,165,46,.35)',
       sw, detail: lr?(isWin?('+'+fmt(lr.total_win-lr.total_bet)+' C'):('−'+fmt(lr.total_bet)+' C')):('Salió el '+n) };
   }
+
+  if(window.EXIDBG && S.result) EXIDBG.event('resultado','cartel n='+S.result.n+' win='+S.result.win+' · fase='+st.status+' · wheelDeg='+Math.round(S.wheelDeg)+' (ojo: si fase=spinning, el cartel sale antes de frenar la rueda)');
 
   if(st.status!=='betting') S.pendingBets={};
   if(S.chip<S.cfg.min_bet || S.chip>S.cfg.max_bet){ const o=chipValues(); S.chip=o[Math.min(1,o.length-1)]||S.cfg.min_bet; }
@@ -294,6 +457,7 @@ function placeBet(key){
   const totalPending=Object.values(pending).reduce((a,b)=>a+b,0)+S.chip;
   if(S.balance!=null && totalPending>S.balance){ flash('No tienes PandaCoins suficientes.'); return; }
   pending[key]=(pending[key]||0)+S.chip; S.pendingBets=pending; S.result=null; render();
+  if(window.EXISFX) EXISFX.chip(); // sonido solo cuando la ficha se coloca realmente
 }
 function half(){ if(S.status!=='betting') return; const p={}; for(const k in S.pendingBets){ const v=Math.round(S.pendingBets[k]/2); if(v>0) p[k]=v; } S.pendingBets=p; render(); }
 function double(){ if(S.status!=='betting') return; const {max_bet}=S.cfg; const merged=mergedBets(); const p={}; for(const k in S.pendingBets){ const committed=(merged[k]||0)-S.pendingBets[k]; p[k]=Math.min(S.pendingBets[k]*2, max_bet-committed); } S.pendingBets=p; render(); }
@@ -351,7 +515,15 @@ function labelFor(key){
   return key;
 }
 
-function animateWheel(idx){ const step=360/37; const cur=S.wheelDeg; const base=cur-(cur%360); S.wheelDeg=base+360*6+((360-idx*step)%360); $('wheel-rot').style.transform='rotate('+S.wheelDeg+'deg)'; }
+function animateWheel(idx){ if(window.EXIDBG) EXIDBG.event('rueda','girar → índice '+idx+' (n='+EURO[idx]+'), fase='+S.status+' · animación CSS 4.7s'); const step=360/37; const cur=S.wheelDeg; const base=cur-(cur%360); S.wheelDeg=base+360*6+((360-idx*step)%360);
+  _wheelSettled=false; render(); // oculta el cartel de resultado mientras gira
+  const el=$('wheel-rot'); el.style.transform='rotate('+S.wheelDeg+'deg)';
+  let done=false; const finish=()=>{ if(done) return; done=true; onWheelSettled(); };
+  el.addEventListener('transitionend', finish, { once:true });
+  setTimeout(finish, 5000); // respaldo por si transitionend no dispara
+}
+function onWheelSettled(){ _wheelSettled=true; if(window.EXIDBG) EXIDBG.event('rueda','frenó · revelar resultado'); flushSound(); render(); }
+function flushSound(){ if(_wheelSettled && _pendingSound && window.EXISFX){ try{ _pendingSound==='win'?EXISFX.win():EXISFX.lose(); }catch(e){} _pendingSound=null; } }
 function buildWheelSVG(){
   const cx=100,cy=100,rOut=99,rIn=46,rT=73,step=360/37; let p='';
   EURO.forEach((num,k)=>{
@@ -444,7 +616,7 @@ function render(){
   $('wheel-rot').style.transform='rotate('+S.wheelDeg+'deg)';
 
   const rc=$('result');
-  if(S.result){
+  if(S.result && _wheelSettled){
     const r=S.result;
     rc.style.cssText='position:absolute; top:-14px; left:50%; z-index:7; display:flex; flex-direction:column; align-items:center; gap:4px; padding:13px 30px; border-radius:14px; background:linear-gradient(180deg,#1a120c,#0c0807); border:2px solid '+r.border+'; box-shadow:0 24px 60px -18px rgba(0,0,0,.9), '+r.glow+'; animation:exiPop .45s ease both;';
     rc.innerHTML='<span style="font-family:\'Cinzel\',serif; font-weight:800; font-size:18px; letter-spacing:.1em; text-transform:uppercase; color:'+r.statusColor+';">'+r.status+'</span><span style="display:flex; align-items:center; gap:9px; font-family:\'Cinzel\',serif; font-weight:800; font-size:30px; color:#f3ead6;"><span style="width:16px; height:16px; border-radius:5px; background:'+r.sw+'; box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);"></span>'+r.n+'</span><span style="font-size:12px; color:#b08d57; letter-spacing:.04em;">'+r.detail+'</span>';
@@ -527,7 +699,7 @@ document.addEventListener('mouseout',function(e){var b=e.target.closest&&e.targe
 <!-- barra superior: login Discord + Mi Perfil + Cómo jugar + sonido -->
 <script>
 (function(){
-var API='https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+var API='https://api.guild-exilium.com';
 function el(t,css,txt){var e=document.createElement(t);if(css)e.style.cssText=css;if(txt!=null)e.textContent=txt;return e;}
 try{var q=new URLSearchParams(location.search);var tk=q.get('token');
 if(tk){localStorage.setItem('exi_tk',tk);localStorage.setItem('exi_nm',q.get('name')||'');localStorage.setItem('exi_av',q.get('avatar')||'');history.replaceState({},'',location.pathname);}
@@ -571,9 +743,11 @@ var ctx=null,muted=false;try{muted=localStorage.getItem('exi_mute')==='1';}catch
 function AC(){if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(ctx&&ctx.state==='suspended')ctx.resume();return ctx;}
 function tone(f,dur,type,vol,to){var c=AC();if(!c||muted)return;var o=c.createOscillator(),g=c.createGain();o.type=type||'sine';o.frequency.value=f;if(to)o.frequency.exponentialRampToValueAtTime(to,c.currentTime+dur);g.gain.value=vol||0.16;g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur);}
 var SFX={chip:function(){tone(880,0.07,'square',0.1);},spin:function(){tone(520,0.7,'sawtooth',0.13,120);},win:function(){[523,659,784].forEach(function(f,i){setTimeout(function(){tone(f,0.35,'triangle',0.15);},i*120);});},lose:function(){tone(165,0.4,'sine',0.15,90);}};
-document.addEventListener('click',function(e){AC();if(muted)return;var bet=e.target.closest&&e.target.closest('[data-bet-key]');if(bet){SFX.chip();return;}var sp=e.target.closest&&e.target.closest('[data-exi-spin]');if(sp)SFX.spin();});
+window.EXISFX=SFX; // el resultado (win/lose) lo dispara el script principal al frenar la rueda
+document.addEventListener('click',function(e){AC();if(muted)return;var sp=e.target.closest&&e.target.closest('[data-exi-spin]');if(sp)SFX.spin();});
 document.addEventListener('keydown',function(){AC();},false);
-function watchStatus(){var node=document.getElementById('exi-status');if(!node){setTimeout(watchStatus,300);return;}var last='';new MutationObserver(function(){var t=(node.textContent||'').toLowerCase();if(t===last)return;last=t;if(t.indexOf('victoria')>=0||t.indexOf('tuyo')>=0||t.indexOf('ganaste')>=0)SFX.win();else if(t.indexOf('casa gana')>=0||t.indexOf('acomp')>=0)SFX.lose();}).observe(node,{childList:true,subtree:true,characterData:true});}watchStatus();
+// (el antiguo watchStatus que adivinaba win/lose por el texto del estado se eliminó: hacía sonar
+//  "perder" en cada giro por la palabra "acompañe" y nunca el de victoria. Ahora se controla en JS.)
 var mb=el('button','padding:6px 10px; border-radius:20px; border:1px solid rgba(240,165,46,.4); background:rgba(20,14,10,.88); color:#f0a52e; font-size:13px; cursor:pointer;');mb.type='button';function lbl(){mb.textContent=muted?'🔇':'🔊';}lbl();mb.onclick=function(){muted=!muted;try{localStorage.setItem('exi_mute',muted?'1':'0');}catch(e){}lbl();if(!muted)AC();};bar.insertBefore(mb,bar.firstChild);
 })();
 </script>

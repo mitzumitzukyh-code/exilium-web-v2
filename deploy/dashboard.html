@@ -7,7 +7,7 @@
     <title>Exilium Boosting · Mi Panel</title>
     <meta name="description" content="Panel privado del cliente de Exilium Boosting. Gestiona tus pedidos de carry.">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="https://exilium-battlepass.pages.dev/dashboard.html">
+    <link rel="canonical" href="https://www.guild-exilium.com/dashboard.html">
     <link rel="icon" href="assets/logo.png" type="image/png">
     <link rel="stylesheet" href="css/portal.css">
 </head>
@@ -263,7 +263,7 @@
 </div>
 
 <script>
-const API = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev';
+const API = 'https://api.guild-exilium.com';
 let currentUser = null;
 let allOrders = [];
 let currentFilter = 'all';
@@ -340,7 +340,13 @@ function showSection(name) {
         document.getElementById('section-' + s).style.display = s === name ? '' : 'none';
     });
     document.querySelectorAll('.sidebar-nav-link').forEach(l => l.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    // Puede llamarse sin evento (p.ej. tras crear un pedido). Solo marcar activo si hay evento.
+    if (typeof event !== 'undefined' && event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    } else {
+        const link = document.querySelector('.sidebar-nav-link[onclick*="' + name + '"]');
+        if (link) link.classList.add('active');
+    }
     if (name === 'orders') loadOrders();
 }
 
