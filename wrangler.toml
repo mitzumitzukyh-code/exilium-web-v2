@@ -3,7 +3,7 @@ main = "worker/index.js"
 compatibility_date = "2024-01-01"
 
 [triggers]
-crons = ["*/30 * * * *", "0 */6 * * *"]
+crons = ["*/30 * * * *", "0 */6 * * *", "* * * * *"]
 
 [[kv_namespaces]]
 binding = "EXILIUM_KV"

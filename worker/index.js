@@ -45,7 +45,7 @@ import {
 import {
   tickStateMachine, getCasinoState,
   handleSeat, handlePlaceBet, handleMarkReady, handleClearBets, handleSendChat,
-  handleGetLeaderboard, handleGetPlayers,
+  handleGetLeaderboard, handleGetPlayers, handleGetMyTransactions,
   handleAdminGetConfig, handleAdminPutConfig, handleAdminAdjustBalance,
   handleAdminGetRounds, handleAdminGetTransactions, handleAdminGetStats,
   handleAdminKick, handleAdminResetState, handleAdminClearCasinoRounds,
@@ -86,8 +86,27 @@ async function handleRequest(request, env, ctx) {
   if (method === 'GET' && path === '/api/players') {
     try {
       const players = await getPlayersData(env, false);
-      return cachedJsonResponse(players, 60);
+      // Guardar snapshot para cuando KV falla (escritura en background, no bloquea)
+      ctx.waitUntil(
+        env.EXILIUM_KV.put('cache:players_snapshot', JSON.stringify(players)).catch(() => {})
+      );
+      // CDN cache de 1 hora: si el Worker falla, Cloudflare sirve la versión cacheada
+      return cachedJsonResponse(players, 3600);
     } catch (err) {
+      // KV agotado — intentar snapshot de una sola lectura
+      try {
+        const snap = await env.EXILIUM_KV.get('cache:players_snapshot', 'json');
+        if (snap && Array.isArray(snap) && snap.length > 0) {
+          return new Response(JSON.stringify(snap), {
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Snapshot-Fallback': '1',
+              'Cache-Control': 'public, max-age=300',
+              ...CORS_HEADERS,
+            },
+          });
+        }
+      } catch (_) {}
       return jsonResponse({ error: err.message }, 500);
     }
   }
@@ -135,18 +154,19 @@ async function handleRequest(request, env, ctx) {
   if (method === 'GET' && path === '/api/officers') {
     try {
       const officers = await getOfficersEnriched(env);
-      return cachedJsonResponse(officers, 120);
+      return cachedJsonResponse(officers, 3600);
     } catch (err) {
-      return cachedJsonResponse([], 120);
+      // Devolver 503 para que el frontend use su snapshot de localStorage en lugar de sobreescribirlo con []
+      return jsonResponse({ error: 'KV no disponible' }, 503);
     }
   }
 
   if (method === 'GET' && path === '/api/hall-of-fame') {
     try {
       const raw = await env.EXILIUM_KV.get('config:hall_of_fame', 'json');
-      return cachedJsonResponse(raw || { entries: [] }, 120);
+      return cachedJsonResponse(raw || { entries: [] }, 3600);
     } catch (err) {
-      return cachedJsonResponse({ entries: [] }, 120);
+      return jsonResponse({ error: 'KV no disponible' }, 503);
     }
   }
 
@@ -888,6 +908,11 @@ async function handleRequest(request, env, ctx) {
 
     if (!session) {
       return jsonResponse({ error: 'No autenticado', status: 401 }, 401);
+    }
+
+    if (method === 'GET' && path === '/api/casino/my-transactions') {
+      const result = await handleGetMyTransactions(env, session);
+      return jsonResponse(result, result.status || (result.error ? 400 : 200));
     }
 
     if (method === 'POST' && path === '/api/casino/seat') {

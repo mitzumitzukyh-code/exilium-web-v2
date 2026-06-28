@@ -1892,6 +1892,123 @@ footer a:hover {
 .pn-banner-title { color: #F0D080; font-weight: 700; font-size: 0.95rem; }
 .pn-banner-sub   { color: #8A7A5A; font-size: 0.78rem; margin-top: 2px; }
 .pn-banner-arrow { margin-left: auto; color: #C89B3C; font-size: 1.2rem; }
+
+/* ── Casino PandaCoins Promo Banner (homepage) ── */
+.casino-promo-link { text-decoration: none; display: block; }
+.casino-promo-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: linear-gradient(135deg, #0a0608 0%, #1a0e0e 50%, #100a06 100%);
+  border: 1px solid rgba(212,175,55,0.35);
+  border-radius: 12px;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212,175,55,0.08);
+  position: relative;
+  overflow: hidden;
+}
+.casino-promo-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent);
+}
+.casino-promo-banner:hover {
+  border-color: #d4af37;
+  background: linear-gradient(135deg, #120a08 0%, #221410 50%, #1a0e06 100%);
+  box-shadow: 0 8px 32px rgba(212,175,55,0.15), 0 0 60px rgba(212,175,55,0.06), inset 0 1px 0 rgba(212,175,55,0.15);
+}
+.casino-promo-left {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.casino-promo-coin {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(212,175,55,0.6));
+  animation: coinGlow 2.5s ease-in-out infinite;
+}
+@keyframes coinGlow {
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(212,175,55,0.5)); }
+  50% { filter: drop-shadow(0 0 22px rgba(212,175,55,0.8)); }
+}
+.casino-promo-center {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+}
+.casino-promo-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #f3cf72;
+  margin-bottom: 4px;
+}
+.casino-promo-title {
+  color: #f5ecd8;
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1.2;
+  margin-bottom: 6px;
+}
+.casino-promo-desc {
+  color: #b7a98c;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  max-width: 500px;
+}
+.casino-promo-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.casino-promo-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 22px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #d4af37, #b8872c 60%, #8a6310);
+  color: #1a1208;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: transform 0.15s, filter 0.2s;
+  box-shadow: 0 4px 16px rgba(212,175,55,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.casino-promo-banner:hover .casino-promo-cta {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+.casino-promo-arrow {
+  color: #d4af37;
+  font-size: 1.3rem;
+  transition: transform 0.2s;
+}
+.casino-promo-banner:hover .casino-promo-arrow {
+  transform: translateX(3px);
+}
+
+@media (max-width: 640px) {
+  .casino-promo-banner {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px;
+  }
+  .casino-promo-center { text-align: center; flex-basis: 100%; }
+  .casino-promo-right { margin-left: 0; }
+  .casino-promo-coin { width: 44px; height: 44px; }
+  .casino-promo-title { font-size: 1.1rem; }
 }
 
 .news-card {

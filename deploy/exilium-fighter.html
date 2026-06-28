@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exilium Fighter — Torneo PvP</title>
+    <meta name="description" content="Exilium Fighter — Torneo PvP. 2 bandos, 5 equipos de 3, 5 vidas compartidas.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Exilium Fighter — Torneo PvP">
+    <meta property="og:description" content="2 Bandos · 5 equipos de 3 · 5 vidas compartidas · 30 jugadores. Retransmisión en vivo vía Discord.">
+    <meta property="og:image" content="assets/fighter-og.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="assets/pandadragon.png" type="image/png">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           FALLBACK STANDALONE — variables y tipografía
+           Este bloque define las custom properties que normalmente vienen
+           de css/main.css (el stylesheet global del sitio Exilium), para
+           que este archivo se vea correcto incluso si ese CSS no está
+           presente. Si tu css/main.css ya define --bg-card, --accent-color,
+           etc., esas reglas de :root tienen prioridad por orden de cascada
+           (main.css se carga primero), así que este bloque solo actúa
+           como respaldo y no debería pisar tu paleta real.
+           ============================================================ */
+        @font-face {
+            font-family: 'Sport Break';
+            src: url('assets/Sport_Break_Free_Version.otf') format('opentype');
+            font-weight: 400 900;
+            font-display: swap;
+        }
+        :root {
+            --bg-card: rgba(18, 14, 9, 0.7);
+            --bg-secondary: #1a1410;
+            --bg-tertiary: #221b14;
+            --text-color: #f0e6d2;
+            --text-muted: #a89a82;
+            --accent-color: #d4a017;
+            --accent-glow: rgba(212,160,23,0.55);
+            --accent-glow-soft: rgba(212,160,23,0.18);
+            --border-color: rgba(212,160,23,0.18);
+            --border-glow: rgba(212,160,23,0.45);
+            --glass-border: rgba(212,160,23,0.15);
+            --glass-blur: 14px;
+            --gold-gradient: linear-gradient(135deg, #f3cf72, #d4a017 55%, #8a6310);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-glow: 0 0 24px rgba(212,160,23,0.35);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.6);
+            --transition-fast: 0.18s ease;
+        }
+        html, body {
+            min-height: 100%;
+            background-color: #0a0806;
+            background-image:
+                linear-gradient(180deg, rgba(6,5,4,0.62), rgba(6,5,4,0.7) 40%, rgba(6,5,4,0.85)),
+                url('assets/fondo-casino.jpg');
+            background-size: cover;
+            background-position: center top;
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+        }
+        .fighter-brand-icon { width: 64px; height: 64px; object-fit: contain; margin: 0 auto 0.75rem; display: block; filter: drop-shadow(0 0 14px rgba(212,160,23,0.5)); }
+        .fighter-header-art { position: absolute; right: -10px; bottom: -30px; width: 180px; opacity: 0.16; pointer-events: none; filter: drop-shadow(0 0 20px rgba(212,160,23,0.3)); }
+        @media (max-width: 700px) { .fighter-header-art { display: none; } }
+        .arena-section h2, .coinflip-section h2, .match-section h2, .signup-section h2 { font-family: 'Sport Break', sans-serif; letter-spacing: 1px; }
+    </style>
+    <style>
+        .fighter-wrapper { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+        .fighter-back { display: inline-flex; align-items: center; gap: .5rem; color: var(--text-muted); text-decoration: none; font-size: .9rem; margin-bottom: 1.5rem; transition: color var(--transition-fast); }
+        .fighter-back:hover { color: var(--accent-color); }
+
+        /* Header */
+        .fighter-header { text-align: center; margin-bottom: 2rem; padding: 2.5rem 2rem; background: var(--bg-card); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); position: relative; overflow: hidden; }
+        .fighter-header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, var(--accent-glow-soft), transparent 60%); pointer-events: none; }
+        .fighter-header h1 { font-family: 'Sport Break', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem); background: var(--gold-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 3px; margin-bottom: 0.5rem; position: relative; }
+        .fighter-header .subtitle { color: var(--text-muted); font-size: 1rem; position: relative; }
+        .fighter-header .event-status { display: inline-flex; align-items: center; gap: 8px; margin-top: 1rem; padding: 6px 16px; background: rgba(212,160,23,0.12); border: 1px solid var(--border-glow); border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: var(--accent-color); text-transform: uppercase; letter-spacing: 1px; position: relative; }
+        .event-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-color); box-shadow: 0 0 8px var(--accent-color); animation: pulse-dot 1.5s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+
+        /* === Arena: 2 columnas (bandos) === */
+        .arena-section { margin-bottom: 2.5rem; }
+        .arena-section h2 { font-size: 1.4rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px; }
+        .arena-section h2::before { content: '⚔️'; }
+
+        .arena-bands {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            align-items: start;
+        }
+        @media (max-width: 800px) { .arena-bands { grid-template-columns: 1fr; } .arena-vs-divider { display: none; } }
+
+        .band-column {
+            background: var(--bg-card);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            min-height: 200px;
+        }
+        .band-column.band-a { border-top: 3px solid #c2362f; }
+        .band-column.band-b { border-top: 3px solid #29b6f6; }
+
+        .band-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .band-title { font-family: 'Sport Break', sans-serif; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; }
+        .band-a .band-title { color: #c2362f; }
+        .band-b .band-title { color: #29b6f6; }
+
+        .band-lives {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .band-life {
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem;
+            transition: all var(--transition-fast);
+        }
+        .band-life.alive { border-color: #2f9c63; background: rgba(47,156,99,0.15); color: #2f9c63; }
+        .band-life.alive::before { content: '❤'; }
+        .band-life.lost { border-color: rgba(221,68,68,0.2); background: rgba(221,68,68,0.05); opacity: 0.3; }
+        .band-life.lost::before { content: '✕'; color: rgba(221,68,68,0.4); }
+
+        .band-teams { display: flex; flex-direction: column; gap: 8px; }
+
+        .team-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all var(--transition-fast);
+        }
+        .team-card.in-arena { border-color: var(--accent-color); box-shadow: 0 0 12px rgba(212,160,23,0.2); background: rgba(212,160,23,0.06); }
+        .team-card.eliminated { opacity: 0.3; filter: grayscale(0.7); }
+        .team-card.incomplete { border-style: dashed; opacity: 0.7; }
+
+        .team-num {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700;
+            flex-shrink: 0;
+        }
+        .band-a .team-num { background: rgba(194,54,47,0.2); color: #c2362f; border: 1px solid rgba(194,54,47,0.3); }
+        .band-b .team-num { background: rgba(41,182,246,0.2); color: #29b6f6; border: 1px solid rgba(41,182,246,0.3); }
+
+        .team-players { flex: 1; display: flex; gap: 6px; flex-wrap: wrap; }
+        .mini-player {
+            display: flex; align-items: center; gap: 4px;
+            padding: 3px 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            font-size: 0.72rem;
+        }
+        .mini-player .mp-role { font-size: 0.8rem; }
+        .mini-player .mp-name { color: var(--text-color); white-space: nowrap; }
+        .mini-player .mp-spec { color: var(--text-muted); font-size: 0.65rem; }
+        .mini-player.empty-slot { color: var(--text-muted); font-style: italic; font-size: 0.68rem; border: 1px dashed var(--border-color); }
+        .role-healer { color: #2f9c63; }
+        .role-dps { color: var(--accent-color); }
+
+        .team-status-tag { font-size: 0.6rem; padding: 2px 6px; border-radius: 3px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; }
+        .team-status-tag.arena { background: rgba(212,160,23,0.2); color: var(--accent-color); }
+        .team-status-tag.eliminated { background: rgba(221,68,68,0.2); color: #dd4444; }
+        .team-status-tag.ready { background: rgba(47,156,99,0.15); color: #2f9c63; }
+        .team-status-tag.incomplete { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+
+        /* VS Divider */
+        .arena-vs-divider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding-top: 3rem;
+        }
+        .vs-badge {
+            font-family: 'Sport Break', sans-serif;
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            text-shadow: 0 0 16px var(--accent-glow);
+            letter-spacing: 3px;
+        }
+        .vs-line { width: 2px; height: 60px; background: linear-gradient(180deg, transparent, var(--accent-color), transparent); }
+
+        /* === Coin Flip === */
+        .coinflip-section { text-align: center; margin-bottom: 2.5rem; padding: 2rem; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(var(--glass-blur)); }
+        .coinflip-section h2 { font-size: 1.4rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .coinflip-section h2::before { content: '🪙'; }
+        .coinflip-section .coin-sub { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .coin-visual { width: 120px; height: 120px; margin: 1rem auto; border-radius: 50%; background: none; border: none; padding: 0; box-shadow: 0 0 0 3px #1a1208, 0 6px 14px rgba(0,0,0,0.7), 0 0 30px rgba(212,160,23,0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.6s; overflow: hidden; }
+        .coin-visual img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .coin-visual:hover { transform: scale(1.08) rotate(180deg); }
+        .coin-visual:disabled, .coin-visual[aria-disabled="true"] { cursor: default; }
+        .coin-visual.flipping { animation: coinFlip 1.2s ease-in-out; }
+        @keyframes coinFlip { 0% { transform: rotateY(0); } 100% { transform: rotateY(1440deg); } }
+        .coin-result { margin-top: 1rem; font-size: 1.1rem; font-weight: 700; color: var(--accent-color); min-height: 28px; }
+
+        /* === Match History === */
+        .match-section { margin-bottom: 2.5rem; }
+        .match-section h2 { font-size: 1.4rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px; }
+        .match-section h2::before { content: '📜'; }
+        .match-list { display: flex; flex-direction: column; gap: 6px; }
+        .match-item { display: flex; align-items: center; gap: 1rem; padding: 0.6rem 1rem; background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-size: 0.85rem; }
+        .match-num { color: var(--text-muted); font-size: 0.75rem; width: 30px; }
+        .match-teams { flex: 1; display: flex; align-items: center; gap: 8px; }
+        .match-team-tag { padding: 3px 10px; border-radius: 4px; font-weight: 600; font-size: 0.78rem; }
+        .match-team-tag.win { background: rgba(47,156,99,0.15); border: 1px solid rgba(47,156,99,0.3); }
+        .match-team-tag.lose { opacity: 0.5; text-decoration: line-through; }
+        .match-team-tag.side-a { color: #c2362f; }
+        .match-team-tag.side-b { color: #29b6f6; }
+        .match-vs { color: var(--text-muted); font-size: 0.7rem; }
+        .match-result { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* === Signup === */
+        .signup-section { margin-bottom: 2.5rem; }
+        .signup-section h2 { font-size: 1.4rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px; }
+        .signup-section h2::before { content: '📝'; }
+        .signup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 700px) { .signup-grid { grid-template-columns: 1fr; } }
+        .signup-card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 1.5rem; backdrop-filter: blur(var(--glass-blur)); }
+        .signup-card h3 { font-size: 1rem; margin-bottom: 1rem; }
+        .entry-fee-info { text-align: center; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-muted); }
+        .entry-fee-info strong { color: var(--accent-color); }
+
+        .band-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+        .band-btn { padding: 14px; background: var(--bg-tertiary); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; text-align: center; transition: all var(--transition-fast); font-family: inherit; }
+        .band-btn:hover { border-color: var(--border-glow); }
+        .band-btn.selected-a { border-color: #c2362f; background: rgba(194,54,47,0.12); }
+        .band-btn.selected-b { border-color: #29b6f6; background: rgba(41,182,246,0.12); }
+        .band-btn .bb-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; }
+        .band-btn .bb-count { font-size: 0.72rem; color: var(--text-muted); }
+        .band-btn.selected-a .bb-title { color: #c2362f; }
+        .band-btn.selected-b .bb-title { color: #29b6f6; }
+
+        .team-selector { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 1rem; }
+        .team-btn { padding: 8px 2px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; font-size: 0.7rem; color: var(--text-muted); transition: all var(--transition-fast); text-align: center; font-family: inherit; }
+        .team-btn:hover { border-color: var(--border-glow); color: var(--text-color); }
+        .team-btn.selected { border-color: var(--accent-color); background: rgba(212,160,23,0.12); color: var(--accent-color); font-weight: 700; }
+        .team-btn:disabled, .team-btn.full { opacity: 0.4; cursor: not-allowed; }
+
+        .class-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 1rem; }
+        @media (max-width: 500px) { .class-grid { grid-template-columns: repeat(4, 1fr); } }
+        .class-btn { aspect-ratio: 1; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.3rem; transition: all var(--transition-fast); }
+        .class-btn:hover { border-color: var(--border-glow); transform: translateY(-2px); }
+        .class-btn.selected { border-color: var(--accent-color); box-shadow: var(--shadow-glow); background: rgba(212,160,23,0.12); }
+
+        .spec-row { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; min-height: 36px; }
+        .spec-btn { padding: 6px 14px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; color: var(--text-muted); transition: all var(--transition-fast); font-family: inherit; }
+        .spec-btn:hover { color: var(--text-color); border-color: var(--border-glow); }
+        .spec-btn.selected { background: rgba(212,160,23,0.12); border-color: var(--accent-color); color: var(--accent-color); font-weight: 600; }
+        .spec-btn.healer { border-color: rgba(47,156,99,0.3); }
+        .spec-btn.healer.selected { background: rgba(47,156,99,0.12); border-color: #2f9c63; color: #2f9c63; }
+        .spec-btn.disabled, .spec-btn:disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+
+        .signup-preview { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-tertiary); border-radius: var(--radius-sm); margin-bottom: 1rem; }
+        .preview-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-secondary); border: 2px solid var(--accent-color); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .preview-info { flex: 1; }
+        .preview-name { font-weight: 700; font-size: 0.9rem; }
+        .preview-detail { font-size: 0.75rem; color: var(--text-muted); }
+
+        .pay-btn { width: 100%; padding: 14px; background: var(--gold-gradient); color: #06060b; border: none; border-radius: var(--radius-md); font-family: 'Sport Break', sans-serif; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .pay-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+        .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Rules */
+        .rules-list { display: flex; flex-direction: column; gap: 0.8rem; }
+        .rule-item { display: flex; gap: 10px; align-items: flex-start; }
+        .rule-icon { font-size: 1.3rem; flex-shrink: 0; }
+        .rule-text h4 { font-size: 0.9rem; margin: 0; }
+        .rule-text p { font-size: 0.82rem; color: var(--text-muted); margin: 2px 0 0; }
+
+        /* Modal */
+        .fighter-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
+        .fighter-modal-overlay.show { display: flex; }
+        .fighter-modal { background: var(--bg-secondary); border: 1px solid var(--border-glow); border-radius: var(--radius-lg); max-width: 500px; width: 100%; padding: 2rem; box-shadow: var(--shadow-lg); }
+        .fighter-modal h3 { font-size: 1.2rem; margin-bottom: 1rem; text-align: center; }
+        .fighter-modal .modal-rules { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--radius-sm); }
+        .fighter-modal .modal-rules strong { color: var(--text-color); }
+        .fighter-modal .modal-actions { display: flex; gap: 10px; }
+        .fighter-modal .modal-actions button { flex: 1; padding: 12px; border: none; border-radius: var(--radius-sm); font-family: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+        .btn-confirm { background: var(--gold-gradient); color: #06060b; }
+        .btn-cancel { background: var(--bg-tertiary); color: var(--text-muted); border: 1px solid var(--border-color)!important; }
+
+        /* Discord live embed */
+        .discord-live { margin-bottom: 2rem; padding: 1rem 1.5rem; background: #2b2d31; border: 1px solid #1e1f22; border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px; }
+        .discord-live .dl-icon { width: 40px; height: 40px; border-radius: 50%; background: #5865f2; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+        .discord-live .dl-content { flex: 1; }
+        .discord-live .dl-title { font-size: 0.85rem; font-weight: 700; color: #fff; }
+        .discord-live .dl-detail { font-size: 0.75rem; color: #b5bac1; }
+        .discord-live .dl-badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 3px; background: rgba(88,101,242,0.2); color: #5865f2; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="fighter-wrapper">
+        <a href="index.html" class="fighter-back">← Volver a Exilium</a>
+
+        <div class="fighter-header">
+            <img src="assets/pandadragon.png" alt="" class="fighter-header-art" aria-hidden="true">
+            <img src="assets/pandadragon.png" alt="Exilium" class="fighter-brand-icon">
+            <h1>EXILIUM FIGHTER</h1>
+            <p class="subtitle">2 Bandos · 5 equipos de 3 · 5 vidas por bando · 30 jugadores</p>
+            <div class="event-status"><span class="dot"></span> Inscripciones abiertas</div>
+        </div>
+
+        <!-- Discord Live -->
+        <div class="discord-live">
+            <div class="dl-icon">📡</div>
+            <div class="dl-content">
+                <div class="dl-title">Retransmisión en vivo vía Discord</div>
+                <div class="dl-detail">El estado del torneo se sincroniza automáticamente al canal de Discord</div>
+            </div>
+            <span class="dl-badge">EN VIVO</span>
+        </div>
+
+        <!-- Arena -->
+        <div class="arena-section">
+            <h2>Arena del Torneo</h2>
+            <div class="arena-bands">
+                <!-- Bando A -->
+                <div class="band-column band-a">
+                    <div class="band-header">
+                        <span class="band-title">Bando A</span>
+                        <div class="band-lives" id="lives-a"></div>
+                    </div>
+                    <div class="band-teams" id="teams-a"></div>
+                </div>
+
+                <!-- VS Divider -->
+                <div class="arena-vs-divider">
+                    <div class="vs-line"></div>
+                    <div class="vs-badge">VS</div>
+                    <div class="vs-line"></div>
+                </div>
+
+                <!-- Bando B -->
+                <div class="band-column band-b">
+                    <div class="band-header">
+                        <span class="band-title">Bando B</span>
+                        <div class="band-lives" id="lives-b"></div>
+                    </div>
+                    <div class="band-teams" id="teams-b"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match History -->
+        <div class="match-section">
+            <h2>Historial de Enfrentamientos</h2>
+            <div class="match-list" id="match-list"></div>
+        </div>
+
+        <!-- Coin Flip -->
+        <div class="coinflip-section">
+            <h2>Lanzamiento de Moneda</h2>
+            <p class="coin-sub">Una sola vez al inicio · El bando ganador elige quién empieza en la arena</p>
+            <button class="coin-visual" id="coin" onclick="flipCoin()" aria-label="Lanzar moneda del torneo, una sola vez">
+                <img src="assets/coin_3.png" alt="" id="coin-img">
+            </button>
+            <div class="coin-result" id="coin-result">Click en la moneda para lanzar</div>
+        </div>
+
+        <!-- Signup -->
+        <div class="signup-section">
+            <h2>Inscripción al Torneo</h2>
+            <div class="signup-grid">
+                <div class="signup-card">
+                    <h3>Únete al torneo</h3>
+                    <div class="entry-fee-info">Costo: <strong>2 🪙 PandaCoins</strong> · No reembolsable</div>
+
+                    <label style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;display:block;">1. Elige tu bando:</label>
+                    <div class="band-selector" id="band-selector"></div>
+
+                    <label style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;display:block;">2. Elige tu equipo:</label>
+                    <div class="team-selector" id="team-selector"><span style="font-size:0.78rem;color:var(--text-muted);grid-column:1/-1;text-align:center;padding:8px;">Primero elige un bando</span></div>
+
+                    <label style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;display:block;">3. Elige tu clase:</label>
+                    <div class="class-grid" id="class-grid"></div>
+
+                    <label style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;display:block;">4. Especialización:</label>
+                    <div class="spec-row" id="spec-row"><span style="font-size:0.78rem;color:var(--text-muted);">Primero elige una clase</span></div>
+
+                    <div class="signup-preview">
+                        <div class="preview-avatar">🎮</div>
+                        <div class="preview-info"><div class="preview-name">TuPersonaje</div><div class="preview-detail">Bando: — · Clase: —</div></div>
+                    </div>
+                    <div id="signup-error" role="status" aria-live="polite" style="display:none;margin-bottom:0.75rem;padding:10px 12px;border-radius:var(--radius-sm);background:rgba(221,68,68,0.12);border:1px solid rgba(221,68,68,0.3);color:#dd4444;font-size:0.82rem;"></div>
+                    <button class="pay-btn" id="pay-btn" onclick="showConfirmModal()" disabled>🪙 Pagar 2 PandaCoins e inscribirse</button>
+                </div>
+
+                <div class="signup-card">
+                    <h3>Reglas del Torneo</h3>
+                    <div class="rules-list">
+                        <div class="rule-item"><span class="rule-icon">⚔️</span><div class="rule-text"><h4>2 Bandos: A vs B</h4><p>5 equipos de 3 jugadores por bando (1 healer + 2 DPS). 30 jugadores total.</p></div></div>
+                        <div class="rule-item"><span class="rule-icon">❤️</span><div class="rule-text"><h4>5 vidas por bando</h4><p>Cada bando comparte 5 vidas. Cada derrota resta 1 vida al bando perdedor.</p></div></div>
+                        <div class="rule-item"><span class="rule-icon">🪙</span><div class="rule-text"><h4>Moneda inicial</h4><p>Se lanza un PandaCoin una sola vez. El bando ganador elige qué equipo manda primero a la arena.</p></div></div>
+                        <div class="rule-item"><span class="rule-icon">🏰</span><div class="rule-text"><h4>Permanencia en arena</h4><p>El equipo ganador se queda. El bando contrario debe mandar otro equipo a intentar derrotarlo.</p></div></div>
+                        <div class="rule-item"><span class="rule-icon">🚫</span><div class="rule-text"><h4>Sin cambios</h4><p>No se pueden cambiar jugadores entre partidas. Sin límite de clases repetidas.</p></div></div>
+                        <div class="rule-item"><span class="rule-icon">⚠️</span><div class="rule-text"><h4>Sin reembolsos</h4><p>Si un jugador no se presenta, su equipo juega con 2. PandaCoins no se devuelven.</p></div></div>
+                        <div class="rule-item"><span class="rule-icon">🏆</span><div class="rule-text"><h4>Victoria</h4><p>El bando que pierda sus 5 vidas es derrotado. El otro bando se lleva todo el pozo (60 PandaCoins).</p></div></div>
+                        <div class="rule-item"><span class="rule-icon">📅</span><div class="rule-text"><h4>Un solo día</h4><p>El torneo se completa en una sola sesión. No se puede repetir ni rearmar.</p></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="fighter-modal-overlay" id="confirm-modal" aria-hidden="true">
+        <div class="fighter-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <h3 id="modal-title">⚠️ Confirmar Inscripción</h3>
+            <div class="modal-rules">
+                Al pagar <strong>2 PandaCoins</strong> aceptas que:
+                <ul style="margin-top:8px;padding-left:18px;">
+                    <li>Tu inscripción es <strong>definitiva</strong> y no reembolsable</li>
+                    <li>Si no te presentas, tu equipo juega con 2 y no hay reembolso</li>
+                    <li>No puedes cambiar de bando, equipo ni clase una vez inscrito</li>
+                    <li>El admin puede reasignarte antes del inicio del torneo</li>
+                </ul>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="btn-confirm" onclick="confirmSignup()">🪙 Aceptar y pagar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    var TEAM_SIZE = 3;
+    var BAND_LIVES = 5;
+
+    var BANDS = {
+        a: { name: 'Bando A', lives: 4, color: '#c2362f', teams: [
+            { id: 'A1', num: 1, status: 'ready', players: [
+                { name: 'Aethon', cls: 'Mago', spec: 'Arcano', role: 'dps', avatar: '🔮' },
+                { name: 'Vorath', cls: 'DK', spec: 'Escarcha', role: 'dps', avatar: '❄️' },
+                { name: 'Lunara', cls: 'Druida', spec: 'Restauración', role: 'healer', avatar: '🌿' }
+            ]},
+            { id: 'A2', num: 2, status: 'ready', players: [
+                { name: 'Keldras', cls: 'Paladín', spec: 'Reprensión', role: 'dps', avatar: '⚔️' },
+                null,
+                { name: 'Zephyr', cls: 'Chamán', spec: 'Restauración', role: 'healer', avatar: '💧' }
+            ]},
+            { id: 'A3', num: 3, status: 'arena', players: [
+                { name: 'Thalion', cls: 'Druida', spec: 'Feral', role: 'dps', avatar: '🐾' },
+                { name: 'Zareth', cls: 'Brujo', spec: 'Aflición', role: 'dps', avatar: '😈' },
+                { name: 'Mira', cls: 'Sacerdote', spec: 'Disciplina', role: 'healer', avatar: '✨' }
+            ]},
+            { id: 'A4', num: 4, status: 'ready', players: [
+                { name: 'Draxor', cls: 'Pícaro', spec: 'Asesinato', role: 'dps', avatar: '🗡️' },
+                null, null
+            ]},
+            { id: 'A5', num: 5, status: 'eliminated', players: [
+                { name: 'Baldrik', cls: 'Guerrero', spec: 'Armas', role: 'dps', avatar: '🪓' },
+                { name: 'Kaelyn', cls: 'Evocador', spec: 'Devastación', role: 'dps', avatar: '🐉' },
+                { name: 'Sage', cls: 'Evocador', spec: 'Preservación', role: 'healer', avatar: '💚' }
+            ]}
+        ]},
+        b: { name: 'Bando B', lives: 3, color: '#29b6f6', teams: [
+            { id: 'B1', num: 1, status: 'eliminated', players: [
+                { name: 'Nyxara', cls: 'Cazador', spec: 'Bestias', role: 'dps', avatar: '🏹' },
+                { name: 'Sylvara', cls: 'Mago', spec: 'Fuego', role: 'dps', avatar: '🔥' },
+                { name: 'Elen', cls: 'Mónje', spec: 'Niebla', role: 'healer', avatar: '🧘' }
+            ]},
+            { id: 'B2', num: 2, status: 'ready', players: [
+                { name: 'Rylai', cls: 'Brujo', spec: 'Destrucción', role: 'dps', avatar: '💥' },
+                null, null
+            ]},
+            { id: 'B3', num: 3, status: 'incomplete', players: [
+                null, null, null
+            ]},
+            { id: 'B4', num: 4, status: 'eliminated', players: [
+                { name: 'Vex', cls: 'Pícaro', spec: 'Sutileza', role: 'dps', avatar: '🥷' },
+                { name: 'Garrek', cls: 'Guerrero', spec: 'Furia', role: 'dps', avatar: '😤' },
+                { name: 'Yara', cls: 'Chamán', spec: 'Restauración', role: 'healer', avatar: '🌊' }
+            ]},
+            { id: 'B5', num: 5, status: 'ready', players: [
+                null, null, null
+            ]}
+        ]}
+    };
+
+    var MATCHES = [
+        { num: 1, sideA: 'A5', sideB: 'B1', winner: 'B1', detail: 'Equipo A5 eliminado · Bando A pierde 1 vida (4 restantes)' },
+        { num: 2, sideA: 'A3', sideB: 'B1', winner: 'A3', detail: 'Equipo B1 eliminado · Bando B pierde 1 vida (4 restantes)' },
+        { num: 3, sideA: 'A3', sideB: 'B4', winner: 'A3', detail: 'Equipo B4 eliminado · Bando B pierde 1 vida (3 restantes)' }
+    ];
+
+    var CLASSES = [
+        { name: 'Guerrero', icon: '<img src="assets/class-icons/Ability_warrior_savageblow.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Armas',i:'Ability_warrior_savageblow.webp'},{n:'Furia',i:'Ability_warrior_innerrage.webp'}] },
+        { name: 'Paladín', icon: '<img src="assets/class-icons/Ability_paladin_shieldofthetemplar.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Reprensión',i:'Ability_paladin_shieldofthetemplar.webp'}], healerSpecs: [{n:'Sagrado',i:'Spell_holy_auraoflight.webp'}] },
+        { name: 'Cazador', icon: '🏹', specs: [{n:'Bestias',i:''},{n:'Puntería',i:''},{n:'Supervivencia',i:''}] },
+        { name: 'Pícaro', icon: '<img src="assets/class-icons/Ability_rogue_eviscerate.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Asesinato',i:'Ability_backstab.webp'},{n:'Forajido',i:'Ability_rogue_eviscerate.webp'},{n:'Sutileza',i:'Ability_stealth.webp'}] },
+        { name: 'Sacerdote', icon: '<img src="assets/class-icons/Spell_holy_powerwordshield.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Sombra',i:'Spell_shadow_shadowwordpain.webp'}], healerSpecs: [{n:'Disciplina',i:'Spell_holy_powerwordshield.webp'},{n:'Sagrado',i:'Spell_holy_guardianspirit.webp'}] },
+        { name: 'DK', icon: '<img src="assets/class-icons/Spell_deathknight_frostpresence.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Escarcha',i:'Spell_deathknight_frostpresence.webp'},{n:'Profano',i:'Spell_deathknight_unholypresence.webp'}] },
+        { name: 'Chamán', icon: '<img src="assets/class-icons/Spell_nature_lightning.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Elemental',i:'Spell_nature_lightning.webp'},{n:'Mejora',i:'Spell_shaman_improvedstormstrike.webp'}], healerSpecs: [{n:'Restauración',i:'Spell_nature_healingtouch.webp'}] },
+        { name: 'Mago', icon: '<img src="assets/class-icons/Spell_nature_magicimmunity.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Arcano',i:'Spell_nature_magicimmunity.webp'},{n:'Fuego',i:'Spell_nature_starfall.webp'},{n:'Escarcha',i:'Spell_nature_magicimmunity.webp'}] },
+        { name: 'Brujo', icon: '<img src="assets/class-icons/Spell_shadow_shadowwordpain.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Aflición',i:'Spell_shadow_shadowwordpain.webp'},{n:'Demonología',i:'Spell_shadow_shadowwordpain.webp'},{n:'Destrucción',i:'Spell_shadow_shadowwordpain.webp'}] },
+        { name: 'Mónje', icon: '<img src="assets/class-icons/Spell_monk_windwalker_spec.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Viajero del Viento',i:'Spell_monk_windwalker_spec.webp'}], healerSpecs: [{n:'Niebla',i:'Spell_monk_mistweaver_spec.webp'}] },
+        { name: 'Druida', icon: '<img src="assets/class-icons/Ability_druid_catform.webp" style="width:62%;height:62%;object-fit:contain;">', specs: [{n:'Balance',i:'Spell_nature_starfall.webp'},{n:'Feral',i:'Ability_druid_catform.webp'}], healerSpecs: [{n:'Restauración',i:'Spell_nature_healingtouch.webp'}] },
+        { name: 'DH', icon: '👁️', specs: [{n:'Devastación',i:''}] },
+        { name: 'Evocador', icon: '🐉', specs: [{n:'Devastación',i:''},{n:'Aumentación',i:''}], healerSpecs: [{n:'Preservación',i:''}] }
+    ];
+
+    var selectedBand = null, selectedTeam = null, selectedClass = null, selectedSpec = null;
+    var MY_SIGNUP = null; // simula "ya estoy inscrito" — en producción vendría de GET /api/fighter/my-signup
+    var COIN_FLIPPED = false; // simula que el coinflip solo se puede hacer una vez (fighter:coinflip.done en el backend)
+
+    function renderLives(bandKey) {
+        var band = BANDS[bandKey];
+        var el = document.getElementById('lives-' + bandKey);
+        var html = '';
+        for (var i = 0; i < BAND_LIVES; i++) {
+            html += '<div class="band-life ' + (i < band.lives ? 'alive' : 'lost') + '"></div>';
+        }
+        el.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, function(c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function renderTeams(bandKey) {
+        var band = BANDS[bandKey];
+        var el = document.getElementById('teams-' + bandKey);
+        var html = '';
+        band.teams.forEach(function(t) {
+            var cls = 'team-card';
+            if (t.status === 'arena') cls += ' in-arena';
+            if (t.status === 'eliminated') cls += ' eliminated';
+            if (t.status === 'incomplete') cls += ' incomplete';
+            var filledCount = t.players.filter(function(p) { return p !== null; }).length;
+            html += '<div class="' + cls + '" role="group" aria-label="Equipo ' + t.num + ', bando ' + bandKey.toUpperCase() + ', ' + filledCount + ' de ' + TEAM_SIZE + ' jugadores">';
+            html += '<div class="team-num">' + t.num + '</div>';
+            html += '<div class="team-players">';
+            for (var s = 0; s < TEAM_SIZE; s++) {
+                var p = t.players[s];
+                if (p) {
+                    var ri = p.role === 'healer' ? '💚' : '⚔️';
+                    var rc = p.role === 'healer' ? 'role-healer' : 'role-dps';
+                    var avatarIcon = typeof p.avatar === 'string' && p.avatar.indexOf('<img') === 0 ? '<span style="width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;">' + p.avatar.replace('width:62%;height:62%', 'width:18px;height:18px') + '</span>' : '<span style="font-size:0.9rem;">' + p.avatar + '</span>';
+                    html += '<div class="mini-player">' + avatarIcon + '<span class="mp-role ' + rc + '">' + ri + '</span><span class="mp-name">' + escapeHtml(p.name) + '</span><span class="mp-spec">' + escapeHtml(p.spec) + '</span></div>';
+                } else {
+                    html += '<div class="mini-player empty-slot">— Libre —</div>';
+                }
+            }
+            html += '</div>';
+            if (t.status === 'arena') html += '<span class="team-status-tag arena">EN ARENA</span>';
+            if (t.status === 'eliminated') html += '<span class="team-status-tag eliminated">✕</span>';
+            if (t.status === 'incomplete') html += '<span class="team-status-tag incomplete">INCOMPLETO</span>';
+            if (t.status === 'ready' && filledCount === TEAM_SIZE) html += '<span class="team-status-tag ready">LISTO</span>';
+            html += '</div>';
+        });
+        el.innerHTML = html;
+    }
+
+    function renderMatches() {
+        var el = document.getElementById('match-list');
+        if (MATCHES.length === 0) { el.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:1rem;">Aún no se han disputado enfrentamientos</div>'; return; }
+        var html = '';
+        MATCHES.forEach(function(m) {
+            var aWin = m.winner === m.sideA;
+            html += '<div class="match-item"><span class="match-num">#' + m.num + '</span><div class="match-teams">';
+            html += '<span class="match-team-tag side-a ' + (aWin ? 'win' : 'lose') + '">' + escapeHtml(m.sideA) + '</span>';
+            html += '<span class="match-vs">VS</span>';
+            html += '<span class="match-team-tag side-b ' + (!aWin ? 'win' : 'lose') + '">' + escapeHtml(m.sideB) + '</span>';
+            html += '</div><span class="match-result">' + escapeHtml(m.detail) + '</span></div>';
+        });
+        el.innerHTML = html;
+    }
+
+    function renderBandSelector() {
+        var el = document.getElementById('band-selector');
+        var aCount = 0, bCount = 0;
+        BANDS.a.teams.forEach(function(t) { aCount += t.players.filter(function(p) { return p !== null; }).length; });
+        BANDS.b.teams.forEach(function(t) { bCount += t.players.filter(function(p) { return p !== null; }).length; });
+        var html = '';
+        var clsA = selectedBand === 'a' ? 'selected-a' : '';
+        var clsB = selectedBand === 'b' ? 'selected-b' : '';
+        html += '<button class="band-btn ' + clsA + '" onclick="selectBand(\'a\')"><div class="bb-title">Bando A</div><div class="bb-count">' + aCount + '/15 jugadores</div></button>';
+        html += '<button class="band-btn ' + clsB + '" onclick="selectBand(\'b\')"><div class="bb-title">Bando B</div><div class="bb-count">' + bCount + '/15 jugadores</div></button>';
+        el.innerHTML = html;
+    }
+
+    function renderTeamSelector() {
+        var el = document.getElementById('team-selector');
+        if (!selectedBand) { el.innerHTML = '<span style="font-size:0.78rem;color:var(--text-muted);grid-column:1/-1;text-align:center;padding:8px;">Primero elige un bando</span>'; return; }
+        var teams = BANDS[selectedBand].teams;
+        var html = '';
+        teams.forEach(function(t) {
+            var count = t.players.filter(function(p) { return p !== null; }).length;
+            var full = count >= TEAM_SIZE;
+            var c = full ? 'full' : '';
+            if (selectedTeam === t.id) c += ' selected';
+            var label = 'Equipo ' + t.num + ', ' + count + ' de ' + TEAM_SIZE + ' jugadores' + (full ? ', completo' : '');
+            html += '<button class="team-btn ' + c + '" aria-label="' + label + '" ' + (full ? 'disabled' : 'onclick="selectTeam(\'' + t.id + '\')"') + '>Eq ' + t.num + '<br><span style="font-size:0.6rem;">' + count + '/' + TEAM_SIZE + '</span></button>';
+        });
+        el.innerHTML = html;
+    }
+
+    function teamHasHealer(team) {
+        return team.players.some(function(p) { return p && p.role === 'healer'; });
+    }
+
+    function renderClassGrid() {
+        var el = document.getElementById('class-grid');
+        var html = '';
+        CLASSES.forEach(function(c, i) {
+            var cls = 'class-btn';
+            if (selectedClass === i) cls += ' selected';
+            html += '<button class="' + cls + '" onclick="selectClass(' + i + ')" title="' + c.name + '" aria-label="Clase ' + c.name + '">' + c.icon + '</button>';
+        });
+        el.innerHTML = html;
+    }
+
+    function renderSpecs() {
+        var el = document.getElementById('spec-row');
+        if (selectedClass === null) { el.innerHTML = '<span style="font-size:0.78rem;color:var(--text-muted);">Primero elige una clase</span>'; return; }
+        var c = CLASSES[selectedClass];
+        var all = [];
+        (c.specs || []).forEach(function(s) { all.push({ name: s.n, icon: s.i, role: 'dps' }); });
+        (c.healerSpecs || []).forEach(function(s) { all.push({ name: s.n, icon: s.i, role: 'healer' }); });
+
+        var teamFull = false;
+        var teamHasH = false;
+        if (selectedBand && selectedTeam) {
+            var team = BANDS[selectedBand].teams.find(function(t) { return t.id === selectedTeam; });
+            if (team) { teamHasH = teamHasHealer(team); }
+        }
+
+        var html = '';
+        all.forEach(function(s) {
+            var blocked = s.role === 'healer' && teamHasH && selectedSpec !== s.name;
+            var cls = 'spec-btn' + (s.role === 'healer' ? ' healer' : '') + (blocked ? ' disabled' : '');
+            if (selectedSpec === s.name) cls += ' selected';
+            var iconHtml = s.icon ? '<img src="assets/class-icons/' + s.icon + '" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;">' : (s.role === 'healer' ? '💚' : '⚔️');
+            var title = blocked ? ' title="Este equipo ya tiene healer (máx. 1 por equipo)"' : '';
+            html += '<button class="' + cls + '"' + title + ' ' + (blocked ? 'disabled' : 'onclick="selectSpec(\'' + s.name + '\',\'' + s.role + '\')"') + '>' + iconHtml + ' ' + s.name + '</button>';
+        });
+        if (teamHasH) html += '<span style="font-size:0.68rem;color:var(--text-muted);width:100%;margin-top:4px;">⚠️ El equipo elegido ya tiene un healer — solo puedes inscribirte como DPS</span>';
+        el.innerHTML = html;
+    }
+
+    function selectBand(b) { selectedBand = b; selectedTeam = null; selectedSpec = null; renderBandSelector(); renderTeamSelector(); renderSpecs(); checkReady(); }
+
+    function selectTeam(id) {
+        var team = BANDS[selectedBand].teams.find(function(t) { return t.id === id; });
+        var count = team ? team.players.filter(function(p) { return p !== null; }).length : 0;
+        if (!team || count >= TEAM_SIZE) {
+            // El estado pudo cambiar entre el último render y el click (otro jugador se inscribió).
+            renderTeamSelector();
+            showSignupError('Ese equipo acaba de llenarse. Elige otro.');
+            return;
+        }
+        selectedTeam = id;
+        selectedSpec = null; // si tenía healer elegido y este equipo ya tiene uno, se limpia
+        renderTeamSelector();
+        renderSpecs();
+        checkReady();
+    }
+
+    function selectClass(idx) { selectedClass = idx; selectedSpec = null; renderClassGrid(); renderSpecs();
+        var c = CLASSES[selectedClass];
+        var prevAvatar = document.querySelector('.preview-avatar');
+        prevAvatar.innerHTML = c.icon.indexOf('<img') === 0 ? c.icon.replace('width:62%;height:62%', 'width:28px;height:28px') : c.icon;
+        checkReady(); }
+
+    function selectSpec(name, role) {
+        if (selectedBand && selectedTeam && role === 'healer') {
+            var team = BANDS[selectedBand].teams.find(function(t) { return t.id === selectedTeam; });
+            if (team && teamHasHealer(team)) {
+                showSignupError('Este equipo ya tiene healer. Elige una especialización DPS.');
+                return;
+            }
+        }
+        selectedSpec = name;
+        renderSpecs();
+        var c = CLASSES[selectedClass];
+        var bandName = selectedBand ? BANDS[selectedBand].name : '—';
+        document.querySelector('.preview-detail').textContent = 'Bando: ' + bandName + ' · ' + c.name + ' ' + name;
+        checkReady();
+    }
+
+    function checkReady() {
+        var ready = !!(selectedBand && selectedTeam && selectedClass !== null && selectedSpec) && !MY_SIGNUP;
+        document.getElementById('pay-btn').disabled = !ready;
+    }
+
+    function showSignupError(msg) {
+        var el = document.getElementById('signup-error');
+        if (!el) return;
+        el.textContent = msg;
+        el.style.display = 'block';
+        clearTimeout(showSignupError._t);
+        showSignupError._t = setTimeout(function() { el.style.display = 'none'; }, 4000);
+    }
+
+    function flipCoin() {
+        if (COIN_FLIPPED) { return; }
+        var coin = document.getElementById('coin'), res = document.getElementById('coin-result');
+        coin.classList.remove('flipping'); void coin.offsetWidth; coin.classList.add('flipping');
+        res.textContent = 'Lanzando...';
+        coin.disabled = true;
+        coin.setAttribute('aria-disabled', 'true');
+        setTimeout(function() {
+            var h = Math.random() > 0.5;
+            res.textContent = h ? '🐼 Cara — Bando A elige quién empieza' : '🪙 Cruz — Bando B elige quién empieza';
+            coin.classList.remove('flipping');
+            COIN_FLIPPED = true;
+            coin.style.opacity = '0.7';
+        }, 1200);
+    }
+
+    function showConfirmModal() {
+        if (MY_SIGNUP) { showSignupError('Ya estás inscrito en este torneo.'); return; }
+        document.getElementById('confirm-modal').classList.add('show');
+        document.getElementById('confirm-modal').setAttribute('aria-hidden', 'false');
+        document.querySelector('.btn-confirm').focus();
+    }
+    function closeModal() {
+        document.getElementById('confirm-modal').classList.remove('show');
+        document.getElementById('confirm-modal').setAttribute('aria-hidden', 'true');
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('confirm-modal').classList.contains('show')) closeModal();
+    });
+
+    function confirmSignup() {
+        // Re-validar todo justo antes de "pagar": el estado pudo cambiar mientras el modal estaba abierto
+        // (otro jugador tomó el slot, llenó el equipo, o agregó un healer). Esto espeja las validaciones
+        // que el backend real haría en POST /api/fighter/signup (ver plan, sección 1.5).
+        if (MY_SIGNUP) { closeModal(); showSignupError('Ya estás inscrito.'); return; }
+        var band = BANDS[selectedBand];
+        var team = band.teams.find(function(t) { return t.id === selectedTeam; });
+        if (!team) { closeModal(); showSignupError('El equipo seleccionado ya no existe.'); return; }
+        var filled = team.players.filter(function(p) { return p !== null; });
+        if (filled.length >= TEAM_SIZE) { closeModal(); showSignupError('Ese equipo se llenó mientras confirmabas. Elige otro.'); selectedTeam = null; renderTeamSelector(); checkReady(); return; }
+        var roleChosen = (function() {
+            var c = CLASSES[selectedClass];
+            var hs = (c.healerSpecs || []).some(function(s) { return s.n === selectedSpec; });
+            return hs ? 'healer' : 'dps';
+        })();
+        if (roleChosen === 'healer' && teamHasHealer(team)) { closeModal(); showSignupError('Ese equipo ya tiene healer. Elige otra especialización.'); renderSpecs(); return; }
+
+        var c = CLASSES[selectedClass];
+        var slotIndex = team.players.findIndex(function(p) { return p === null; });
+        var newPlayer = { name: 'TuPersonaje', cls: c.name, spec: selectedSpec, role: roleChosen, avatar: c.icon };
+        team.players[slotIndex] = newPlayer;
+        MY_SIGNUP = { band: selectedBand, team_id: team.id };
+
+        closeModal();
+        renderTeams('a'); renderTeams('b');
+        renderBandSelector(); renderTeamSelector();
+        checkReady();
+        showSignupError('✅ ¡Inscrito en ' + band.name + ' · Equipo ' + team.num + ' · ' + c.name + ' ' + selectedSpec + '! Se debitaron 2 PandaCoins.');
+        document.getElementById('signup-error').style.background = 'rgba(47,156,99,0.15)';
+        document.getElementById('signup-error').style.color = '#2f9c63';
+        document.getElementById('signup-error').style.borderColor = 'rgba(47,156,99,0.3)';
+    }
+
+    function clsIconFor(clsName) {
+        var c = CLASSES.find(function(c) { return c.name === clsName; });
+        return c ? c.icon : '🎮';
+    }
+
+    function setPlayerAvatars() {
+        Object.keys(BANDS).forEach(function(key) {
+            BANDS[key].teams.forEach(function(t) {
+                t.players.forEach(function(p) {
+                    if (p) { p.avatar = clsIconFor(p.cls); }
+                });
+            });
+        });
+    }
+
+    setPlayerAvatars();
+
+    // Init
+    renderLives('a'); renderLives('b');
+    renderTeams('a'); renderTeams('b');
+    renderMatches();
+    renderBandSelector(); renderClassGrid(); renderSpecs();
+    </script>
+</body>
+</html>

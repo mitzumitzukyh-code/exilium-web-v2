@@ -184,6 +184,12 @@ export async function handleCasinoDiscordCallback(request, env) {
     return Response.redirect(`${frontendPage}?error=fetch_user_error`, 302);
   }
 
+  // Crear o actualizar usuario en KV + crear sesión.
+  // KV-FIX: si las escrituras de KV están agotadas (free tier: 1.000/día), estos `put`
+  // lanzan. Antes la excepción salía SIN capturar del handler → el catch-all del worker
+  // respondía un 500 crudo ("Error interno del servidor") en plena pantalla del callback,
+  // bloqueando el login. Ahora capturamos y redirigimos al frontend con un error legible.
+  try {
   // Crear o actualizar usuario en KV
   const discordId = discordUser.id;
   const userId = generateUserId(discordId);
@@ -241,6 +247,11 @@ export async function handleCasinoDiscordCallback(request, env) {
 
   const frontendUrl = `${frontendPage}?token=${encodeURIComponent(token)}&name=${encodeURIComponent(user.name)}&avatar=${avatarUrl ? encodeURIComponent(avatarUrl) : ''}`;
   return Response.redirect(frontendUrl, 302);
+  } catch (e) {
+    console.error('[DISCORD] KV upsert/session error (¿escrituras KV agotadas?):', e);
+    const msg = encodeURIComponent('El casino está temporalmente saturado (límite de KV). Intenta de nuevo más tarde.');
+    return Response.redirect(`${frontendPage}?error=${msg}`, 302);
+  }
 }
 
 /**

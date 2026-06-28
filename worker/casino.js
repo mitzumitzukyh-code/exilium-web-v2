@@ -118,7 +118,10 @@ const CHAT_RATE_LIMIT = 5;
 const CHAT_RATE_WINDOW_MS = 30_000;
 
 async function getConfig(env) {
-  const cfg = await env.EXILIUM_KV.get('casino:config', 'json');
+  // KV-FIX: la config solo cambia por el admin (rara vez). Cacheamos en el edge
+  // (cacheTtl 120s) para que las múltiples lecturas por poll no cuenten como lecturas
+  // facturadas. La escritura del admin (handleAdminPutConfig) la invalida en <=120s.
+  const cfg = await env.EXILIUM_KV.get('casino:config', { type: 'json', cacheTtl: 120 });
   return { ...DEFAULT_CONFIG, ...(cfg || {}) };
 }
 
@@ -256,10 +259,15 @@ export async function tickStateMachine(env) {
       return newState;
     }
 
-    // Si timer expiró pero no hay apuestas: extender la ronda (reiniciar timer)
+    // Timer expiró pero no hay apuestas.
+    // KV-FIX (free tier: 1.000 escrituras/día): NO reescribir el estado en reposo.
+    // Antes se extendía betting_ends_at en CADA tick → con el cron de 1/min eso son
+    // ~1.440 escrituras/día solo con la mesa vacía (o con alguien sentado AFK),
+    // agotando el límite de escrituras del free tier.
+    // Ahora no escribimos nada: betting_ends_at queda en el pasado, la ronda no gira
+    // (no hay apuestas que resolver) y la ventana de 20s se renueva cuando llega la
+    // PRIMERA apuesta de la ronda (ver handlePlaceBet). Cero escrituras en reposo.
     if (timerExpired && seatedWithBets.length === 0) {
-      state.betting_ends_at = now + cfg.betting_duration * 1000;
-      await setState(env, state);
       return state;
     }
   }
@@ -415,7 +423,10 @@ export async function getCasinoState(env, session) {
   const state = await getState(env);
   const seats = await getSeats(env);
   const chat = await getChat(env);
-  const history = (await env.EXILIUM_KV.get('casino:rounds_history', 'json')) || [];
+  // KV-FIX: el historial de rondas solo cambia al cerrar una ronda. Para la vista de
+  // polling lo cacheamos en el edge (cacheTtl 45s). El append (appendRoundToHistory)
+  // sigue leyendo SIN cache, así no se pierden entradas.
+  const history = (await env.EXILIUM_KV.get('casino:rounds_history', { type: 'json', cacheTtl: 45 })) || [];
 
   // Información del usuario actual (si logueado)
   let me = null;
@@ -631,6 +642,15 @@ export async function handlePlaceBet(request, env, session) {
     user.balance += totalNew;
     await setUser(env, user);
     return { error: 'Error al procesar la apuesta. Intenta de nuevo.' };
+  }
+
+  // KV-FIX: en reposo el tick ya no reescribe betting_ends_at, así que la ventana
+  // puede estar vencida. Al llegar la PRIMERA apuesta que revive la ronda, renovamos
+  // la ventana de 20s para que dé tiempo a apostar antes de girar. Solo escribimos si
+  // realmente estaba vencida (escritura acotada a actividad real, no a reposo).
+  if (Date.now() >= state.betting_ends_at) {
+    state.betting_ends_at = Date.now() + cfg.betting_duration * 1000;
+    try { await setState(env, state); } catch (_) {}
   }
 
   return {
@@ -878,12 +898,26 @@ export async function handleGetPlayers(env, limit = 50) {
   return { ok: true, players };
 }
 
+/**
+ * GET /api/casino/my-transactions — historial propio del jugador (perfil).
+ * Player-facing: solo ve SUS transacciones (rondas, ajustes admin). Reusa
+ * casino:transactions:{userId}. Requiere sesión.
+ */
+export async function handleGetMyTransactions(env, session) {
+  if (!session) return { error: 'No autenticado', status: 401 };
+  const list = (await env.EXILIUM_KV.get(`casino:transactions:${session.user_id}`, 'json')) || [];
+  return { ok: true, transactions: list.slice(0, 50) };
+}
+
 // ─────────────────────────────────────────────────────────────────────
 //  ENDPOINTS ADMIN
 // ─────────────────────────────────────────────────────────────────────
 
 export async function handleAdminGetConfig(env) {
-  return { ok: true, config: await getConfig(env) };
+  // El admin debe ver SIEMPRE la config fresca (sin el cacheTtl de getConfig), para
+  // que tras guardar no muestre valores viejos durante hasta 120s.
+  const cfg = await env.EXILIUM_KV.get('casino:config', 'json');
+  return { ok: true, config: { ...DEFAULT_CONFIG, ...(cfg || {}) } };
 }
 
 export async function handleAdminPutConfig(request, env) {

@@ -158,30 +158,45 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.prepend(banner);
     }
 
-    function cachedFetch(url, fallback, cacheKey, snapKey) {
+    function fetchStaticSnapshot(staticUrl, fallback) {
+        return fetch(staticUrl + '?_=' + Math.floor(Date.now() / 3600000))
+            .then(function(r) {
+                if (!r.ok) return fallback;
+                return r.json().then(function(data) {
+                    const hasData = Array.isArray(data) ? data.length > 0 : (data && Object.keys(data).length > 0);
+                    if (hasData) { showOfflineBanner(); return data; }
+                    return fallback;
+                }).catch(function() { return fallback; });
+            }).catch(function() { return fallback; });
+    }
+
+    function cachedFetch(url, fallback, cacheKey, snapKey, staticUrl) {
         return fetch(url).then(function(res) {
             if (res.ok) return res.json().then(function(data) {
                 usingCachedData = false;
                 cacheSave(cacheKey, snapKey, data);
                 return data;
             });
-            // API respondió con error → usar snapshot
+            // API respondió con error → intentar snapshot de localStorage
             var cached = cacheLoad(cacheKey, snapKey);
-            if (cached) showOfflineBanner();
-            return cached || fallback;
+            if (cached) { showOfflineBanner(); return cached; }
+            // Último recurso: archivo estático desplegado con Pages
+            if (staticUrl) return fetchStaticSnapshot(staticUrl, fallback);
+            return fallback;
         }).catch(function() {
-            // Error de red / timeout → usar snapshot
+            // Error de red / timeout → snapshot de localStorage
             var cached = cacheLoad(cacheKey, snapKey);
-            if (cached) showOfflineBanner();
-            return cached || fallback;
+            if (cached) { showOfflineBanner(); return cached; }
+            if (staticUrl) return fetchStaticSnapshot(staticUrl, fallback);
+            return fallback;
         });
     }
 
     async function fetchData() {
         var results = await Promise.all([
-            cachedFetch(`${API_URL}/players`, [], CACHE_KEYS.players, SNAP_KEYS.players),
+            cachedFetch(`${API_URL}/players`, [], CACHE_KEYS.players, SNAP_KEYS.players, 'data/players-snapshot.json'),
             cachedFetch(`${API_URL}/announcement`, { message: null }, CACHE_KEYS.announcement, SNAP_KEYS.announcement),
-            cachedFetch(`${API_URL}/officers`, [], CACHE_KEYS.officers, SNAP_KEYS.officers),
+            cachedFetch(`${API_URL}/officers`, [], CACHE_KEYS.officers, SNAP_KEYS.officers, 'data/officers-snapshot.json'),
             cachedFetch(`${API_URL}/guild-ranking`, { ranking: [] }, CACHE_KEYS.guildRanking, SNAP_KEYS.guildRanking),
             cachedFetch(`${API_URL}/hall-of-fame`, { entries: [] }, CACHE_KEYS.hallOfFame, SNAP_KEYS.hallOfFame),
             cachedFetch(`${API_URL}/boost-banner`, { visible: true }, CACHE_KEYS.boostBanner, SNAP_KEYS.boostBanner),
@@ -1183,5 +1198,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // ══════════════════════════════════════════════════════════
     //  NOTICIAS DE PARCHE
     // ══════════════════════════════════════════════════════════
+
+    // ══════════════════════════════════════════════════════════
+    //  UTILIDAD ADMIN: exportar snapshots de localStorage a JSON
+    //  Uso en consola del navegador: exportSnapshot('players')
+    //  Luego pegar el contenido en deploy/data/players-snapshot.json
+    // ══════════════════════════════════════════════════════════
+    window.exportSnapshot = function(type) {
+        const key = 'exilium_snap_' + (type || 'players');
+        const raw = localStorage.getItem(key);
+        if (!raw) { console.warn('[Exilium] No hay snapshot para:', key); return null; }
+        try {
+            const parsed = JSON.parse(raw);
+            const data = parsed.data || parsed;
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = type + '-snapshot.json';
+            a.click();
+            console.info('[Exilium] Snapshot descargado:', type + '-snapshot.json');
+            console.info('[Exilium] Sube este archivo a deploy/data/' + type + '-snapshot.json y haz deploy.');
+            return data;
+        } catch (e) { console.error('[Exilium] Error al exportar snapshot:', e); return null; }
+    };
 
 }); // Fin DOMContentLoaded
