@@ -116,15 +116,20 @@ export class CasinoTable {
       // Ponerse al día por si un temporizador venció estando el DO inactivo
       // (tras redeploy, hibernación o sin sockets). Evita estados "atascados".
       await this._advance();
+      // Refrescar avatar/decoraciones del asiento con el registro ACTUAL del usuario
+      // (al reconectar tras cambiar el avatar de Discord o equipar algo) → evita avatar viejo cacheado.
+      let user = null;
+      if (session) {
+        user = await this._getUser(session.user_id);
+        const seat = this.seats.find(s => s.user_id === session.user_id);
+        if (seat && user) { seat.avatar_url = user.avatar_url || null; seat.equipped = user.equipped || {}; }
+      }
       await this._persist();
       await this._scheduleAlarm();
       this._broadcast(); // incluye al recién conectado (y refresca a los demás si cambió)
-      if (session) {
-        const user = await this._getUser(session.user_id);
-        if (user) {
-          this._send(server, { type: 'me', balance: user.balance, name: user.name, avatar_url: user.avatar_url || null });
-          this._send(server, { type: 'shop', catalog: SHOP_CATALOG, owned: user.decorations || [], equipped: user.equipped || {} });
-        }
+      if (user) {
+        this._send(server, { type: 'me', balance: user.balance, name: user.name, avatar_url: user.avatar_url || null });
+        this._send(server, { type: 'shop', catalog: SHOP_CATALOG, owned: user.decorations || [], equipped: user.equipped || {} });
       }
       return new Response(null, { status: 101, webSocket: client });
     }
@@ -298,7 +303,9 @@ export class CasinoTable {
     const arr = (this._chatRate[session.user_id] || []).filter(t => t > now - CHAT_RATE_WINDOW_MS);
     if (arr.length >= CHAT_RATE_LIMIT) { this._sendErr(session, 'Demasiados mensajes, espera un momento.'); return; }
     arr.push(now); this._chatRate[session.user_id] = arr;
-    this.chat.push({ user_id: session.user_id, name: session.name, message: text, ts: now });
+    const u = await this._getUser(session.user_id);
+    const nameEffect = (u && u.equipped && u.equipped.name_effect) || null;
+    this.chat.push({ user_id: session.user_id, name: session.name, message: text, ts: now, name_effect: nameEffect });
     this.chat = this.chat.slice(-CHAT_MAX);
     await this._afterChange();
   }

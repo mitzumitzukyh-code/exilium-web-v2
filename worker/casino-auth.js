@@ -332,6 +332,8 @@ export async function handleCasinoMe(request, env) {
       total_bet: user.total_bet || 0,
       total_won: user.total_won || 0,
       rounds_played: user.rounds_played || 0,
+      equipped: user.equipped || {},
+      decorations: user.decorations || [],
     },
   };
 }

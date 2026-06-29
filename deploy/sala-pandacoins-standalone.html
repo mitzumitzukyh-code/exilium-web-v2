@@ -702,7 +702,7 @@ function render(){
     const ts=m.ts?new Date(m.ts).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}):'';
     const tss=ts?'<span style="color:#6a5c42; font-size:9px; margin-right:5px; font-variant-numeric:tabular-nums;">'+ts+'</span>':'';
     if(m.system) return '<div style="font-size:12px; line-height:1.45;">'+tss+'<span style="color:#9c8156; font-style:italic;">'+esc(m.message||m.text)+'</span></div>';
-    return '<div style="font-size:12px; line-height:1.45;">'+tss+'<span style="font-weight:700; color:'+nameColor(m.name)+';">'+esc(m.name)+'</span><span style="color:#7a6a4d;"> · </span><span style="color:#e6dcc6;">'+esc(m.message||m.text)+'</span></div>';
+    return '<div style="font-size:12px; line-height:1.45;">'+tss+'<span class="'+decoClass(m.name_effect)+'" style="font-weight:700; color:'+nameColor(m.name)+';">'+esc(m.name)+'</span><span style="color:#7a6a4d;"> · </span><span style="color:#e6dcc6;">'+esc(m.message||m.text)+'</span></div>';
   }).join('');
   $('online').textContent=S.serverSeats.filter(x=>x&&x.name).length;
 
