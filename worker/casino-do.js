@@ -13,6 +13,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 import { WHEEL_SEQUENCE, colorOf, resolveBets, isValidBetKey } from './casino.js';
+import { SHOP_CATALOG, SHOP_SLOTS, shopItem } from './casino-shop.js';
 
 const DEFAULT_CONFIG = {
   betting_duration: 20,
@@ -120,7 +121,10 @@ export class CasinoTable {
       this._broadcast(); // incluye al recién conectado (y refresca a los demás si cambió)
       if (session) {
         const user = await this._getUser(session.user_id);
-        if (user) this._send(server, { type: 'me', balance: user.balance, name: user.name, avatar_url: user.avatar_url || null });
+        if (user) {
+          this._send(server, { type: 'me', balance: user.balance, name: user.name, avatar_url: user.avatar_url || null });
+          this._send(server, { type: 'shop', catalog: SHOP_CATALOG, owned: user.decorations || [], equipped: user.equipped || {} });
+        }
       }
       return new Response(null, { status: 101, webSocket: client });
     }
@@ -158,6 +162,8 @@ export class CasinoTable {
         case 'clear': await this._clear(ws, session); break;
         case 'ready': await this._ready(session); break;
         case 'chat':  await this._chatMsg(session, msg.message); break;
+        case 'shop_buy':   await this._shopBuy(ws, session, msg.id); break;
+        case 'shop_equip': await this._shopEquip(ws, session, msg.slot, msg.id); break;
         default: return;
       }
     } catch (e) {
@@ -211,6 +217,7 @@ export class CasinoTable {
     this.seats.push({
       seat: seatNum, user_id: session.user_id, name: session.name,
       avatar_url: (user && user.avatar_url) || null,
+      equipped: (user && user.equipped) || {},
       bets: [], ready: false, connected: true, joined_at: Date.now(),
       rounds_without_bet: 0, last_result: null,
     });
@@ -305,6 +312,43 @@ export class CasinoTable {
       await this._setUser(user);
     }
     return user;
+  }
+
+  // ── Tienda de decoraciones (compra permanente con PandaCoins) ──
+  async _shopBuy(ws, session, id) {
+    const item = shopItem(id);
+    if (!item) { this._send(ws, { type: 'error', message: 'Decoración no encontrada.' }); return; }
+    const user = await this._getUser(session.user_id);
+    if (!user) return;
+    user.decorations = user.decorations || [];
+    if (user.decorations.includes(id)) { this._send(ws, { type: 'error', message: 'Ya tienes esa decoración.' }); return; }
+    if ((user.balance || 0) < item.price) { this._send(ws, { type: 'error', message: 'PandaCoins insuficientes.' }); return; }
+    user.balance -= item.price;
+    user.decorations.push(id);
+    await this._setUser(user);
+    this._send(ws, { type: 'me', balance: user.balance });
+    this._send(ws, { type: 'shop', catalog: SHOP_CATALOG, owned: user.decorations, equipped: user.equipped || {} });
+  }
+
+  async _shopEquip(ws, session, slot, id) {
+    if (!SHOP_SLOTS.includes(slot)) { this._send(ws, { type: 'error', message: 'Ranura inválida.' }); return; }
+    const user = await this._getUser(session.user_id);
+    if (!user) return;
+    user.decorations = user.decorations || [];
+    user.equipped = user.equipped || {};
+    if (id == null || id === '') {
+      delete user.equipped[slot]; // desequipar
+    } else {
+      const item = shopItem(id);
+      if (!item || item.slot !== slot) { this._send(ws, { type: 'error', message: 'Decoración inválida.' }); return; }
+      if (!user.decorations.includes(id)) { this._send(ws, { type: 'error', message: 'No posees esa decoración.' }); return; }
+      user.equipped[slot] = id;
+    }
+    await this._setUser(user);
+    // Reflejar en el asiento (si está sentado) y difundir a todos.
+    const seat = this.seats.find(s => s.user_id === session.user_id);
+    if (seat) { seat.equipped = user.equipped; await this._persist(); this._broadcast(); }
+    this._send(ws, { type: 'shop', catalog: SHOP_CATALOG, owned: user.decorations, equipped: user.equipped });
   }
 
   // ════════════════════════════════════════════════════════════════
@@ -497,7 +541,7 @@ export class CasinoTable {
       const sv = this.seats.find(s => s.seat === i + 1);
       if (!sv) { publicSeats.push({ seat: i + 1, name: null, avatar_url: null, bets: [], has_bet: false, bet_total: 0, ready: false, last_result: null, is_me: false }); continue; }
       publicSeats.push({
-        seat: sv.seat, name: sv.name, avatar_url: sv.avatar_url || null,
+        seat: sv.seat, name: sv.name, avatar_url: sv.avatar_url || null, equipped: sv.equipped || {},
         bets: (sv.bets || []).map(b => ({ bet_key: b.bet_key, amount: b.amount })),
         has_bet: !!(sv.bets && sv.bets.length), bet_total: (sv.bets || []).reduce((t, b) => t + (Number(b.amount) || 0), 0),
         ready: !!sv.ready, last_result: sv.last_result || null, is_me: meId && sv.user_id === meId,
