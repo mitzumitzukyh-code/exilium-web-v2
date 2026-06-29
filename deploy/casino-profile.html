@@ -163,10 +163,15 @@ function render(user, txs, rank){
   const winRate = (wins+losses)>0 ? Math.round((wins/(wins+losses))*100) : 0;
   const initial = (user.name||'?').charAt(0).toUpperCase();
   const eq = user.equipped || {};
-  const frameCls = decoClass(eq.avatar_frame);
-  const avatar = user.avatar_url
+  const eqImg = user.equipped_images || {};
+  const frameImg = eqImg.avatar_frame;
+  const frameCls = frameImg ? '' : decoClass(eq.avatar_frame);
+  const avInner = user.avatar_url
     ? '<img class="avatar '+frameCls+'" src="'+esc(user.avatar_url)+'" alt="">'
     : '<div class="avatar '+frameCls+'">'+esc(initial)+'</div>';
+  const avatar = frameImg
+    ? '<span style="position:relative; display:inline-flex;">'+avInner+'<img src="'+esc(frameImg)+'" alt="" style="position:absolute; left:-45%; top:-45%; width:190%; height:190%; pointer-events:none; object-fit:contain; z-index:2;"></span>'
+    : avInner;
 
   const rows = txs.length ? txs.map(t=>{
     let amount='', color='var(--ink-dim)', detail='';

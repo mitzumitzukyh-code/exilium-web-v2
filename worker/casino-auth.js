@@ -2,6 +2,8 @@
 // Sistema de autenticación DEDICADO para la Sala de PandaCoins (Casino).
 // Independiente del boosting y del sistema admin. Sesiones KV con TTL 7 días.
 
+import { getCatalog } from './casino-shop.js';
+
 const SESSION_TTL = 7 * 24 * 60 * 60; // 7 días en segundos
 const LOGIN_RATE_LIMIT = 10;           // máx intentos login por IP
 const LOGIN_RATE_WINDOW = 15 * 60;     // ventana de 15 minutos
@@ -320,6 +322,17 @@ export async function handleCasinoMe(request, env) {
   const user = await env.EXILIUM_KV.get(`casino:user:${session.user_id}`, 'json');
   if (!user) return { error: 'Usuario no encontrado', status: 404 };
 
+  // Resolver las imágenes de las decoraciones equipadas (para perfil/render con imagen-overlay)
+  const equipped = user.equipped || {};
+  const equipped_images = {};
+  try {
+    const catalog = await getCatalog(env);
+    for (const slot of Object.keys(equipped)) {
+      const it = catalog.find(x => x.id === equipped[slot]);
+      if (it && it.image) equipped_images[slot] = it.image;
+    }
+  } catch (_) {}
+
   return {
     ok: true,
     user: {
@@ -332,7 +345,8 @@ export async function handleCasinoMe(request, env) {
       total_bet: user.total_bet || 0,
       total_won: user.total_won || 0,
       rounds_played: user.rounds_played || 0,
-      equipped: user.equipped || {},
+      equipped,
+      equipped_images,
       decorations: user.decorations || [],
     },
   };
