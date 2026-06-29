@@ -19,6 +19,7 @@ export const SHOP_CATALOG = [
   { id: 'frame_flame',   slot: 'avatar_frame', name: 'Aura de Llamas',   price: 900,  rarity: 'epico' },
   { id: 'frame_ice',     slot: 'avatar_frame', name: 'Escarcha Arcana',  price: 900,  rarity: 'epico' },
   { id: 'frame_dragon',  slot: 'avatar_frame', name: 'Marco Dracónico',  price: 1600, rarity: 'legendario' },
+  { id: 'frame_dragon_wings', slot: 'avatar_frame', name: 'Dragón Alado', price: 1000, rarity: 'legendario', image: 'assets/decorations/dragon-wings.gif' },
   // ── Efectos de nombre ──
   { id: 'name_gold',     slot: 'name_effect',  name: 'Nombre Dorado',    price: 300,  rarity: 'comun' },
   { id: 'name_fire',     slot: 'name_effect',  name: 'Nombre Ardiente',  price: 550,  rarity: 'raro' },

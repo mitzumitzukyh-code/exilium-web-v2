@@ -351,6 +351,21 @@ function avatarDecoHtml(inner, frameId, sizeCss, circleStyle){
   const overlay=img?'<img src="'+esc(img)+'" alt="" style="position:absolute; left:-45%; top:-45%; width:190%; height:190%; pointer-events:none; object-fit:contain; z-index:2;">':'';
   return '<span style="position:relative; display:inline-flex; flex-shrink:0; width:'+sizeCss+'; height:'+sizeCss+';">'+circle+overlay+'</span>';
 }
+// Decora el avatar+nombre de la barra superior con lo equipado (la barra se construye en otro script).
+function applyTopbarDeco(){
+  const eq=(S.shop&&S.shop.equipped)||{};
+  const nameEl=document.getElementById('exi-top-name');
+  if(nameEl) nameEl.className=decoClass(eq.name_effect);
+  const wrap=document.getElementById('exi-top-avatar');
+  if(wrap){
+    const inner=wrap.querySelector('.exi-top-avatar-inner');
+    const img=frameImageUrl(eq.avatar_frame);
+    if(inner){ inner.classList.remove('df-gold','df-emerald','df-flame','df-ice','df-dragon'); const c=img?'':decoClass(eq.avatar_frame); if(c) inner.classList.add(c); }
+    const old=wrap.querySelector('.exi-top-deco'); if(old) old.remove();
+    if(img){ const o=document.createElement('img'); o.className='exi-top-deco'; o.src=img; o.alt=''; o.style.cssText='position:absolute; left:-45%; top:-45%; width:190%; height:190%; object-fit:contain; pointer-events:none; z-index:2;'; wrap.appendChild(o); }
+  }
+}
+window.exiApplyTopbarDeco=applyTopbarDeco;
 let _offset=0, _endsAt=null, _spunRound=null, _resolvedRound=null, _busy=false, _pt=null, _lastDbgStatus=null, _wheelSettled=true, _pendingSound=null, _confirmDismissed=false, _confirmRound=null, _bigwinRound=null;
 
 // ── WebSocket en tiempo real (Durable Object) ──
@@ -382,7 +397,7 @@ function reconnectWS(){ try{ if(_ws) _ws.close(); }catch(e){} _ws=null; connectW
 function onWsMessage(d){
   if(d.type==='state'){ applyState(d); }
   else if(d.type==='me'){ if(d.balance!=null){ S.balance=d.balance; render(); const sb=document.getElementById('exi-shop-bal'); if(sb) sb.textContent=fmt(S.balance); } }
-  else if(d.type==='shop'){ S.shop={ catalog:d.catalog||[], owned:d.owned||[], equipped:d.equipped||{} }; renderShop(); render(); }
+  else if(d.type==='shop'){ S.shop={ catalog:d.catalog||[], owned:d.owned||[], equipped:d.equipped||{} }; renderShop(); render(); applyTopbarDeco(); }
   else if(d.type==='error'){ const m=d.message||d.error||'Error'; flash(m); if(window.EXIDBG&&EXIDBG.toast) EXIDBG.toast(m,'error'); }
   else if(d.type==='pong'){ /* keepalive */ }
 }
@@ -730,7 +745,7 @@ function render(){
       const frameId=sv.equipped&&sv.equipped.avatar_frame; const nameCls=decoClass(sv.equipped&&sv.equipped.name_effect);
       const avInner=(sv.avatar_url?'<img src="'+esc(sv.avatar_url)+'" alt="" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display=\'none\';this.parentNode.textContent=\''+esc((sv.name[0]||'?').toUpperCase())+'\'">':esc((sv.name[0]||'?').toUpperCase()));
       const avBlock=avatarDecoHtml(avInner, frameId, 'clamp(32px,3.2vw,46px)', 'background:'+cc+'; border:'+ring+'; box-shadow:'+glow+', inset 0 1px 2px rgba(255,255,255,.25); font-family:\'Cinzel\',serif; font-weight:800; font-size:clamp(12px,1.2vw,15px); color:#0a0a0c;');
-      seatsHtml+='<div style="display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0;">'+avBlock+'<span class="'+nameCls+'" style="font-size:10px; font-weight:700; color:'+(me?'#f0a52e':'#e9d4a0')+'; white-space:nowrap; max-width:84px; overflow:hidden; text-overflow:ellipsis;">'+esc(sv.name)+'</span><span style="font-size:8px; letter-spacing:.04em; color:'+(sv.ready?'#54d18a':'#9c8156')+'; white-space:nowrap;">'+sub+'</span></div>';
+      seatsHtml+='<div style="display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0;">'+avBlock+'<span class="'+nameCls+'" style="position:relative; z-index:5; font-size:10px; font-weight:700; color:'+(me?'#f0a52e':'#e9d4a0')+'; white-space:nowrap; max-width:84px; overflow:hidden; text-overflow:ellipsis;">'+esc(sv.name)+'</span><span style="position:relative; z-index:5; font-size:8px; letter-spacing:.04em; color:'+(sv.ready?'#54d18a':'#9c8156')+'; white-space:nowrap;">'+sub+'</span></div>';
     }
   }
   $('seats').innerHTML=seatsHtml;
@@ -900,12 +915,15 @@ function renderDc(){while(dc.firstChild)dc.removeChild(dc.firstChild);
 if(logged()){
 var av=localStorage.getItem('exi_av');var nm=localStorage.getItem('exi_nm')||'Aventurero';
 var wrap=el('div','display:flex; align-items:center; gap:8px; padding:4px 10px 4px 4px; border-radius:24px; border:1px solid rgba(240,165,46,.35); background:rgba(20,14,10,.88);');
-var ic;if(av){ic=el('img','width:30px; height:30px; border-radius:50%; object-fit:cover;');ic.src=av;}else{ic=el('div','width:30px; height:30px; border-radius:50%; background:linear-gradient(150deg,#5865F2,#404EED); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:13px;',nm.charAt(0).toUpperCase());}
-var sp=el('span','color:#f3ead6; font-weight:700; font-size:12px; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;',nm);
+var avWrap=el('span','position:relative; display:inline-flex; width:30px; height:30px; flex-shrink:0;');avWrap.id='exi-top-avatar';
+var ic;if(av){ic=el('img','width:100%; height:100%; border-radius:50%; object-fit:cover;');ic.src=av;}else{ic=el('div','width:100%; height:100%; border-radius:50%; background:linear-gradient(150deg,#5865F2,#404EED); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:13px;',nm.charAt(0).toUpperCase());}
+ic.className='exi-top-avatar-inner';avWrap.appendChild(ic);
+var sp=el('span','color:#f3ead6; font-weight:700; font-size:12px; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;',nm);sp.id='exi-top-name';
 var prof=el('a','padding:3px 10px; border-radius:14px; border:1px solid rgba(240,165,46,.4); background:rgba(240,165,46,.1); color:#f0a52e; font-size:10px; text-decoration:none;','Mi Perfil');prof.href='casino-profile.html';
 var out=el('button','padding:3px 9px; border-radius:14px; border:1px solid rgba(207,106,100,.4); background:transparent; color:#cf6a64; font-size:10px; cursor:pointer;','Salir');out.type='button';
 out.onclick=function(){localStorage.removeItem('exi_tk');localStorage.removeItem('exi_nm');localStorage.removeItem('exi_av');renderDc();try{S.loggedIn=false;render();}catch(e){}try{window.exiReconnectWS&&window.exiReconnectWS();}catch(e){}};
-wrap.appendChild(ic);wrap.appendChild(sp);wrap.appendChild(prof);wrap.appendChild(out);dc.appendChild(wrap);
+wrap.appendChild(avWrap);wrap.appendChild(sp);wrap.appendChild(prof);wrap.appendChild(out);dc.appendChild(wrap);
+try{window.exiApplyTopbarDeco&&window.exiApplyTopbarDeco();}catch(e){}
 }else{
 var btn=el('button','display:flex; align-items:center; gap:7px; padding:7px 16px; border-radius:24px; border:none; background:linear-gradient(150deg,#5865F2,#4752C4); color:#fff; font-weight:700; font-size:12px; cursor:pointer; box-shadow:0 4px 14px rgba(88,101,242,.45);');btn.type='button';
 btn.appendChild(el('span','font-size:14px;','🎮'));var _dt=el('span',null,'Entrar con Discord');_dt.className='exi-hide-sm';btn.appendChild(_dt);
