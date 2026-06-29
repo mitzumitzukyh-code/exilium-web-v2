@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sala de PandaCoins — Ruleta Exilium Guild</title>
+<link rel="prefetch" href="assets/celebration.mp4" as="video" type="video/mp4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cinzel+Decorative:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -20,6 +21,9 @@
   [data-bet-key]{ transition:box-shadow .12s ease,filter .12s ease,transform .12s ease; }
   [data-bet-key].exi-hv-self{ box-shadow:0 0 0 2px #f0a52e,0 0 26px rgba(240,165,46,.9)!important; transform:translateY(-3px) scale(1.08)!important; filter:brightness(1.4) saturate(1.15)!important; z-index:20!important; position:relative!important; }
   [data-bet-key].exi-hv-rel{ box-shadow:inset 0 0 0 2px rgba(240,165,46,.65),0 0 16px rgba(240,165,46,.5)!important; filter:brightness(1.22)!important; z-index:8!important; position:relative!important; }
+  .exi-act{ transition:all .15s ease; }
+  .exi-act:hover{ border-color:#f0a52e!important; background:rgba(240,165,46,.2)!important; color:#f7c168!important; transform:translateY(-2px); box-shadow:0 4px 14px rgba(240,165,46,.45); }
+  .exi-act-clear:hover{ border-color:#cf6a64!important; background:rgba(181,26,26,.24)!important; color:#ff9a93!important; box-shadow:0 4px 14px rgba(207,106,100,.45); }
   @media (max-width:900px){ #exi-topbar{ gap:6px!important; } #exi-topbar .exi-hide-sm{ display:none!important; } #exi-topbar button{ padding:7px 11px!important; } }
   @media (max-width:1100px){ #exi-arena{ grid-template-columns:minmax(158px,188px) minmax(0,1fr) minmax(176px,210px)!important; gap:8px!important; } }
   @media (max-width:820px){ #exi-stage{ height:auto!important; min-height:100vh!important; overflow:auto!important; } #exi-arena{ grid-template-columns:1fr!important; } #exi-board{ overflow-x:auto!important; } #exi-board>div{ min-width:600px!important; } #exi-topbar{ position:static!important; transform:none!important; margin:8px auto 0!important; justify-content:center!important; } }
@@ -122,15 +126,9 @@
       <button id="readybtn" data-exi-spin="1" type="button" style="margin-top:3px; width:100%; padding:14px 16px; border-radius:11px; border:1px solid rgba(240,165,46,.5); background:linear-gradient(180deg,#f7c168,#f0a52e 58%,#b97916); color:#2a1a06; font-family:'Cinzel',serif; font-weight:700; font-size:15px; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; box-shadow:0 10px 26px -8px rgba(240,165,46,.6), inset 0 1px 0 rgba(255,255,255,.45);">LISTO · Apostar</button>
 
       <div style="display:flex; gap:7px; margin-top:1px;">
-        <button id="btn-half" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(240,165,46,.2); background:rgba(0,0,0,.26); color:#c9b182; font-family:'Cinzel',serif; font-weight:700; font-size:14px; cursor:pointer;">½</button>
-        <button id="btn-double" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(240,165,46,.2); background:rgba(0,0,0,.26); color:#c9b182; font-family:'Cinzel',serif; font-weight:700; font-size:14px; cursor:pointer;">×2</button>
-        <button id="btn-clear" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(181,26,26,.28); background:rgba(0,0,0,.26); color:#cf6a64; font-family:'Inter',sans-serif; font-weight:600; font-size:12px; cursor:pointer;">Limpiar</button>
-      </div>
-
-      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:7px; padding-top:11px; border-top:1px solid rgba(240,165,46,.14);">
-        <div style="background:rgba(0,0,0,.26); border:1px solid rgba(240,165,46,.12); border-radius:8px; padding:7px 4px; text-align:center;"><span style="display:block; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:#9c8156; margin-bottom:3px;">Ganadas</span><span id="stat-wins" style="font-family:'Cinzel',serif; font-weight:700; font-size:15px; color:#54d18a;">0</span></div>
-        <div style="background:rgba(0,0,0,.26); border:1px solid rgba(240,165,46,.12); border-radius:8px; padding:7px 4px; text-align:center;"><span style="display:block; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:#9c8156; margin-bottom:3px;">Perdidas</span><span id="stat-losses" style="font-family:'Cinzel',serif; font-weight:700; font-size:15px; color:#cf6a64;">0</span></div>
-        <div style="background:rgba(0,0,0,.26); border:1px solid rgba(240,165,46,.12); border-radius:8px; padding:7px 4px; text-align:center;"><span style="display:block; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:#9c8156; margin-bottom:3px;">Neto</span><span id="stat-net" style="font-family:'Cinzel',serif; font-weight:700; font-size:15px; color:#e9d4a0;">±0</span></div>
+        <button id="btn-half" class="exi-act" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(240,165,46,.2); background:rgba(0,0,0,.26); color:#c9b182; font-family:'Cinzel',serif; font-weight:700; font-size:14px; cursor:pointer;">½</button>
+        <button id="btn-double" class="exi-act" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(240,165,46,.2); background:rgba(0,0,0,.26); color:#c9b182; font-family:'Cinzel',serif; font-weight:700; font-size:14px; cursor:pointer;">×2</button>
+        <button id="btn-clear" class="exi-act exi-act-clear" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(181,26,26,.28); background:rgba(0,0,0,.26); color:#cf6a64; font-family:'Inter',sans-serif; font-weight:600; font-size:12px; cursor:pointer;">Limpiar</button>
       </div>
     </section>
   </div>
@@ -312,61 +310,59 @@ const S={
   cfg:{ min_bet:50, max_bet:1000, max_seats:5, max_bets_per_round:3 },
   serverSeats:[], mySeat:null, chat:[], history:[],
   resultNumber:null, resultIndex:null, countdown:0,
-  chip:50, pendingBets:{}, wheelDeg:0, result:null,
+  chip:5, pendingBets:{}, wheelDeg:0, result:null,
   stats:{ wins:0, losses:0, net:0 }, statusLine:'Conectando con la mesa…',
 };
-let _offset=0, _endsAt=null, _spunRound=null, _resolvedRound=null, _busy=false, _pt=null, _lastDbgStatus=null, _wheelSettled=true, _pendingSound=null;
+let _offset=0, _endsAt=null, _spunRound=null, _resolvedRound=null, _busy=false, _pt=null, _lastDbgStatus=null, _wheelSettled=true, _pendingSound=null, _confirmDismissed=false, _confirmRound=null, _bigwinRound=null;
 
-async function api(path,opts){
-  opts=opts||{}; const headers=Object.assign({},opts.headers||{});
-  const tk=token(); if(tk) headers['Authorization']='Bearer '+tk;
-  if(opts.body) headers['Content-Type']='application/json';
-  const method=opts.method||'GET';
-  const DBG=window.EXIDBG;
-  const t0=(window.performance&&performance.now)?performance.now():Date.now();
-  const ms=()=>Math.round(((window.performance&&performance.now)?performance.now():Date.now())-t0);
-  if(DBG) DBG.log('debug','api→', method+' '+path, opts.body!==undefined?opts.body:undefined);
-  let res, netErr=null;
-  try{ res=await fetch(API+path,{ method, headers, body:opts.body?JSON.stringify(opts.body):undefined }); }
-  catch(e){ netErr=e; }
-  if(netErr){
-    if(DBG){ DBG.log('error','api✗', method+' '+path+' — sin conexión ('+ms()+'ms)', String(netErr&&netErr.message||netErr)); DBG.reportNet(method,path); }
-    return { ok:false, status:0, data:{}, raw:null, error:'network' };
-  }
-  let data=null, raw=null;
-  try{ raw=await res.text(); data=raw?JSON.parse(raw):null; }catch(e){ /* respuesta vacía o no-JSON */ }
-  if(res.status===401){ try{ localStorage.removeItem('exi_tk'); }catch(e){} S.loggedIn=false; }
-  if(DBG){
-    DBG.log(res.ok?'net':'error','api'+(res.ok?'✓':'✗'), method+' '+path+' → '+res.status+' ('+ms()+'ms)', data!=null?data:(raw||''));
-    if(!res.ok) DBG.reportHttp(method,path,res.status,data,raw);
-  }
-  return { ok:res.ok, status:res.status, data:data||{}, raw:raw };
+// ── WebSocket en tiempo real (Durable Object) ──
+// Todos los jugadores conectados a la MISMA mesa ven lo mismo al instante: mismo
+// countdown, mismas apuestas, mismo giro. Reemplaza el viejo polling a KV.
+let _ws=null, _wsReconnect=null, _wsBackoff=1000;
+function wsUrl(){ const base=API.replace(/^http/i,'ws'); const tk=token(); return base+'/api/casino/ws'+(tk?('?token='+encodeURIComponent(tk)):''); }
+function wsSend(obj){
+  try{
+    if(_ws && _ws.readyState===1){ _ws.send(JSON.stringify(obj)); if(window.EXIDBG) EXIDBG.event('ws→', obj.type, obj.type==='chat'?undefined:obj); return true; }
+  }catch(e){}
+  if(window.EXIDBG) EXIDBG.log('warn','ws','sin conexión, no se envió '+(obj&&obj.type));
+  return false;
 }
-
-// Workers Paid: polling más ágil (antes 1200/1500/2600). Sondeo más frecuente = chat,
-// asientos y apuestas de otros se ven casi al momento. El tick del motor también corre
-// en cada request, así que las rondas avanzan con más precisión.
-function pollInterval(){ if(S.status==='spinning') return 900; if(S.status==='result') return 1100; return 1500; }
-function schedule(){ clearTimeout(_pt); if(document.hidden) return; _pt=setTimeout(()=>poll(false), pollInterval()); }
-async function poll(immediate){
-  if(document.hidden && !immediate){ schedule(); return; }
-  const r=await api('/api/casino/state');
-  if(r.ok && r.data && r.data.ok) applyState(r.data);
-  schedule();
+function connectWS(){
+  clearTimeout(_wsReconnect);
+  if(_ws && (_ws.readyState===0 || _ws.readyState===1)) return; // ya conectando/abierto
+  let sock; try{ sock=new WebSocket(wsUrl()); }catch(e){ scheduleReconnect(); return; }
+  _ws=sock;
+  sock.onopen=()=>{ _wsBackoff=1000; if(window.EXIDBG) EXIDBG.event('ws','conectado'); };
+  sock.onmessage=(ev)=>{ let d; try{ d=JSON.parse(ev.data); }catch(e){ return; } onWsMessage(d); };
+  sock.onclose=()=>{ if(window.EXIDBG) EXIDBG.event('ws','cerrado · reconectando…'); scheduleReconnect(); };
+  sock.onerror=()=>{ if(window.EXIDBG) EXIDBG.log('warn','ws','error de socket'); try{ sock.close(); }catch(e){} };
 }
+function scheduleReconnect(){ clearTimeout(_wsReconnect); if(document.hidden) return; _wsReconnect=setTimeout(connectWS, _wsBackoff); _wsBackoff=Math.min(_wsBackoff*1.6, 10000); }
+function reconnectWS(){ try{ if(_ws) _ws.close(); }catch(e){} _ws=null; connectWS(); }
+function onWsMessage(d){
+  if(d.type==='state'){ applyState(d); }
+  else if(d.type==='me'){ if(d.balance!=null){ S.balance=d.balance; render(); } }
+  else if(d.type==='error'){ const m=d.message||d.error||'Error'; flash(m); if(window.EXIDBG&&EXIDBG.toast) EXIDBG.toast(m,'error'); }
+  else if(d.type==='pong'){ /* keepalive */ }
+}
+// keepalive + watchdog de reconexión
+setInterval(()=>{ if(_ws && _ws.readyState===1) wsSend({type:'ping'}); else if(!document.hidden) connectWS(); }, 20000);
+// Compatibilidad: las acciones ya no sondean; poll() solo garantiza conexión.
+function poll(){ connectWS(); }
 function applyState(d){
   const st=d.state||{};
   _offset=(st.server_time||Date.now())-Date.now();
   S.cfg=d.config||S.cfg;
   S.serverSeats=Array.isArray(d.seats)?d.seats:[];
   S.history=(Array.isArray(d.history)?d.history:[]).map(h=>(typeof h==='number'?h:h.result));
-  const me=d.me||null; S.mySeat=d.my_seat||null;
+  S.mySeat=d.my_seat||null;
   // El servidor envía last_result en el asiento (seats[is_me]), no en my_seat: lo adjuntamos
   // para que la detección de victoria/derrota, estadísticas y sonido funcionen.
   const _meSeat=S.serverSeats.find(x=>x&&x.is_me);
   if(S.mySeat) S.mySeat.last_result=_meSeat?_meSeat.last_result:null;
-  S.loggedIn=!!token(); S.balance=me?me.balance:null;
+  S.loggedIn=(d.logged_in!=null)?d.logged_in:!!token(); // el saldo (S.balance) llega por mensajes 'me'
   S.status=st.status; S.roundId=st.round_id;
+  if(S.roundId!==_confirmRound){ _confirmRound=S.roundId; _confirmDismissed=false; } // reabrir el cartel cada ronda
   S.resultNumber=st.result_number; S.resultIndex=st.result_index;
   S.chat=Array.isArray(d.chat)?d.chat:[];
 
@@ -379,7 +375,7 @@ function applyState(d){
 
   if(st.status==='spinning' && st.result_index!=null && _spunRound!==st.round_id){ _spunRound=st.round_id; animateWheel(st.result_index); }
   if(st.status==='result' && S.mySeat && S.mySeat.last_result && _resolvedRound!==st.round_id){
-    _resolvedRound=st.round_id; const lr=S.mySeat.last_result; const net=(lr.total_win||0)-(lr.total_bet||0);
+    _resolvedRound=st.round_id; const lr=S.mySeat.last_result; const net=(lr.net!=null)?lr.net:((lr.total_win||0)-(lr.total_bet||0));
     S.stats={ wins:S.stats.wins+(lr.won?1:0), losses:S.stats.losses+(lr.won?0:1), net:S.stats.net+net };
     _pendingSound=lr.won?'win':'lose'; flushSound(); // suena al terminar el giro (ver flushSound)
   }
@@ -393,13 +389,16 @@ function applyState(d){
       statusColor: lr?(isWin?'#54d18a':'#e9d4a0'):'#e9d4a0',
       border: isWin?'#2f9c63':'rgba(240,165,46,.5)',
       glow: isWin?'0 0 30px rgba(47,156,99,.55)':'0 0 22px rgba(240,165,46,.35)',
-      sw, detail: lr?(isWin?('+'+fmt(lr.total_win-lr.total_bet)+' C'):('−'+fmt(lr.total_bet)+' C')):('Salió el '+n) };
+      sw, detail: lr?(()=>{ const nt=(lr.net!=null)?lr.net:((lr.total_win||0)-(lr.total_bet||0)); return nt>0?('+'+fmt(nt)+' C'):(nt<0?('−'+fmt(Math.abs(nt))+' C'):'±0 C'); })():('Salió el '+n) };
   }
 
   if(window.EXIDBG && S.result) EXIDBG.event('resultado','cartel n='+S.result.n+' win='+S.result.win+' · fase='+st.status+' · wheelDeg='+Math.round(S.wheelDeg)+' (ojo: si fase=spinning, el cartel sale antes de frenar la rueda)');
 
+  S.bigwin = st.bigwin || null;   // celebración de pleno (la pinta maybePlayBigwin al frenar la rueda)
+  maybePlayBigwin();
+
   if(st.status!=='betting') S.pendingBets={};
-  if(S.chip<S.cfg.min_bet || S.chip>S.cfg.max_bet){ const o=chipValues(); S.chip=o[Math.min(1,o.length-1)]||S.cfg.min_bet; }
+  { const cv=chipValues(); if(!cv.includes(S.chip)) S.chip=cv[Math.min(1,cv.length-1)]||cv[0]; }
   S.statusLine=buildStatusLine(st.status, S.mySeat);
   render();
   scrollChat();
@@ -407,7 +406,7 @@ function applyState(d){
 function tickClock(){
   const now=Date.now()+(_offset||0);
   const cd=_endsAt!=null?Math.max(0,Math.ceil((_endsAt-now)/1000)):0;
-  if(cd!==S.countdown){ S.countdown=cd; $('exi-status').textContent=statusLineWithCd(); }
+  if(cd!==S.countdown){ S.countdown=cd; $('exi-status').textContent=statusLineWithCd(); updateConfirmCard(cd); }
 }
 function statusLineWithCd(){
   let l=S.statusLine;
@@ -428,12 +427,59 @@ function buildStatusLine(status, mySeat){
 }
 function flash(msg){ S.statusLine=msg; $('exi-status').textContent=statusLineWithCd(); }
 
+// ── Popup grande: avatares + qué apostó cada jugador + tiempo restante ──
+function buildConfirmCard(){
+  const card=document.createElement('div'); card.id='exi-confirm';
+  card.style.cssText='display:none; position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:9600; width:min(700px,94vw); pointer-events:none; font-family:Inter,sans-serif;';
+  const inner=document.createElement('div');
+  inner.style.cssText='pointer-events:auto; background:linear-gradient(180deg,rgba(26,18,12,.97),rgba(12,9,7,.97)); border:2px solid #f0a52e; border-radius:16px; padding:12px 16px; box-shadow:0 18px 50px -10px rgba(0,0,0,.85), 0 0 32px -8px rgba(240,165,46,.5);';
+  inner.innerHTML='<div style="display:flex; align-items:center; gap:12px; margin-bottom:9px;"><span style="font-family:\'Cinzel\',serif; color:#f0a52e; font-size:16px; font-weight:700; white-space:nowrap;">⏳ <span id="exi-cf-cd">0</span>s para apostar</span><span style="flex:1; height:7px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden;"><span id="exi-cf-bar" style="display:block; height:100%; width:100%; background:linear-gradient(90deg,#f7c168,#f0a52e); transition:width .25s linear;"></span></span></div><div id="exi-cf-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div><div id="exi-cf-actions"></div>';
+  card.appendChild(inner); document.body.appendChild(card);
+  return card;
+}
+function betChipLabel(key){
+  const [t,v]=String(key).split(':');
+  if(t==='number') return '#'+v;
+  if(t==='color') return v==='red'?'Rojo':'Negro';
+  if(t==='parity') return v==='even'?'Par':'Impar';
+  if(t==='half') return v==='low'?'1-18':'19-36';
+  if(t==='dozen') return v+'ª doc';
+  if(t==='col') return 'Col '+v;
+  return labelFor(key);
+}
+function updateConfirmCard(cd){
+  const bettors=(S.serverSeats||[]).filter(s=>s&&s.name&&Array.isArray(s.bets)&&s.bets.length);
+  const show = S.status==='betting' && bettors.length>0 && cd>0;
+  let card=document.getElementById('exi-confirm');
+  if(!show){ if(card) card.style.display='none'; return; }
+  card=card||buildConfirmCard();
+  const cdEl=document.getElementById('exi-cf-cd'); if(cdEl) cdEl.textContent=cd;
+  const bar=document.getElementById('exi-cf-bar'); if(bar){ const dur=(S.cfg&&S.cfg.betting_duration)||20; bar.style.width=Math.max(0,Math.min(100,(cd/dur)*100))+'%'; }
+  const list=document.getElementById('exi-cf-list');
+  if(list){ list.innerHTML=bettors.map(sv=>{
+    const av=sv.avatar_url
+      ? '<img src="'+esc(sv.avatar_url)+'" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      : '<span style="width:28px;height:28px;border-radius:50%;background:'+nameColor(sv.name)+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#0a0a0c;flex-shrink:0;">'+esc((sv.name[0]||'?').toUpperCase())+'</span>';
+    const bets=sv.bets.map(b=>'<span style="background:rgba(240,165,46,.14);border:1px solid rgba(240,165,46,.3);border-radius:6px;padding:1px 6px;font-size:11px;color:#f3e6c4;white-space:nowrap;">'+esc(betChipLabel(b.bet_key||b.key))+' <b style="color:#f0a52e;">'+fmt(b.amount)+'</b></span>').join(' ');
+    return '<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid '+(sv.is_me?'#f7c168':'rgba(240,165,46,.18)')+';border-radius:11px;padding:5px 10px 5px 5px;">'+av+'<div style="display:flex;flex-direction:column;gap:3px;min-width:0;"><span style="font-size:11px;font-weight:700;color:'+(sv.is_me?'#f0a52e':'#e9d4a0')+';white-space:nowrap;">'+esc(sv.name)+(sv.ready?' <span style=\'color:#54d18a\'>✓</span>':'')+'</span><div style="display:flex;flex-wrap:wrap;gap:4px;">'+bets+'</div></div></div>';
+  }).join(''); }
+  const act=document.getElementById('exi-cf-actions'); const myPend=Object.keys(S.pendingBets||{}).length>0;
+  if(act){
+    if(S.mySeat && !S.mySeat.ready && (myPend || (S.mySeat.bets&&S.mySeat.bets.length))){
+      act.innerHTML='<button id="exi-cf-yes" type="button" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(240,165,46,.5);background:linear-gradient(180deg,#f7c168,#f0a52e 60%,#b97916);color:#2a1a06;font-family:\'Cinzel\',serif;font-weight:700;font-size:13px;cursor:pointer;">✓ Confirmar mi apuesta (LISTO)</button>';
+      const y=document.getElementById('exi-cf-yes'); if(y) y.onclick=()=>spin();
+    } else if(S.mySeat && S.mySeat.ready){
+      act.innerHTML='<div style="text-align:center;color:#54d18a;font-size:12px;font-weight:600;">Listo ✓ — esperando a la mesa…</div>';
+    } else { act.innerHTML=''; }
+  }
+  card.style.display='block';
+}
+
 function chipValues(){
+  // Fichas fijas de 1, 5 y 10 PandaCoins (acotadas al min/max de la config).
   const {min_bet,max_bet}=S.cfg;
-  const cand=[10,25,50,100,200,500,1000].filter(v=>v>=min_bet && v<=max_bet);
-  if(cand.length===0) return [min_bet, Math.round((min_bet+max_bet)/2), max_bet];
-  if(cand.length<=3) return cand;
-  return [cand[0], cand[Math.floor(cand.length/2)], cand[cand.length-1]];
+  const cand=[1,5,10].filter(v=>v>=min_bet && v<=max_bet);
+  return cand.length?cand:[Math.max(1,min_bet)];
 }
 function selectChip(v){ S.chip=v; render(); }
 function mergedBets(){
@@ -461,47 +507,34 @@ function placeBet(key){
 }
 function half(){ if(S.status!=='betting') return; const p={}; for(const k in S.pendingBets){ const v=Math.round(S.pendingBets[k]/2); if(v>0) p[k]=v; } S.pendingBets=p; render(); }
 function double(){ if(S.status!=='betting') return; const {max_bet}=S.cfg; const merged=mergedBets(); const p={}; for(const k in S.pendingBets){ const committed=(merged[k]||0)-S.pendingBets[k]; p[k]=Math.min(S.pendingBets[k]*2, max_bet-committed); } S.pendingBets=p; render(); }
-async function clearBets(){
+function clearBets(){
   if(S.status!=='betting') return;
-  S.pendingBets={}; render();
-  if(S.mySeat && S.mySeat.bets && S.mySeat.bets.length){
-    const r=await api('/api/casino/clear-bets',{ method:'POST' });
-    if(r.ok) poll(true); else flash((r.data&&r.data.error)||'No se pudo limpiar.');
-  }
+  S.pendingBets={}; _confirmDismissed=true; render();
+  if(S.mySeat && S.mySeat.bets && S.mySeat.bets.length) wsSend({type:'clear'});
 }
-async function spin(){
-  if(_busy) return;
+function spin(){
   if(!token()){ flash('Entra con Discord para jugar.'); return; }
   if(S.status!=='betting'){ flash('Espera a la siguiente ronda.'); return; }
   if(!S.mySeat){ flash('Siéntate primero para apostar.'); return; }
   const pend=S.pendingBets; const keys=Object.keys(pend); const committed=(S.mySeat.bets||[]).length;
   if(keys.length===0 && committed===0){ flash('Coloca una apuesta en el tablero primero.'); return; }
-  _busy=true;
-  try{
-    if(keys.length>0){
-      const bets=keys.map(k=>({ bet_key:keyToServer(k), amount:pend[k] }));
-      const rb=await api('/api/casino/bet',{ method:'POST', body:{ bets } });
-      if(!rb.ok){ flash((rb.data&&rb.data.error)||'No se pudo apostar.'); _busy=false; return; }
-      S.pendingBets={}; if(rb.data.balance!=null) S.balance=rb.data.balance;
-    }
-    const rr=await api('/api/casino/ready',{ method:'POST' });
-    if(!rr.ok) flash((rr.data&&rr.data.error)||'No se pudo marcar listo.');
-  } finally { _busy=false; poll(true); }
+  if(keys.length>0){
+    const bets=keys.map(k=>({ bet_key:keyToServer(k), amount:pend[k] }));
+    wsSend({type:'bet', bets});       // el servidor cobra y difunde; el saldo vuelve por 'me'
+    S.pendingBets={};
+  }
+  wsSend({type:'ready'});             // marca listo (gira si es solo / todos listos)
+  _confirmDismissed=true; render();
 }
-async function toggleSeat(){
-  if(_busy) return;
+function toggleSeat(){
   if(!token()){ flash('Entra con Discord para sentarte.'); return; }
-  const action=S.mySeat?'stand':'sit'; _busy=true;
-  try{ const r=await api('/api/casino/seat',{ method:'POST', body:{ action } }); if(!r.ok) flash((r.data&&r.data.error)||'No se pudo cambiar de asiento.'); }
-  finally { _busy=false; poll(true); }
+  wsSend({type: S.mySeat?'stand':'sit'});
 }
-async function sendChat(){
+function sendChat(){
   const el=$('chatinput'); if(!el) return; const text=el.value.trim(); if(!text) return;
   if(!token()){ flash('Entra con Discord para chatear.'); return; }
   el.value='';
-  const r=await api('/api/casino/chat',{ method:'POST', body:{ message:text } });
-  if(!r.ok){ flash((r.data&&r.data.error)||'No se pudo enviar el mensaje.'); return; }
-  poll(true);
+  wsSend({type:'chat', message:text});
 }
 function scrollChat(){ requestAnimationFrame(()=>{ const el=$('chat'); if(el) el.scrollTop=el.scrollHeight; }); }
 function labelFor(key){
@@ -522,7 +555,48 @@ function animateWheel(idx){ if(window.EXIDBG) EXIDBG.event('rueda','girar → í
   el.addEventListener('transitionend', finish, { once:true });
   setTimeout(finish, 5000); // respaldo por si transitionend no dispara
 }
-function onWheelSettled(){ _wheelSettled=true; if(window.EXIDBG) EXIDBG.event('rueda','frenó · revelar resultado'); flushSound(); render(); }
+function onWheelSettled(){ _wheelSettled=true; if(window.EXIDBG) EXIDBG.event('rueda','frenó · revelar resultado'); flushSound(); render(); maybePlayBigwin(); }
+
+// ── Video de celebración: SOLO cuando alguien gana al PLENO (number:X). Lo ven todos. ──
+function maybePlayBigwin(){
+  if(!S.bigwin || !_wheelSettled) return;
+  if(_bigwinRound===S.roundId) return;        // una sola vez por ronda
+  _bigwinRound=S.roundId;
+  if(window.EXIDBG) EXIDBG.event('bigwin','PLENO '+S.bigwin.number+' · '+(S.bigwin.winners||[]).map(w=>w.name).join(', '));
+  playWinVideo(S.bigwin);
+}
+function playWinVideo(bw){
+  if(document.getElementById('exi-winvid')) return;
+  const ov=document.createElement('div'); ov.id='exi-winvid';
+  ov.style.cssText='position:fixed; inset:0; z-index:99999; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden; font-family:Inter,sans-serif;';
+  const vid=document.createElement('video');
+  vid.style.cssText='position:absolute; inset:0; width:100%; height:100%; object-fit:cover;';
+  vid.playsInline=true; vid.autoplay=true; vid.preload='auto';
+  try{ vid.muted = localStorage.getItem('exi_mute')==='1'; }catch(e){}
+  vid.innerHTML='<source src="assets/celebration.mp4" type="video/mp4">';
+  const info=document.createElement('div');
+  info.style.cssText='position:relative; z-index:2; text-align:center; pointer-events:none; text-shadow:0 3px 16px rgba(0,0,0,.95);';
+  const avs=(bw.winners||[]).slice(0,5).map(w=> w.avatar_url
+    ? '<img src="'+esc(w.avatar_url)+'" alt="" style="width:clamp(60px,9vw,96px); height:clamp(60px,9vw,96px); border-radius:50%; border:3px solid #f0a52e; object-fit:cover; margin:0 5px; box-shadow:0 0 34px rgba(240,165,46,.85);">'
+    : '<span style="display:inline-flex; width:clamp(60px,9vw,96px); height:clamp(60px,9vw,96px); border-radius:50%; border:3px solid #f0a52e; background:'+nameColor(w.name)+'; align-items:center; justify-content:center; font-size:36px; font-weight:800; color:#0a0a0c; margin:0 5px;">'+esc((w.name[0]||'?').toUpperCase())+'</span>'
+  ).join('');
+  const names=(bw.winners||[]).map(w=>esc(w.name)).join(', ');
+  const totalWin=(bw.winners||[]).reduce((t,w)=>t+(Number(w.win)||0),0);
+  info.innerHTML='<div style="display:flex; justify-content:center; align-items:center; margin-bottom:18px; flex-wrap:wrap;">'+avs+'</div>'+
+    '<div style="font-family:\'Cinzel Decorative\',serif; font-size:clamp(64px,13vw,150px); font-weight:900; color:#f7c168; line-height:.95;">'+esc(bw.number)+'</div>'+
+    '<div style="font-family:\'Cinzel\',serif; font-size:clamp(20px,3.2vw,36px); font-weight:800; color:#fff; margin-top:10px; text-transform:uppercase; letter-spacing:.05em;">¡'+names+' ganó al pleno!</div>'+
+    (totalWin?'<div style="font-family:\'Cinzel\',serif; font-size:clamp(18px,2.6vw,30px); color:#54d18a; margin-top:6px;">+'+fmt(totalWin)+' C</div>':'');
+  const skip=document.createElement('button'); skip.type='button'; skip.textContent='Saltar ✕';
+  skip.style.cssText='position:absolute; top:16px; right:18px; z-index:3; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.4); color:#fff; border-radius:20px; padding:7px 14px; font-size:13px; cursor:pointer;';
+  let done=false; function close(){ if(done) return; done=true; try{ vid.pause(); }catch(e){} if(ov.parentNode) ov.parentNode.removeChild(ov); }
+  skip.onclick=close;
+  vid.addEventListener('ended', close);
+  vid.addEventListener('error', ()=>{ setTimeout(close, 6000); }); // sin archivo de video → muestra el cartel 6s
+  ov.appendChild(vid); ov.appendChild(info); ov.appendChild(skip);
+  document.body.appendChild(ov);
+  const p=vid.play&&vid.play(); if(p&&p.catch) p.catch(()=>{});
+  setTimeout(close, 20000); // tope de seguridad
+}
 function flushSound(){ if(_wheelSettled && _pendingSound && window.EXISFX){ try{ _pendingSound==='win'?EXISFX.win():EXISFX.lose(); }catch(e){} _pendingSound=null; } }
 function buildWheelSVG(){
   const cx=100,cy=100,rOut=99,rIn=46,rT=73,step=360/37; let p='';
@@ -608,7 +682,7 @@ function render(){
       const ring=me?'3px solid #f7c168':'2px solid rgba(240,165,46,.5)';
       const glow=me?'0 0 0 3px rgba(240,165,46,.4), 0 0 16px rgba(240,165,46,.55), 0 4px 12px rgba(0,0,0,.6)':'0 3px 9px rgba(0,0,0,.6)';
       const sub=me?'Tú':(sv.ready?'Listo ✓':(sv.has_bet?'Apostando…':'En mesa'));
-      seatsHtml+='<div style="display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0;"><span style="width:clamp(32px,3.2vw,46px); height:clamp(32px,3.2vw,46px); border-radius:50%; background:'+cc+'; border:'+ring+'; box-shadow:'+glow+', inset 0 1px 2px rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-family:\'Cinzel\',serif; font-weight:800; font-size:clamp(12px,1.2vw,15px); color:#0a0a0c; overflow:hidden;">'+esc(sv.name[0].toUpperCase())+'</span><span style="font-size:10px; font-weight:700; color:'+(me?'#f0a52e':'#e9d4a0')+'; white-space:nowrap; max-width:84px; overflow:hidden; text-overflow:ellipsis;">'+esc(sv.name)+'</span><span style="font-size:8px; letter-spacing:.04em; color:'+(sv.ready?'#54d18a':'#9c8156')+'; white-space:nowrap;">'+sub+'</span></div>';
+      seatsHtml+='<div style="display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0;"><span style="width:clamp(32px,3.2vw,46px); height:clamp(32px,3.2vw,46px); border-radius:50%; background:'+cc+'; border:'+ring+'; box-shadow:'+glow+', inset 0 1px 2px rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-family:\'Cinzel\',serif; font-weight:800; font-size:clamp(12px,1.2vw,15px); color:#0a0a0c; overflow:hidden;">'+(sv.avatar_url?'<img src="'+esc(sv.avatar_url)+'" alt="" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display=\'none\';this.parentNode.textContent=\''+esc((sv.name[0]||'?').toUpperCase())+'\'">':esc((sv.name[0]||'?').toUpperCase()))+'</span><span style="font-size:10px; font-weight:700; color:'+(me?'#f0a52e':'#e9d4a0')+'; white-space:nowrap; max-width:84px; overflow:hidden; text-overflow:ellipsis;">'+esc(sv.name)+'</span><span style="font-size:8px; letter-spacing:.04em; color:'+(sv.ready?'#54d18a':'#9c8156')+'; white-space:nowrap;">'+sub+'</span></div>';
     }
   }
   $('seats').innerHTML=seatsHtml;
@@ -638,6 +712,22 @@ function render(){
     if(amt>0){ b.textContent=amt; b.style.display='flex'; } else b.style.display='none';
   });
 
+  // Apuestas de OTROS jugadores (sincronizadas en tiempo real): puntito de color por jugador en cada casilla
+  const otherByKey={};
+  for(const sv of (S.serverSeats||[])){
+    if(!sv || sv.is_me || !Array.isArray(sv.bets)) continue;
+    for(const bb of sv.bets){ const k=keyFromServer(bb.bet_key||bb.key); (otherByKey[k]=otherByKey[k]||[]).push({ c:nameColor(sv.name), amt:bb.amount, name:sv.name }); }
+  }
+  document.querySelectorAll('[data-bet-key]').forEach(el=>{
+    const k=el.getAttribute('data-bet-key'); const arr=otherByKey[k]; let dots=el.querySelector('.bet-others');
+    if(arr && arr.length){
+      if(!dots){ dots=document.createElement('span'); dots.className='bet-others'; dots.style.cssText='position:absolute; left:3px; bottom:3px; display:flex; gap:2px; z-index:6; pointer-events:none;'; el.appendChild(dots); }
+      dots.innerHTML=arr.slice(0,6).map(o=>'<span title="'+esc(o.name)+': '+fmt(o.amt)+' C" style="width:8px; height:8px; border-radius:50%; background:'+o.c+'; box-shadow:0 0 0 1px rgba(0,0,0,.55);"></span>').join('');
+    } else if(dots){ dots.remove(); }
+  });
+
+  updateConfirmCard(S.countdown);
+
   let readyLabel='LISTO · Apostar', dis=false;
   if(!S.loggedIn){ readyLabel='Entra con Discord'; dis=true; }
   else if(S.status==='spinning'){ readyLabel='Girando…'; dis=true; }
@@ -645,11 +735,6 @@ function render(){
   else if(!S.mySeat){ readyLabel='Siéntate primero'; dis=true; }
   else if(S.mySeat.ready){ readyLabel='Listo ✓'; dis=true; }
   const rb=$('readybtn'); rb.textContent=readyLabel; rb.disabled=dis; rb.style.opacity=dis?0.6:1; rb.style.cursor=dis?'default':'pointer';
-
-  $('stat-wins').textContent=S.stats.wins; $('stat-losses').textContent=S.stats.losses;
-  const net=S.stats.net; const ne=$('stat-net');
-  ne.textContent=(net>0?'+':(net<0?'−':'±'))+fmt(Math.abs(net));
-  ne.style.color=net>0?'#54d18a':(net<0?'#cf6a64':'#e9d4a0');
 }
 
 function init(){
@@ -665,11 +750,13 @@ function init(){
   $('btn-clear').addEventListener('click',clearBets);
   $('chatsend').addEventListener('click',sendChat);
   $('chatinput').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) poll(true); });
-  window.addEventListener('storage',()=>{ S.loggedIn=!!token(); render(); });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) connectWS(); });
+  // Cambio de sesión en otra pestaña (login/logout): reconectar con el nuevo token.
+  window.addEventListener('storage',()=>{ S.loggedIn=!!token(); reconnectWS(); render(); });
   setInterval(tickClock,250);
-  poll(true);
+  connectWS();
 }
+window.exiReconnectWS=function(){ try{ reconnectWS(); }catch(e){} }; // para que el logout de la barra reconecte sin sesión
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 </script>
 
@@ -718,7 +805,7 @@ var ic;if(av){ic=el('img','width:30px; height:30px; border-radius:50%; object-fi
 var sp=el('span','color:#f3ead6; font-weight:700; font-size:12px; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;',nm);
 var prof=el('a','padding:3px 10px; border-radius:14px; border:1px solid rgba(240,165,46,.4); background:rgba(240,165,46,.1); color:#f0a52e; font-size:10px; text-decoration:none;','Mi Perfil');prof.href='casino-profile.html';
 var out=el('button','padding:3px 9px; border-radius:14px; border:1px solid rgba(207,106,100,.4); background:transparent; color:#cf6a64; font-size:10px; cursor:pointer;','Salir');out.type='button';
-out.onclick=function(){localStorage.removeItem('exi_tk');localStorage.removeItem('exi_nm');localStorage.removeItem('exi_av');renderDc();try{S.loggedIn=false;render();}catch(e){}};
+out.onclick=function(){localStorage.removeItem('exi_tk');localStorage.removeItem('exi_nm');localStorage.removeItem('exi_av');renderDc();try{S.loggedIn=false;render();}catch(e){}try{window.exiReconnectWS&&window.exiReconnectWS();}catch(e){}};
 wrap.appendChild(ic);wrap.appendChild(sp);wrap.appendChild(prof);wrap.appendChild(out);dc.appendChild(wrap);
 }else{
 var btn=el('button','display:flex; align-items:center; gap:7px; padding:7px 16px; border-radius:24px; border:none; background:linear-gradient(150deg,#5865F2,#4752C4); color:#fff; font-weight:700; font-size:12px; cursor:pointer; box-shadow:0 4px 14px rgba(88,101,242,.45);');btn.type='button';

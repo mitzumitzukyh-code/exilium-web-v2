@@ -7,22 +7,28 @@ Incluye sistema de progresión PvP (Battle Pass), Sala de PandaCoins (casino mul
 
 | Componente | URL |
 |---|---|
-| 🌐 **Web principal** | [exilium-battlepass.pages.dev](https://exilium-battlepass.pages.dev) |
-| 🎰 **Casino PandaCoins** | [exilium-battlepass.pages.dev/sala-pandacoins-standalone.html](https://exilium-battlepass.pages.dev/sala-pandacoins-standalone.html) |
-| 🔧 **Panel Admin** | [exilium-battlepass.pages.dev/admin.html](https://exilium-battlepass.pages.dev/admin.html) |
-| ⚙️ **API Backend** | `https://exilium-blizzard.mitzumitzukyhs.workers.dev` |
+| 🌐 **Web principal** | [www.guild-exilium.com](https://www.guild-exilium.com) |
+| 🎰 **Casino PandaCoins** | [www.guild-exilium.com/sala-pandacoins-standalone](https://www.guild-exilium.com/sala-pandacoins-standalone) |
+| 🔧 **Panel Admin** | [www.guild-exilium.com/admin.html](https://www.guild-exilium.com/admin.html) |
+| ⚙️ **API Backend** | `https://api.guild-exilium.com` |
 
-> **Nota:** Si ves caracteres raros o la página no carga, haz **Ctrl+F5** (hard refresh) para limpiar la caché del navegador.
+> **Dominio propio** `guild-exilium.com` (Cloudflare Registrar): el apex redirige a `www`.
+> URLs antiguas siguen activas como respaldo: `exilium-battlepass.pages.dev` (web) y
+> `exilium-blizzard.mitzumitzukyhs.workers.dev` (API).
+>
+> **Nota:** Si ves algo raro o no carga, haz **Ctrl+Shift+R** (hard refresh) para limpiar la caché.
 
 ## Arquitectura
 
-| Componente | Tecnología | URL |
+| Componente | Tecnología | URL / Recurso |
 |---|---|---|
-| Frontend | HTML/CSS/JS estático (Cloudflare Pages) | [exilium-battlepass.pages.dev](https://exilium-battlepass.pages.dev) |
-| Backend API | Cloudflare Workers | `exilium-blizzard.mitzumitzukyhs.workers.dev` |
-| Base de datos | Cloudflare KV | Namespace `EXILIUM_KV` |
+| Frontend | HTML/CSS/JS estático (Cloudflare Pages) | `www.guild-exilium.com` (proyecto Pages `exilium-battlepass`) |
+| Backend API | Cloudflare Workers | `api.guild-exilium.com` (worker `exilium-blizzard`) |
+| **Casino tiempo real** | **Cloudflare Durable Object + WebSockets** | DO `CasinoTable` (binding `CASINO_TABLE`) |
+| Base de datos | Cloudflare KV | Namespace `EXILIUM_KV` (saldos, usuarios, config, historial) |
 | Media Storage | Cloudflare R2 | Bucket `exilium-media` |
 | Automatización | N8N Cloud | Webhook → Discord |
+| Plan | **Workers Paid ($5/mes)** | Habilita Durable Objects y sube límites KV |
 
 ## Estructura del Proyecto
 
@@ -50,7 +56,8 @@ exilium-web-v2/
 │
 ├── worker/                          # Backend (Cloudflare Worker)
 │   ├── index.js                     # Router principal + endpoints API
-│   ├── casino.js                    # 🎰 Lógica del casino (máquina de estados, apuestas, pagos)
+│   ├── casino-do.js                 # 🔴 Durable Object CasinoTable (tiempo real: WebSockets, ronda, pagos) — ACTUAL
+│   ├── casino.js                    # 🎰 Funciones puras (resolveBets, validación) + path KV viejo (deprecado)
 │   ├── casino-auth.js               # 🔐 Autenticación del casino (sesiones KV)
 │   ├── discord-auth.js              # 🔗 Login con Discord OAuth
 │   ├── players.js                   # CRUD jugadores, sync, XP, bodas
@@ -119,52 +126,42 @@ Casino multijugador en tiempo real con ruleta europea (37 sectores).
 | `POST` | `/api/casino/auth/register` | Registrarse |
 | `GET`  | `/api/casino/auth/discord` | Inicia OAuth con Discord (redirect) |
 | `GET`  | `/api/casino/auth/discord/callback` | Callback OAuth (code → sesión) |
+| `WS`   | `/api/casino/ws?token=...` | 🔴 **Tiempo real** — conexión WebSocket al Durable Object (estado, apuestas, chat, giro) |
 
-### Lógica de negocio: Registro Discord, Chat y Asientos
+> Los endpoints HTTP `GET /api/casino/state` y los `POST` de juego pertenecen al **sistema viejo KV (deprecado)**; el casino actual usa el **WebSocket** del Durable Object para todo el juego en vivo. Siguen presentes pero el frontend ya no los usa.
 
-> **Estado actual:** `sala-pandacoins-standalone.html` es un **rediseño visual ("Ruleta Exilium Guild")** que hoy funciona como **maqueta autónoma**: todo el estado (saldo, asientos, chat, giro) está *hardcodeado* en el JS del propio HTML y la ruleta gira con `Math.random()` local. El backend (`worker/casino.js`, `casino-auth.js`, `discord-auth.js`) ya existe; falta **cablear** esta UI a esos endpoints. Abajo el diseño objetivo.
+### Cómo funciona el casino en TIEMPO REAL (Durable Object + WebSockets)
 
-**1. Registro / Login con Discord (OAuth2)**
+> Desde **28-jun-2026** la mesa es un **Durable Object** (`worker/casino-do.js`, clase `CasinoTable`) con **WebSockets**. Reemplaza el viejo polling a KV (que era *eventualmente consistente* → cada jugador veía un estado distinto/retrasado). Ahora **todos los conectados a la misma mesa ven lo mismo al instante**: mismo countdown, mismas apuestas, mismo giro.
+
+**1. Login con Discord (OAuth2)** — sin cambios respecto al backend existente:
 
 ```
-[Botón "Entrar con Discord"]
-      │  redirect
-      ▼
-discord.com/oauth2/authorize?client_id=DISCORD_CLIENT_ID
-   &redirect_uri=FRONTEND_URL/api/casino/auth/discord/callback
-   &response_type=code&scope=identify%20guilds
-      │  el usuario autoriza → Discord redirige con ?code=...
-      ▼
-Worker /api/casino/auth/discord/callback
-   1. Intercambia `code` por access_token (usa DISCORD_CLIENT_SECRET)
-   2. GET /users/@me           → id, username, avatar
-   3. GET /users/@me/guilds    → verifica que pertenece a EXILIUM_GUILD_ID
-   4. KV upsert casino:user:{discordId}  (saldo inicial si es nuevo)
-   5. Crea sesión: casino:session:{token} → { userId, exp }
-   6. Devuelve el token (cookie httpOnly o localStorage) y redirige al casino
+[Entrar con Discord] → discord.com/oauth2/authorize (scope identify guilds)
+   → Worker /api/casino/auth/discord/callback
+        1. code → access_token (DISCORD_CLIENT_SECRET)
+        2. GET /users/@me  → id, username, avatar_url
+        3. GET /users/@me/guilds → verifica pertenencia a EXILIUM_GUILD_ID
+        4. KV upsert casino:user:{id}  (saldo + avatar_url; saldo inicial si es nuevo)
+        5. casino:session:{token} → { user_id, name }   (TTL)
+        6. redirige al casino con ?token=&name=&avatar=
 ```
+El `redirect_uri` lo deriva el worker del host de la petición → debe estar registrado en el portal de Discord (`api.guild-exilium.com/.../callback` y los de respaldo).
 
-- Cada request posterior manda el token; `casino-auth.js` lo valida contra `casino:session:{token}`.
-- Solo miembros del Discord de Exilium pueden jugar (gate por `EXILIUM_GUILD_ID`).
-- El saldo vive server-side en `casino:user:{id}` — nunca confiar en el saldo del cliente.
+**2. Conexión WebSocket** — `wss://api.guild-exilium.com/api/casino/ws?token=<exi_tk>`:
+- El worker enruta a la **única instancia** del DO (`idFromName('main')`). El DO valida el token contra `casino:session:{token}`.
+- **Mensajes cliente → servidor:** `{type: sit | stand | bet | clear | ready | chat | ping}`.
+- **Mensajes servidor → cliente:** `{type:'state', ...}` (snapshot completo con seats[].bets, avatares, countdown, `bigwin`), `{type:'me', balance}` (saldo por jugador), `{type:'error', message}`.
 
-**2. Chat de sala**
+**3. Motor de ronda** (en el DO, no por request):
+- Estado/seats/chat persistidos en `ctx.storage`; el reloj de la ronda lo lleva `ctx.storage.setAlarm()`. **Saldos en KV** `casino:user:{id}` (perfil/leaderboard/admin lo siguen leyendo).
+- `betting` → `spinning` cuando **TODOS los sentados marcan LISTO** o **vence el timer (20s)**. Solo (1 sentado) gira al instante con LISTO. RNG **server-side**.
+- `spinning` (4s) → `resolving` → `result` (4s): paga **solo lo apostado a aciertos + ganancias** (lo perdido se lo queda la casa), registra transacción e historial.
+- Si alguien **acierta el PLENO** (`number:X`), el DO marca `bigwin` → el frontend reproduce el **video de celebración** para todos.
 
-- Enviar: `POST /api/casino/chat { text }` con token → el worker valida sesión, aplica **rate-limit anti-spam** (p. ej. 1 msg / 2 s por usuario), sanitiza y hace *append* a `casino:chat` (lista en KV, se conservan los últimos ~30-50 mensajes).
-- Recibir: el cliente **hace polling** de `GET /api/casino/state` cada ~1-2 s y renderiza el array `chat`. KV no tiene pub/sub, por eso polling. Para chat verdaderamente en tiempo real conviene un **Durable Object + WebSocket** (pendiente).
-- Mensajes de sistema (entradas/salidas, resultados de giro) los inyecta el propio worker en `casino:chat`.
+**4. Robustez:** al conectar, el DO hace *catch-up* (`_advance`) por si un temporizador venció estando inactivo (tras redeploy/hibernación) → nunca queda "atascado".
 
-**3. Asientos (mesa multijugador)**
-
-- Sentarse / levantarse: `POST /api/casino/seat { action:'sit'|'leave' }` con token → el worker actualiza `casino:seats` (array de 5: `null` o `{ userId, name, cls, ready }`) de forma atómica para evitar choques de concurrencia.
-- El estado de asientos se propaga a todos vía el polling de `/api/casino/state`.
-- **Máquina de estados de la ronda** (`casino:state`, en `worker/casino.js`):
-  1. `betting` — los sentados colocan apuestas (`/api/casino/bet`) y marcan `ready` (`/api/casino/ready`).
-  2. Cuando **todos los sentados están listos** o **expira el timer** (~20 s) → el servidor genera el número ganador (**RNG autoritativo server-side**, nunca el cliente).
-  3. `resolving` — resuelve apuestas, actualiza saldos en `casino:user:{id}`, registra en `casino:transactions:{id}` y `casino:rounds_history`, añade el número al historial.
-  4. Vuelve a `betting`. Todos los clientes ven el mismo giro porque leen el mismo `casino:state`.
-
-> **Nota KV (free tier):** KV es *eventually consistent* y tiene límite de escrituras. El casino usa un **snapshot cacheado** para no escribir en cada request (ver memoria del proyecto). Real-time fuerte (giro sincronizado al milisegundo, chat instantáneo) requiere migrar a **Durable Objects**; el modelo actual de polling es el compromiso barato sobre Pages+KV.
+> **Saldo siempre server-side** en `casino:user:{id}` — nunca se confía en el cliente. Solo miembros del Discord de Exilium pueden jugar (gate `EXILIUM_GUILD_ID`).
 
 ## Variables de Entorno (Worker)
 
@@ -185,18 +182,21 @@ Configurar en Cloudflare Dashboard → Workers → Settings → Variables:
 
 ## Despliegue
 
+> ⚠️ **El frontend NO se despliega con `git push`.** Cloudflare Pages está como **subida directa**:
+> hay que ejecutar `wrangler pages deploy`. El `git push` solo guarda el código en el repo.
+
 ```bash
-# Worker (backend) - actualiza la API
+# Worker (backend + Durable Object CasinoTable) — actualiza la API
 npx wrangler deploy
 
-# Pages (frontend) - actualiza preview
-npx wrangler pages deploy deploy/ --project-name exilium-battlepass
-
-# Pages a producción (branch main)
-npx wrangler pages deploy deploy/ --project-name exilium-battlepass --branch main
+# Frontend a producción (sube TODA la carpeta deploy/ tal cual está en disco)
+npx wrangler pages deploy deploy/ --project-name exilium-battlepass --branch main --commit-dirty=true
 ```
 
-> La URL principal (`exilium-battlepass.pages.dev`) se actualiza automáticamente al hacer `git push` a la rama `main`.
+- El worker sirve en `api.guild-exilium.com` (custom domain en `wrangler.toml` con `custom_domain = true`)
+  y también en `...workers.dev` (mantener `workers_dev = true`; si se quita, wrangler **desactiva** esa URL).
+- El Durable Object se declara en `wrangler.toml` (`[[durable_objects.bindings]]` + `[[migrations]] new_sqlite_classes`). Requiere **Workers Paid**.
+- Tras desplegar, **Ctrl+Shift+R** en el navegador (el HTML va con `max-age=0` pero las pestañas abiertas no recargan solas).
 
 ## Tests
 
@@ -219,13 +219,12 @@ El worker ejecuta cada 30 minutos (`*/30 * * * *`):
 | Key | Descripción |
 |---|---|
 | `player:{id}` | Datos de cada jugador |
-| `casino:state` | Estado de la sala del casino |
-| `casino:seats` | Asientos ocupados |
-| `casino:chat` | Mensajes del chat |
-| `casino:user:{id}` | Usuario del casino |
+| `casino:user:{id}` | Usuario del casino (saldo, avatar_url, stats) — **fuente de verdad del saldo** |
+| `casino:session:{token}` | Sesión activa (validada en cada conexión WS) |
 | `casino:transactions:{id}` | Transacciones del casino |
-| `casino:rounds_history` | Historial de rondas |
-| `casino:config` | Configuración del casino |
+| `casino:rounds_history` | Historial de rondas (también lo lee el admin) |
+| `casino:config` | Configuración del casino (duraciones, min/max, asientos) |
+| ~~`casino:state` / `casino:seats` / `casino:chat`~~ | ⚪ Estado/asientos/chat — ahora viven en el **Durable Object** (`ctx.storage`), no en KV. Estas keys son del path viejo |
 | `config:hall_of_fame` | Salón de la Fama |
 | `config:officers` | Oficiales de la guild |
 | `config:battlepass_rewards` | Recompensas del pase |
@@ -237,6 +236,29 @@ El worker ejecuta cada 30 minutos (`*/30 * * * *`):
 ## 📓 Changelog / Diario de cambios
 
 > Registro cronológico de cambios y estado de cada función de la web.
+
+### 2026-06-28 — Dominio propio + casino TIEMPO REAL (Durable Object + WebSockets) + video de pleno
+
+**🌐 Dominio `guild-exilium.com`** (Cloudflare Registrar):
+- Web → `www.guild-exilium.com` (apex 301 → www). API → `api.guild-exilium.com` (worker custom domain en `wrangler.toml`, `workers.dev` mantenido). Frontend del casino + Mi Perfil apuntan a la API nueva; resto del sitio sigue en workers.dev (CORS `*`).
+- Tags `canonical`/`og:`/`twitter:`/schema → `www.guild-exilium.com` (arregla el preview al compartir en redes). Callback de Discord añadido para `api.guild-exilium.com`.
+
+**🔴 Casino multijugador en TIEMPO REAL** (el cambio grande):
+- Nuevo **Durable Object `CasinoTable`** (`worker/casino-do.js`) + **WebSockets**. Reemplaza el polling a KV (que era eventualmente consistente → cada jugador veía un estado distinto/retrasado; chat con lag; giros desincronizados). Ahora **todos ven lo mismo al instante**: mismo countdown, apuestas de los demás en vivo, mismo giro.
+- Frontend reescrito a WebSocket (`connectWS`/`wsSend` en `sala-pandacoins-standalone.html`); saldo por mensajes `me`; reconexión automática; *catch-up* al conectar (no queda atascado).
+- **Regla de giro corregida**: espera a que **TODOS los sentados** marquen LISTO (antes solo esperaba a los que ya habían apostado → giraba sin esperar a los demás). Solo (1 sentado) gira al instante.
+- **🔴 Fix económico**: el pago era `total_bet + total_win` → reembolsaba también las apuestas perdedoras (**nadie perdía nunca**). Ahora paga `apuestas_ganadoras + ganancias`; lo perdido se lo queda la casa. (Saldos viejos quedaron inflados; no se revirtió.)
+- **Avatares de Discord** en los asientos; **apuestas de otros** visibles en el tablero (puntos de color por jugador).
+
+**🎬 Video de celebración de PLENO**:
+- Cuando un jugador acierta un **número pleno** (`number:X`, ej. apuesta al 3 y sale 3) — **nunca** con color/par/docena/columna — se reproduce `assets/celebration.mp4` a pantalla completa con el **avatar(es) + número + ganancia**, ocultando el casino; al terminar reaparece. Lo ven **todos**. Degrada a un cartel 6s si falta el archivo.
+
+**🎨 UI del casino**: popup grande de apuestas (barra de tiempo + avatares + qué apostó cada uno + confirmar); fichas **1 / 5 / 10** (antes 10/50/200); quitados los recuadros GANADAS/PERDIDAS/NETO; hover en ½ · ×2 · Limpiar.
+
+**🩹 Bugs corregidos (sesión)**:
+- Casino: chat 500 (`expirationTtl:35` < mínimo 60s de KV) · ruleta mostraba el resultado antes de frenar · sonidos win/lose (sonaba "perder" en cada giro por la palabra "acompañe", "ganar" nunca) · detección de victorias (`last_result` se leía de `my_seat` en vez de `seats[is_me]`) · chat reubicado abajo.
+- Sitio: `player-profile.html` XSS reflejado vía `?id` (escapado) · `dashboard.html` `event.currentTarget` reventaba al crear pedido · `login.html` open-redirect vía `?redirect` · `boosting.html` el orden por precio destruía el orden original.
+- **Sistema de diagnóstico** (`?debug=1`): panel 🐞, toasts con el error real, log persistente (consola + localStorage).
 
 ### 2026-06-27 (tarde) — Casino reconstruido como web limpia + cableado + perfil de jugador
 
@@ -294,9 +316,12 @@ Solo UI/UX (el juego sigue siendo maqueta local). Cada edit valida el JSON del t
 |---|---|
 | Web pública (Battle Pass, ranking, perfil) | ✅ En producción |
 | Panel admin (CRUD, sync, casino admin) | ✅ En producción |
-| Casino — motor de ruleta backend (`worker/casino.js`) | ✅ Implementado + 42 tests |
-| Casino — auth (nombre+pass / Discord OAuth) | ✅ Backend listo |
-| 🎰 **`sala-pandacoins-standalone.html`** — diseño "Ruleta Exilium Guild" (HTML/JS limpio, asientos, tamaños, hover de iluminación) | 🟢 **VERSIÓN ÚNICA Y OFICIAL del casino.** Cableada al backend y en producción. Editable directamente (ya NO es bundle) |
+| 🔴 **Casino TIEMPO REAL — Durable Object + WebSockets** (`worker/casino-do.js`) | ✅ **En producción.** Mesa compartida sincronizada (estado/apuestas/chat/giro en vivo) |
+| Casino — motor puro de ruleta (`worker/casino.js`: resolveBets, validación) | ✅ Implementado + 42 tests (reutilizado por el DO) |
+| Casino — auth Discord OAuth (saldo + avatar server-side) | ✅ En producción |
+| Casino — **video de celebración de PLENO** (`assets/celebration.mp4`) | ✅ En producción (solo number:X; lo ven todos) |
+| Casino — apuestas de otros visibles + avatares en asientos + popup de apuestas | ✅ En producción |
+| 🎰 **`sala-pandacoins-standalone.html`** — cliente del casino (WebSocket) | 🟢 **VERSIÓN ÚNICA Y OFICIAL.** En producción, editable directamente |
 | Casino — diseño VIEJO Three.js (`js/casino.js` + `js/casino-wheel.js`) | ⚪ **DEPRECADO** — reemplazado; no usar |
 | Casino — hover highlight del tapete | ✅ Implementado (standalone) |
 | Casino — asientos (fila arriba de la ruleta) | ✅ Implementado (standalone, visual) |

@@ -51,6 +51,8 @@ import {
   handleAdminKick, handleAdminResetState, handleAdminClearCasinoRounds,
   handleAdminGetRound, handleAdminGetAdvancedStats,
 } from './casino.js';
+import { CasinoTable } from './casino-do.js';
+export { CasinoTable };
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
@@ -1026,6 +1028,14 @@ export default {
   async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
+    }
+
+    // WebSocket del casino en tiempo real → Durable Object.
+    // Debe devolverse TAL CUAL (status 101 + webSocket); no puede pasar por el
+    // envoltorio CORS de abajo (new Response(...) perdería la propiedad webSocket).
+    if (new URL(request.url).pathname === '/api/casino/ws') {
+      const id = env.CASINO_TABLE.idFromName('main');
+      return env.CASINO_TABLE.get(id).fetch(request);
     }
 
     let response;

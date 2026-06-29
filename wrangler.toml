@@ -14,6 +14,15 @@ routes = [
 [triggers]
 crons = ["*/30 * * * *", "0 */6 * * *", "* * * * *"]
 
+# Durable Object: mesa de ruleta en tiempo real (WebSockets, estado fuerte).
+[[durable_objects.bindings]]
+name = "CASINO_TABLE"
+class_name = "CasinoTable"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["CasinoTable"]
+
 [[kv_namespaces]]
 binding = "EXILIUM_KV"
 id = "2d6d2badfc184b408f6c5af7e380d6be"

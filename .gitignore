@@ -35,3 +35,6 @@ assets/videos/
 *.mov
 *.avi
 *.bak
+
+# Excepción: el video de celebración del casino SÍ se versiona (2.6 MB, muy por debajo del límite de GitHub)
+!deploy/assets/celebration.mp4
