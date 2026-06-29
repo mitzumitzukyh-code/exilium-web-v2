@@ -24,6 +24,13 @@
   .exi-act{ transition:all .15s ease; }
   .exi-act:hover{ border-color:#f0a52e!important; background:rgba(240,165,46,.2)!important; color:#f7c168!important; transform:translateY(-2px); box-shadow:0 4px 14px rgba(240,165,46,.45); }
   .exi-act-clear:hover{ border-color:#cf6a64!important; background:rgba(181,26,26,.24)!important; color:#ff9a93!important; box-shadow:0 4px 14px rgba(207,106,100,.45); }
+  /* Animación universal de TODOS los botones: hover con brillo, "press" al click, disabled atenuado */
+  button{ transition:transform .12s ease, filter .15s ease, box-shadow .15s ease, background .15s ease; }
+  button:not(:disabled):hover{ filter:brightness(1.13) saturate(1.06); }
+  button:not(:disabled):active{ transform:scale(.94)!important; }
+  button:disabled{ filter:grayscale(.35) brightness(.82); cursor:default; }
+  @keyframes exiPulseBtn{ 0%,100%{ box-shadow:0 0 0 0 rgba(240,165,46,.55), 0 10px 26px -8px rgba(240,165,46,.6); } 50%{ box-shadow:0 0 0 7px rgba(240,165,46,0), 0 10px 26px -8px rgba(240,165,46,.6); } }
+  #readybtn:not(:disabled){ animation:exiPulseBtn 2.1s ease-in-out infinite; }
   @media (max-width:900px){ #exi-topbar{ gap:6px!important; } #exi-topbar .exi-hide-sm{ display:none!important; } #exi-topbar button{ padding:7px 11px!important; } }
   @media (max-width:1100px){ #exi-arena{ grid-template-columns:minmax(158px,188px) minmax(0,1fr) minmax(176px,210px)!important; gap:8px!important; } }
   @media (max-width:820px){ #exi-stage{ height:auto!important; min-height:100vh!important; overflow:auto!important; } #exi-arena{ grid-template-columns:1fr!important; } #exi-board{ overflow-x:auto!important; } #exi-board>div{ min-width:600px!important; } #exi-topbar{ position:static!important; transform:none!important; margin:8px auto 0!important; justify-content:center!important; } }
