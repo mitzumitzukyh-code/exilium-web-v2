@@ -313,6 +313,9 @@ export class CasinoTable {
   async alarm() {
     await this._loadConfig();
     await this._advance();
+    await this._persist();   // CRÍTICO: el DO puede hibernar tras el alarm; sin esto, al
+                             // despertar recargaba estado viejo (ronda hacia atrás, "no estás
+                             // en fase de apuestas", número fantasma, video repetido).
     this._broadcast();
     await this._scheduleAlarm();
   }

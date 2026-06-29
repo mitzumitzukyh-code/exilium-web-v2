@@ -330,12 +330,14 @@ function wsSend(obj){
 function connectWS(){
   clearTimeout(_wsReconnect);
   if(_ws && (_ws.readyState===0 || _ws.readyState===1)) return; // ya conectando/abierto
+  // Limpiar cualquier socket viejo (cerrando/cerrado) para que su onclose no dispare otra reconexión.
+  if(_ws){ try{ _ws.onopen=_ws.onmessage=_ws.onclose=_ws.onerror=null; _ws.close(); }catch(e){} _ws=null; }
   let sock; try{ sock=new WebSocket(wsUrl()); }catch(e){ scheduleReconnect(); return; }
   _ws=sock;
   sock.onopen=()=>{ _wsBackoff=1000; if(window.EXIDBG) EXIDBG.event('ws','conectado'); };
-  sock.onmessage=(ev)=>{ let d; try{ d=JSON.parse(ev.data); }catch(e){ return; } onWsMessage(d); };
-  sock.onclose=()=>{ if(window.EXIDBG) EXIDBG.event('ws','cerrado · reconectando…'); scheduleReconnect(); };
-  sock.onerror=()=>{ if(window.EXIDBG) EXIDBG.log('warn','ws','error de socket'); try{ sock.close(); }catch(e){} };
+  sock.onmessage=(ev)=>{ if(_ws!==sock) return; let d; try{ d=JSON.parse(ev.data); }catch(e){ return; } onWsMessage(d); };
+  sock.onclose=()=>{ if(_ws!==sock) return; if(window.EXIDBG) EXIDBG.event('ws','cerrado · reconectando…'); scheduleReconnect(); };
+  sock.onerror=()=>{ if(_ws!==sock) return; if(window.EXIDBG) EXIDBG.log('warn','ws','error de socket'); try{ sock.close(); }catch(e){} };
 }
 function scheduleReconnect(){ clearTimeout(_wsReconnect); if(document.hidden) return; _wsReconnect=setTimeout(connectWS, _wsBackoff); _wsBackoff=Math.min(_wsBackoff*1.6, 10000); }
 function reconnectWS(){ try{ if(_ws) _ws.close(); }catch(e){} _ws=null; connectWS(); }
@@ -560,8 +562,12 @@ function onWheelSettled(){ _wheelSettled=true; if(window.EXIDBG) EXIDBG.event('r
 // ── Video de celebración: SOLO cuando alguien gana al PLENO (number:X). Lo ven todos. ──
 function maybePlayBigwin(){
   if(!S.bigwin || !_wheelSettled) return;
-  if(_bigwinRound===S.roundId) return;        // una sola vez por ronda
+  if(_bigwinRound===S.roundId) return;        // una sola vez por ronda en esta sesión
+  // No repetir un pleno ya visto (al volver de "Mi Perfil" o reconectar). Se recuerda en localStorage.
+  let seen=0; try{ seen=Number(localStorage.getItem('exi_bw_seen')||0)||0; }catch(e){}
   _bigwinRound=S.roundId;
+  if(S.roundId<=seen) return;                 // ya se mostró esta ronda (o una anterior)
+  try{ localStorage.setItem('exi_bw_seen', String(S.roundId)); }catch(e){}
   if(window.EXIDBG) EXIDBG.event('bigwin','PLENO '+S.bigwin.number+' · '+(S.bigwin.winners||[]).map(w=>w.name).join(', '));
   playWinVideo(S.bigwin);
 }
