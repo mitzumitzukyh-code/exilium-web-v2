@@ -13,7 +13,7 @@
 // ════════════════════════════════════════════════════════════════════
 
 import { WHEEL_SEQUENCE, colorOf, resolveBets, isValidBetKey } from './casino.js';
-import { SHOP_CATALOG, SHOP_SLOTS, shopItem } from './casino-shop.js';
+import { SHOP_CATALOG, SHOP_SLOTS, getCatalog } from './casino-shop.js';
 
 const DEFAULT_CONFIG = {
   betting_duration: 20,
@@ -74,6 +74,15 @@ export class CasinoTable {
     return this.config;
   }
 
+  // Catálogo de la tienda (editado por el admin en KV, o el del código). Cache 30s.
+  async _loadShop() {
+    if (this.shopCatalog && Date.now() - (this._shopLoadedAt || 0) < 30_000) return this.shopCatalog;
+    this.shopCatalog = await getCatalog(this.env);
+    this._shopLoadedAt = Date.now();
+    return this.shopCatalog;
+  }
+  _shopItem(id) { return (this.shopCatalog || SHOP_CATALOG).find(x => x.id === id) || null; }
+
   // ── KV: usuarios (saldos) ──
   async _getUser(userId) {
     return await this.env.EXILIUM_KV.get(`casino:user:${userId}`, 'json');
@@ -128,8 +137,9 @@ export class CasinoTable {
       await this._scheduleAlarm();
       this._broadcast(); // incluye al recién conectado (y refresca a los demás si cambió)
       if (user) {
+        await this._loadShop();
         this._send(server, { type: 'me', balance: user.balance, name: user.name, avatar_url: user.avatar_url || null });
-        this._send(server, { type: 'shop', catalog: SHOP_CATALOG, owned: user.decorations || [], equipped: user.equipped || {} });
+        this._send(server, { type: 'shop', catalog: this.shopCatalog, owned: user.decorations || [], equipped: user.equipped || {} });
       }
       return new Response(null, { status: 101, webSocket: client });
     }
@@ -323,7 +333,8 @@ export class CasinoTable {
 
   // ── Tienda de decoraciones (compra permanente con PandaCoins) ──
   async _shopBuy(ws, session, id) {
-    const item = shopItem(id);
+    await this._loadShop();
+    const item = this._shopItem(id);
     if (!item) { this._send(ws, { type: 'error', message: 'Decoración no encontrada.' }); return; }
     const user = await this._getUser(session.user_id);
     if (!user) return;
@@ -333,12 +344,21 @@ export class CasinoTable {
     user.balance -= item.price;
     user.decorations.push(id);
     await this._setUser(user);
+    // Registrar la venta (para el panel admin) + transacción del usuario.
+    const now = Date.now();
+    try {
+      const sales = (await this.env.EXILIUM_KV.get('casino:shop_sales', 'json')) || [];
+      sales.unshift({ user_id: user.id, name: user.name, item_id: item.id, item_name: item.name, price: item.price, ts: now });
+      await this.env.EXILIUM_KV.put('casino:shop_sales', JSON.stringify(sales.slice(0, 500)));
+    } catch (_) {}
+    await this._appendTransaction(user.id, { type: 'shop_buy', item: item.id, item_name: item.name, price: item.price, balance_after: user.balance, ts: now });
     this._send(ws, { type: 'me', balance: user.balance });
-    this._send(ws, { type: 'shop', catalog: SHOP_CATALOG, owned: user.decorations, equipped: user.equipped || {} });
+    this._send(ws, { type: 'shop', catalog: this.shopCatalog, owned: user.decorations, equipped: user.equipped || {} });
   }
 
   async _shopEquip(ws, session, slot, id) {
     if (!SHOP_SLOTS.includes(slot)) { this._send(ws, { type: 'error', message: 'Ranura inválida.' }); return; }
+    await this._loadShop();
     const user = await this._getUser(session.user_id);
     if (!user) return;
     user.decorations = user.decorations || [];
@@ -346,7 +366,7 @@ export class CasinoTable {
     if (id == null || id === '') {
       delete user.equipped[slot]; // desequipar
     } else {
-      const item = shopItem(id);
+      const item = this._shopItem(id);
       if (!item || item.slot !== slot) { this._send(ws, { type: 'error', message: 'Decoración inválida.' }); return; }
       if (!user.decorations.includes(id)) { this._send(ws, { type: 'error', message: 'No posees esa decoración.' }); return; }
       user.equipped[slot] = id;
@@ -355,7 +375,7 @@ export class CasinoTable {
     // Reflejar en el asiento (si está sentado) y difundir a todos.
     const seat = this.seats.find(s => s.user_id === session.user_id);
     if (seat) { seat.equipped = user.equipped; await this._persist(); this._broadcast(); }
-    this._send(ws, { type: 'shop', catalog: SHOP_CATALOG, owned: user.decorations, equipped: user.equipped });
+    this._send(ws, { type: 'shop', catalog: this.shopCatalog, owned: user.decorations, equipped: user.equipped });
   }
 
   // ════════════════════════════════════════════════════════════════

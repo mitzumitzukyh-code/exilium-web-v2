@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · Tienda del Casino — Exilium</title>
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ background:#0c0a08; color:#f3ead6; font-family:'Inter',system-ui,sans-serif; min-height:100vh; padding:24px clamp(12px,3vw,40px); }
+  h1{ font-size:22px; color:#f0a52e; margin-bottom:4px; }
+  .sub{ color:#9c8156; font-size:13px; margin-bottom:20px; }
+  .card{ background:linear-gradient(180deg,#16110c,#0e0a07); border:1px solid rgba(240,165,46,.2); border-radius:14px; padding:18px; margin-bottom:18px; }
+  .card h2{ font-size:15px; color:#e9d4a0; letter-spacing:.08em; text-transform:uppercase; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  input,select{ background:rgba(0,0,0,.4); border:1px solid rgba(240,165,46,.25); border-radius:7px; padding:7px 9px; color:#f3ead6; font-size:13px; outline:none; font-family:inherit; }
+  input:focus,select:focus{ border-color:#f0a52e; }
+  button{ cursor:pointer; border-radius:8px; font-weight:700; font-size:13px; padding:9px 16px; border:1px solid rgba(240,165,46,.4); background:linear-gradient(180deg,#f7c168,#f0a52e 60%,#b97916); color:#2a1a06; transition:filter .15s, transform .1s; }
+  button:hover{ filter:brightness(1.08); } button:active{ transform:scale(.96); }
+  button.ghost{ background:rgba(0,0,0,.3); color:#e9d4a0; }
+  button.danger{ background:rgba(181,26,26,.18); color:#cf6a64; border-color:rgba(207,106,100,.4); }
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th,td{ text-align:left; padding:7px 8px; border-bottom:1px solid rgba(240,165,46,.1); white-space:nowrap; }
+  th{ color:#9c8156; font-size:11px; text-transform:uppercase; letter-spacing:.06em; }
+  .row-grid{ display:grid; grid-template-columns:1.2fr 1fr 1.4fr .8fr 1fr 1.6fr auto; gap:6px; align-items:center; margin-bottom:6px; }
+  .row-grid input,.row-grid select{ width:100%; }
+  .head-grid{ font-size:10px; color:#9c8156; text-transform:uppercase; letter-spacing:.05em; }
+  .stat{ display:inline-block; background:rgba(0,0,0,.3); border:1px solid rgba(240,165,46,.15); border-radius:10px; padding:10px 16px; margin:0 8px 8px 0; }
+  .stat .n{ font-size:20px; font-weight:800; color:#f0a52e; } .stat .l{ font-size:11px; color:#9c8156; text-transform:uppercase; }
+  .msg{ font-size:13px; padding:8px 12px; border-radius:8px; margin-bottom:10px; display:none; }
+  .msg.ok{ background:rgba(84,209,138,.12); border:1px solid rgba(84,209,138,.4); color:#54d18a; display:block; }
+  .msg.err{ background:rgba(207,106,100,.12); border:1px solid rgba(207,106,100,.4); color:#cf6a64; display:block; }
+  #login{ max-width:360px; margin:60px auto; }
+  .muted{ color:#9c8156; font-size:12px; }
+  a{ color:#f0a52e; }
+</style>
+</head>
+<body>
+<div id="login" class="card">
+  <h1>🎁 Admin · Tienda</h1>
+  <p class="sub">Gestión de decoraciones del casino</p>
+  <div id="login-msg" class="msg"></div>
+  <input id="pass" type="password" placeholder="Clave de administrador" style="width:100%; margin-bottom:10px;">
+  <button id="login-btn" style="width:100%;">Entrar</button>
+</div>
+
+<div id="app" style="display:none;">
+  <h1>🎁 Tienda del Casino — Administración</h1>
+  <p class="sub">Edita el catálogo y precios, y consulta las ventas. <a href="admin.html">← Panel principal</a></p>
+  <div id="msg" class="msg"></div>
+
+  <div class="card">
+    <h2>📊 Ventas</h2>
+    <div id="stats"></div>
+    <h2 style="margin-top:16px;">Por decoración</h2>
+    <div style="overflow:auto;"><table id="summary"><thead><tr><th>Decoración</th><th>Vendidas</th><th>Ingresos</th></tr></thead><tbody></tbody></table></div>
+    <h2 style="margin-top:16px;">Compras recientes</h2>
+    <div style="overflow:auto; max-height:300px;"><table id="sales"><thead><tr><th>Jugador</th><th>Decoración</th><th>Precio</th><th>Fecha</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="card">
+    <h2>🛠️ Catálogo <span class="muted" style="text-transform:none; letter-spacing:0;">— edita, añade o quita decoraciones</span></h2>
+    <div class="row-grid head-grid"><span>ID (único)</span><span>Ranura</span><span>Nombre</span><span>Precio</span><span>Rareza</span><span>Imagen (opcional)</span><span></span></div>
+    <div id="rows"></div>
+    <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+      <button id="add-row" class="ghost">＋ Añadir decoración</button>
+      <button id="restore" class="ghost">↩ Restaurar por defecto</button>
+      <button id="save">💾 Guardar catálogo</button>
+    </div>
+    <p class="muted" style="margin-top:10px;">Ranuras: <b>avatar_frame</b> (marco), <b>name_effect</b> (nombre), <b>chip_skin</b> (fichas). El aspecto visual lo define el CSS por el ID (ej. <code>frame_gold</code>). Para una decoración con imagen, pon la ruta en "Imagen" (ej. <code>assets/decorations/wings.png</code>).</p>
+  </div>
+</div>
+
+<script>
+const API='https://api.guild-exilium.com';
+let TOKEN=sessionStorage.getItem('admin_token')||'';
+let DEFAULT_CATALOG=[];
+const $=id=>document.getElementById(id);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmt(n){ return Number(n||0).toLocaleString('es'); }
+function msg(el,text,ok){ el.textContent=text; el.className='msg '+(ok?'ok':'err'); setTimeout(()=>{ el.className='msg'; },4000); }
+
+async function adminFetch(path,opts){
+  opts=opts||{}; const headers=Object.assign({'Authorization':'Bearer '+TOKEN}, opts.headers||{});
+  if(opts.body) headers['Content-Type']='application/json';
+  const res=await fetch(API+path,{ method:opts.method||'GET', headers, body:opts.body?JSON.stringify(opts.body):undefined });
+  let data=null; try{ data=await res.json(); }catch(e){}
+  return { ok:res.ok, status:res.status, data:data||{} };
+}
+
+async function login(){
+  const pass=$('pass').value.trim(); if(!pass) return;
+  try{
+    const res=await fetch(API+'/admin/auth',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pass}) });
+    const data=await res.json();
+    if(res.ok && data.token){ TOKEN=data.token; sessionStorage.setItem('admin_token',TOKEN); start(); }
+    else msg($('login-msg'), data.error||'Clave incorrecta.', false);
+  }catch(e){ msg($('login-msg'),'Error de conexión.',false); }
+}
+
+const SLOTS=['avatar_frame','name_effect','chip_skin'];
+function rowHtml(it){
+  it=it||{ id:'', slot:'avatar_frame', name:'', price:0, rarity:'comun', image:'' };
+  const slopts=SLOTS.map(s=>'<option value="'+s+'"'+(it.slot===s?' selected':'')+'>'+s+'</option>').join('');
+  const raropts=['comun','raro','epico','legendario'].map(r=>'<option value="'+r+'"'+(it.rarity===r?' selected':'')+'>'+r+'</option>').join('');
+  return '<div class="row-grid"><input class="f-id" value="'+esc(it.id)+'" placeholder="frame_x"><select class="f-slot">'+slopts+'</select><input class="f-name" value="'+esc(it.name)+'" placeholder="Nombre"><input class="f-price" type="number" min="0" value="'+(Number(it.price)||0)+'"><select class="f-rarity">'+raropts+'</select><input class="f-image" value="'+esc(it.image||'')+'" placeholder="(CSS por id)"><button class="danger del" type="button">✕</button></div>';
+}
+function addRow(it){ const d=document.createElement('div'); d.innerHTML=rowHtml(it); const node=d.firstChild; $('rows').appendChild(node); node.querySelector('.del').onclick=()=>node.remove(); }
+function collectCatalog(){
+  const out=[]; $('rows').querySelectorAll('.row-grid').forEach(r=>{
+    const id=r.querySelector('.f-id').value.trim(); if(!id) return;
+    out.push({ id, slot:r.querySelector('.f-slot').value, name:r.querySelector('.f-name').value.trim()||id, price:Math.max(0,Math.round(Number(r.querySelector('.f-price').value)||0)), rarity:r.querySelector('.f-rarity').value, image:r.querySelector('.f-image').value.trim()||undefined });
+  });
+  return out;
+}
+
+function renderSales(d){
+  $('stats').innerHTML='<span class="stat"><span class="n">'+fmt(d.total_sales)+'</span><span class="l">Ventas totales</span></span>'+
+    '<span class="stat"><span class="n">'+fmt(d.total_revenue)+' C</span><span class="l">Ingresos (PandaCoins)</span></span>';
+  $('summary').querySelector('tbody').innerHTML=(d.summary||[]).map(s=>'<tr><td>'+esc(s.name||s.item_id)+'</td><td>'+fmt(s.count)+'</td><td style="color:#f0a52e;">'+fmt(s.revenue)+' C</td></tr>').join('')||'<tr><td colspan="3" class="muted">Sin ventas aún.</td></tr>';
+  $('sales').querySelector('tbody').innerHTML=(d.sales||[]).map(s=>'<tr><td>'+esc(s.name)+'</td><td>'+esc(s.item_name||s.item_id)+'</td><td style="color:#f0a52e;">'+fmt(s.price)+' C</td><td class="muted">'+(s.ts?new Date(s.ts).toLocaleString('es'):'—')+'</td></tr>').join('')||'<tr><td colspan="4" class="muted">Sin compras aún.</td></tr>';
+}
+
+async function loadAll(){
+  const r=await adminFetch('/admin/casino/shop');
+  if(r.status===401){ sessionStorage.removeItem('admin_token'); location.reload(); return; }
+  if(!r.ok){ msg($('msg'), (r.data.error||'Error al cargar.'), false); return; }
+  DEFAULT_CATALOG=r.data.default_catalog||[];
+  $('rows').innerHTML=''; (r.data.catalog||[]).forEach(addRow);
+  renderSales(r.data);
+}
+async function save(){
+  const catalog=collectCatalog();
+  const r=await adminFetch('/admin/casino/shop',{ method:'PUT', body:{ catalog } });
+  if(r.ok){ msg($('msg'),'Catálogo guardado ('+catalog.length+' decoraciones).',true); }
+  else msg($('msg'), r.data.error||'Error al guardar.', false);
+}
+
+function start(){ $('login').style.display='none'; $('app').style.display='block'; loadAll(); }
+$('login-btn').onclick=login;
+$('pass').addEventListener('keydown',e=>{ if(e.key==='Enter') login(); });
+$('add-row').onclick=()=>addRow();
+$('restore').onclick=()=>{ if(confirm('¿Cargar el catálogo por defecto en el editor? (no guarda hasta pulsar Guardar)')){ $('rows').innerHTML=''; DEFAULT_CATALOG.forEach(addRow); } };
+$('save').onclick=save;
+if(TOKEN){ start(); }
+</script>
+</body>
+</html>

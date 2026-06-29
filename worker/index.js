@@ -52,6 +52,7 @@ import {
   handleAdminGetRound, handleAdminGetAdvancedStats,
 } from './casino.js';
 import { CasinoTable } from './casino-do.js';
+import { handleAdminGetShop, handleAdminPutShop } from './casino-shop.js';
 export { CasinoTable };
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -1018,6 +1019,15 @@ async function handleRequest(request, env, ctx) {
     if (method === 'POST' && path === '/admin/casino/clear-rounds') {
       const result = await handleAdminClearCasinoRounds(env);
       return jsonResponse(result);
+    }
+
+    if (method === 'GET' && path === '/admin/casino/shop') {
+      return jsonResponse(await handleAdminGetShop(env));
+    }
+
+    if (method === 'PUT' && path === '/admin/casino/shop') {
+      const result = await handleAdminPutShop(request, env);
+      return jsonResponse(result, result.error ? 400 : 200);
     }
   }
 
