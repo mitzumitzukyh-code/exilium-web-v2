@@ -31,6 +31,12 @@
   button:disabled{ filter:grayscale(.35) brightness(.82); cursor:default; }
   @keyframes exiPulseBtn{ 0%,100%{ box-shadow:0 0 0 0 rgba(240,165,46,.55), 0 10px 26px -8px rgba(240,165,46,.6); } 50%{ box-shadow:0 0 0 7px rgba(240,165,46,0), 0 10px 26px -8px rgba(240,165,46,.6); } }
   #readybtn:not(:disabled){ animation:exiPulseBtn 2.1s ease-in-out infinite; }
+  /* Botón Sentarse: grande, llamativo, animación de casino (pulso + brillo que barre) */
+  @keyframes seatPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(240,165,46,.6), 0 10px 26px -6px rgba(240,165,46,.7); } 50%{ box-shadow:0 0 0 12px rgba(240,165,46,0), 0 10px 30px -6px rgba(240,165,46,.85); } }
+  @keyframes seatShine{ 0%{ transform:translateX(-160%) skewX(-18deg); } 100%{ transform:translateX(360%) skewX(-18deg); } }
+  .exi-seatbtn{ position:relative; overflow:hidden; animation:seatPulse 1.7s ease-in-out infinite; }
+  .exi-seatbtn::after{ content:''; position:absolute; top:0; bottom:0; left:0; width:40%; background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); animation:seatShine 2.4s ease-in-out infinite; pointer-events:none; }
+  .exi-seatbtn:hover{ filter:brightness(1.08); transform:translateY(-1px); }
   /* ── Decoraciones de la tienda (estilo Nitro) ── */
   .df-gold{ border-color:#f0a52e!important; animation:dfGold 1.8s ease-in-out infinite; }
   @keyframes dfGold{ 0%,100%{ box-shadow:0 0 0 2px #f0a52e,0 0 10px rgba(240,165,46,.7),0 0 22px rgba(240,165,46,.4); } 50%{ box-shadow:0 0 0 3px #ffd98a,0 0 18px rgba(255,200,90,1),0 0 36px rgba(240,165,46,.7); } }
@@ -128,7 +134,7 @@
       </div>
 
       <p id="exi-status" style="margin:clamp(40px,5.5vh,72px) auto 0; display:table; padding:6px 18px; background:rgba(20,14,10,.72); border:1px solid rgba(240,165,46,.2); border-radius:20px; font-size:13px; font-weight:600; letter-spacing:.04em; color:#e9d4a0; text-align:center; min-height:18px;">Conectando con la mesa…</p>
-      <button id="seatbtn" type="button" style="margin-top:10px; padding:8px 26px; border-radius:10px; border:1px solid rgba(240,165,46,.4); background:rgba(240,165,46,.12); color:#f0a52e; font-family:'Cinzel',serif; font-weight:700; font-size:12px; letter-spacing:.08em; cursor:pointer; z-index:5;">Sentarse</button>
+      <button id="seatbtn" class="exi-seatbtn" type="button" style="margin-top:14px; padding:14px 46px; border-radius:13px; border:2px solid #f7c168; background:linear-gradient(180deg,#f7c168,#f0a52e 58%,#b97916); color:#2a1a06; font-family:'Cinzel',serif; font-weight:800; font-size:16px; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; z-index:5;">Sentarse</button>
     </section>
 
     <!-- RIGHT -->
@@ -399,6 +405,7 @@ function onWsMessage(d){
   else if(d.type==='me'){ if(d.balance!=null){ S.balance=d.balance; render(); const sb=document.getElementById('exi-shop-bal'); if(sb) sb.textContent=fmt(S.balance); } }
   else if(d.type==='shop'){ S.shop={ catalog:d.catalog||[], owned:d.owned||[], equipped:d.equipped||{} }; renderShop(); render(); applyTopbarDeco(); }
   else if(d.type==='error'){ const m=d.message||d.error||'Error'; flash(m); if(window.EXIDBG&&EXIDBG.toast) EXIDBG.toast(m,'error'); }
+  else if(d.type==='activity'){ const e=d.event||{}; if(window.EXIDBG) EXIDBG.log(e.level==='error'?'warn':'event', 'mesa·'+(e.kind||'?'), (e.name||'?')+': '+(e.detail||'')); }
   else if(d.type==='pong'){ /* keepalive */ }
 }
 // keepalive + watchdog de reconexión

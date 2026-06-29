@@ -183,6 +183,7 @@ export class CasinoTable {
       }
     } catch (e) {
       this._send(ws, { type: 'error', message: 'Error procesando la acción.' });
+      this._activity(session && session.name, 'error', 'excepción: ' + (e && e.message), 'error');
       console.error('[CasinoDO] action error', e);
     }
   }
@@ -236,6 +237,7 @@ export class CasinoTable {
       bets: [], ready: false, connected: true, joined_at: Date.now(),
       rounds_without_bet: 0, last_result: null,
     });
+    this._activity(session.name, 'sentarse', 'se sentó (asiento ' + seatNum + ')');
     await this._afterChange();
   }
 
@@ -244,6 +246,7 @@ export class CasinoTable {
     if (!seat) return;
     if (this.state.status === 'betting') await this._refundSeat(seat);
     this.seats = this.seats.filter(s => s.user_id !== session.user_id);
+    this._activity(session.name, 'levantarse', 'se levantó de la mesa');
     await this._afterChange();
   }
 
@@ -270,7 +273,7 @@ export class CasinoTable {
     if (!user) { this._send(ws, { type: 'error', message: 'Usuario no encontrado.' }); return; }
     const totalNew = validated.reduce((t, b) => t + b.amount, 0);
     const already = existing.reduce((t, b) => t + b.amount, 0);
-    if (already + totalNew > user.balance) { this._send(ws, { type: 'error', message: 'Saldo insuficiente.' }); return; }
+    if (already + totalNew > user.balance) { this._send(ws, { type: 'error', message: 'Saldo insuficiente.' }); this._activity(session.name, 'error', 'saldo insuficiente al apostar', 'error'); return; }
 
     // Cobrar → registrar.
     user.balance -= totalNew;
@@ -283,6 +286,7 @@ export class CasinoTable {
       this.state.betting_ends_at = Date.now() + cfg.betting_duration * 1000;
     }
     this._send(ws, { type: 'me', balance: user.balance });
+    this._activity(session.name, 'apuesta', 'apostó ' + totalNew + ' C en ' + validated.map(b => b.bet_key).join(', '));
     await this._afterChange();
   }
 
@@ -301,6 +305,7 @@ export class CasinoTable {
     const seat = this.seats.find(s => s.user_id === session.user_id);
     if (!seat || !seat.bets || seat.bets.length === 0) { this._sendErr(session, 'Apuesta antes de marcar listo.'); return; }
     seat.ready = true;
+    this._activity(session.name, 'listo', 'marcó LISTO');
     await this._afterChange(); // _advance puede disparar el giro
   }
 
@@ -340,7 +345,7 @@ export class CasinoTable {
     if (!user) return;
     user.decorations = user.decorations || [];
     if (user.decorations.includes(id)) { this._send(ws, { type: 'error', message: 'Ya tienes esa decoración.' }); return; }
-    if ((user.balance || 0) < item.price) { this._send(ws, { type: 'error', message: 'PandaCoins insuficientes.' }); return; }
+    if ((user.balance || 0) < item.price) { this._send(ws, { type: 'error', message: 'PandaCoins insuficientes.' }); this._activity(session.name, 'error', 'PandaCoins insuficientes al comprar ' + item.name, 'error'); return; }
     user.balance -= item.price;
     user.decorations.push(id);
     await this._setUser(user);
@@ -352,6 +357,7 @@ export class CasinoTable {
       await this.env.EXILIUM_KV.put('casino:shop_sales', JSON.stringify(sales.slice(0, 500)));
     } catch (_) {}
     await this._appendTransaction(user.id, { type: 'shop_buy', item: item.id, item_name: item.name, price: item.price, balance_after: user.balance, ts: now });
+    this._activity(session.name, 'compra', 'compró ' + item.name + ' (' + item.price + ' C)');
     this._send(ws, { type: 'me', balance: user.balance });
     this._send(ws, { type: 'shop', catalog: this.shopCatalog, owned: user.decorations, equipped: user.equipped || {} });
   }
@@ -558,6 +564,13 @@ export class CasinoTable {
       const a = ws.deserializeAttachment() || {};
       this._send(ws, this._snapshotFor(a.session));
     }
+  }
+
+  // Difunde un evento de actividad a TODOS los conectados (lo muestra el panel debug ?debug=1).
+  // Permite ver qué hacen los demás jugadores y si les saltan errores.
+  _activity(name, kind, detail, level) {
+    const ev = { ts: Date.now(), name: name || '?', kind, detail: detail || '', level: level || 'info' };
+    for (const ws of this.ctx.getWebSockets()) this._send(ws, { type: 'activity', event: ev });
   }
 
   _snapshotFor(session) {
