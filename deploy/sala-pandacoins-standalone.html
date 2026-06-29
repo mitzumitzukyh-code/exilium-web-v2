@@ -353,9 +353,11 @@ function frameImageUrl(id){ if(!id) return null; const it=((S.shop&&S.shop.catal
 // Devuelve el avatar (círculo) + la decoración: imagen-overlay que sobresale, o clase CSS.
 function avatarDecoHtml(inner, frameId, sizeCss, circleStyle){
   const img=frameImageUrl(frameId); const cls=img?'':decoClass(frameId);
-  const circle='<span class="'+cls+'" style="width:100%; height:100%; border-radius:50%; '+circleStyle+' display:flex; align-items:center; justify-content:center; overflow:hidden;">'+inner+'</span>';
-  const overlay=img?'<img src="'+esc(img)+'" alt="" style="position:absolute; left:-45%; top:-45%; width:190%; height:190%; pointer-events:none; object-fit:contain; z-index:2;">':'';
-  return '<span style="position:relative; display:inline-flex; flex-shrink:0; width:'+sizeCss+'; height:'+sizeCss+';">'+circle+overlay+'</span>';
+  // El avatar (opaco) va ENCIMA; la decoración con imagen va DETRÁS y grande, enmarcando
+  // lo que sobresale del borde del avatar (así el avatar siempre se ve nítido).
+  const circle='<span class="'+cls+'" style="position:relative; z-index:1; width:100%; height:100%; border-radius:50%; '+circleStyle+' display:flex; align-items:center; justify-content:center; overflow:hidden;">'+inner+'</span>';
+  const overlay=img?'<img src="'+esc(img)+'" alt="" style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:250%; height:250%; pointer-events:none; object-fit:contain; z-index:0;">':'';
+  return '<span style="position:relative; display:inline-flex; flex-shrink:0; width:'+sizeCss+'; height:'+sizeCss+'; overflow:visible;">'+overlay+circle+'</span>';
 }
 // Decora el avatar+nombre de la barra superior con lo equipado (la barra se construye en otro script).
 function applyTopbarDeco(){
@@ -366,9 +368,9 @@ function applyTopbarDeco(){
   if(wrap){
     const inner=wrap.querySelector('.exi-top-avatar-inner');
     const img=frameImageUrl(eq.avatar_frame);
-    if(inner){ inner.classList.remove('df-gold','df-emerald','df-flame','df-ice','df-dragon'); const c=img?'':decoClass(eq.avatar_frame); if(c) inner.classList.add(c); }
+    if(inner){ inner.style.position='relative'; inner.style.zIndex='1'; inner.classList.remove('df-gold','df-emerald','df-flame','df-ice','df-dragon'); const c=img?'':decoClass(eq.avatar_frame); if(c) inner.classList.add(c); }
     const old=wrap.querySelector('.exi-top-deco'); if(old) old.remove();
-    if(img){ const o=document.createElement('img'); o.className='exi-top-deco'; o.src=img; o.alt=''; o.style.cssText='position:absolute; left:-45%; top:-45%; width:190%; height:190%; object-fit:contain; pointer-events:none; z-index:2;'; wrap.appendChild(o); }
+    if(img){ const o=document.createElement('img'); o.className='exi-top-deco'; o.src=img; o.alt=''; o.style.cssText='position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:250%; height:250%; object-fit:contain; pointer-events:none; z-index:0;'; wrap.insertBefore(o, wrap.firstChild); }
   }
 }
 window.exiApplyTopbarDeco=applyTopbarDeco;
