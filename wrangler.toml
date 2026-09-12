@@ -12,7 +12,7 @@ routes = [
 ]
 
 [triggers]
-crons = ["*/30 * * * *", "0 */6 * * *", "* * * * *"]
+crons = ["*/5 * * * *", "*/30 * * * *", "0 */6 * * *", "* * * * *"]
 
 # Durable Object: mesa de ruleta en tiempo real (WebSockets, estado fuerte).
 [[durable_objects.bindings]]
