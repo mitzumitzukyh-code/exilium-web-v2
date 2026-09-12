@@ -93,8 +93,10 @@ async function handleRequest(request, env, ctx) {
       ctx.waitUntil(
         env.EXILIUM_KV.put('cache:players_snapshot', JSON.stringify(players)).catch(() => {})
       );
-      // CDN cache de 1 hora: si el Worker falla, Cloudflare sirve la versión cacheada
-      return cachedJsonResponse(players, 3600);
+      // Cache corto: permite absorber tráfico sin ocultar cambios recientes de Blizzard.
+      // Antes eran 3600s (1h), lo que hacía que ratings ya sincronizados siguieran
+      // apareciendo viejos en la web durante demasiado tiempo.
+      return cachedJsonResponse(players, 60);
     } catch (err) {
       // KV agotado — intentar snapshot de una sola lectura
       try {
@@ -1064,32 +1066,43 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
+    // Blizzard: refrescar un lote de jugadores cada 5 minutos.
+    // syncAllPlayers usa round-robin y MAX_SYNC_PER_RUN=3, así evitamos superar
+    // el límite de subrequests del Worker y reducimos mucho la antigüedad de ratings.
+    if (event.cron === '*/5 * * * *') {
+      console.log(`[CRON] Iniciando sincronización Blizzard: ${new Date().toISOString()}`);
+      ctx.waitUntil(
+        (async () => {
+          try {
+            const result = await syncAllPlayers(env);
+            console.log(`[CRON] Blizzard sync: ${result.message}`);
+          } catch (err) {
+            console.error('[CRON] Error durante la sincronización Blizzard:', err);
+            await logError(err, 'cron_blizzard', env);
+          }
+        })()
+      );
+    }
+
+    // Ranking de guild: mantener trabajo pesado cada 30 minutos, separado del
+    // refresco de jugadores para que una fase parcial del ranking nunca bloquee
+    // la actualización de datos provenientes de Blizzard.
     if (event.cron === '*/30 * * * *') {
-      console.log(`[CRON] Iniciando sincronización programada: ${new Date().toISOString()}`);
       ctx.waitUntil(
         (async () => {
           const partial = await env.EXILIUM_KV.get('cache:guild-ranking:partial', 'json');
-          if (partial) {
-            try {
+          try {
+            if (partial) {
               const off = partial.offset || 0;
               const result = await buildGuildRanking(env, String(off));
               console.log(`[CRON] Guild ranking phase: ${result.status}`);
-            } catch (err) {
-              console.error('[CRON] Error en guild ranking build:', err);
-            }
-          } else {
-            try {
-              await syncAllPlayers(env);
-            } catch (err) {
-              console.error('[CRON] Error durante la sincronización masiva:', err);
-              await logError(err, 'cron', env);
-            }
-            try {
+            } else {
               const result = await buildGuildRanking(env, '0');
               console.log(`[CRON] Guild ranking started: ${result.status}`);
-            } catch (err) {
-              console.error('[CRON] Error iniciando guild ranking build:', err);
             }
+          } catch (err) {
+            console.error('[CRON] Error en guild ranking build:', err);
+            await logError(err, 'cron_guild_ranking', env);
           }
         })()
       );
