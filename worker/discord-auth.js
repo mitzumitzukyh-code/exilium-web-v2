@@ -26,18 +26,30 @@ function buildAvatarUrl(userId, avatarHash) {
 }
 
 
-/** Orígenes de frontend permitidos para el redirect post-OAuth (anti open-redirect). */
+/** True solo en modo desarrollo (sin secrets Discord) — permite localhost. */
+function isDevOAuth(env) {
+  return !env.DISCORD_CLIENT_ID || !env.DISCORD_CLIENT_SECRET;
+}
+
+/**
+ * Orígenes de frontend permitidos para el redirect post-OAuth (anti open-redirect).
+ * NUNCA acepta un comodín *.pages.dev — el token de sesión viaja en la URL.
+ * Hosts oficiales documentados + FRONTEND_URL; localhost solo en dev.
+ */
 function allowedFrontendHosts(env) {
   const hosts = new Set([
     'www.guild-exilium.com',
     'guild-exilium.com',
-    'exilium-battlepass.pages.dev',
-    'localhost',
-    '127.0.0.1',
+    'exilium-battlepass.pages.dev', // hostname Pages exacto (README / sitemap)
   ]);
   try {
     if (env.FRONTEND_URL) hosts.add(new URL(env.FRONTEND_URL).hostname);
   } catch (_) {}
+  // localhost / 127.0.0.1 SOLO en desarrollo — nunca en producción
+  if (isDevOAuth(env)) {
+    hosts.add('localhost');
+    hosts.add('127.0.0.1');
+  }
   return hosts;
 }
 
@@ -68,8 +80,7 @@ function resolveOAuthFrontendPage(frontendBase, env) {
   }
 
   const hosts = allowedFrontendHosts(env);
-  const hostOk = hosts.has(parsed.hostname) || parsed.hostname.endsWith('.pages.dev');
-  if (!hostOk) return casinoFallback;
+  if (!hosts.has(parsed.hostname)) return casinoFallback;
 
   // Path vacío → casino (comportamiento histórico del login directo)
   if (parsed.pathname === '/' || parsed.pathname === '') {

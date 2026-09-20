@@ -108,6 +108,57 @@ async function putIndex(env, index) {
   await env.EXILIUM_KV.put(INDEX_KEY, JSON.stringify(index));
 }
 
+/**
+ * Lista user_ids con perfil en KV (prefix rbg:profile:*), con paginación.
+ * No borra ni reescribe perfiles — solo lectura.
+ */
+async function listProfileUserIds(env) {
+  const ids = [];
+  if (!env.EXILIUM_KV || typeof env.EXILIUM_KV.list !== 'function') return ids;
+  let cursor;
+  try {
+    do {
+      const page = await env.EXILIUM_KV.list({ prefix: PROFILE_PREFIX, cursor, limit: 1000 });
+      for (const key of page.keys || []) {
+        const name = key && key.name ? key.name : '';
+        if (!name.startsWith(PROFILE_PREFIX)) continue;
+        const userId = name.slice(PROFILE_PREFIX.length);
+        if (userId) ids.push(userId);
+      }
+      cursor = page.list_complete ? undefined : page.cursor;
+    } while (cursor);
+  } catch (_) {
+    // Si list falla, el caller puede seguir con el índice solo.
+  }
+  return ids;
+}
+
+/**
+ * Une índice + perfiles existentes. Si el índice está vacío/incompleto,
+ * recupera inscripciones vía list(rbg:profile:*) sin borrar datos.
+ * Si faltan IDs en el índice, lo sana con un merge (append-only).
+ */
+async function resolveRosterUserIds(env) {
+  const fromIndex = await getIndex(env);
+  const fromProfiles = await listProfileUserIds(env);
+  const seen = new Set();
+  const merged = [];
+  for (const id of fromIndex.concat(fromProfiles)) {
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    merged.push(id);
+  }
+
+  // Sanar índice incompleto sin reemplazar: solo añadir IDs faltantes.
+  const missing = fromProfiles.filter((id) => !fromIndex.includes(id));
+  if (missing.length) {
+    try {
+      await putIndex(env, merged);
+    } catch (_) {}
+  }
+  return merged;
+}
+
 async function getCore(env, roster) {
   let core = null;
   try {
@@ -262,7 +313,8 @@ export async function handleRbgPutProfile(request, env) {
 
 /** GET /api/rbg/roster */
 export async function handleRbgRoster(env) {
-  const index = await getIndex(env);
+  // No depender solo del índice: recuperar perfiles huérfanos si hace falta.
+  const index = await resolveRosterUserIds(env);
   const roster = [];
 
   for (const userId of index) {
