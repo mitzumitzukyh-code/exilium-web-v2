@@ -43,6 +43,10 @@ import {
   handleCasinoDiscordAuth, handleCasinoDiscordCallback, handleCasinoDiscordExchange,
 } from './discord-auth.js';
 import {
+  handleRbgCatalog, handleRbgGetProfile, handleRbgPutProfile,
+  handleRbgRoster, handleRbgPhoto, handleRbgPlayer,
+} from './rbg-league.js';
+import {
   tickStateMachine, getCasinoState,
   handleSeat, handlePlaceBet, handleMarkReady, handleClearBets, handleSendChat,
   handleGetLeaderboard, handleGetPlayers, handleGetMyTransactions,
@@ -853,6 +857,32 @@ async function handleRequest(request, env, ctx) {
 
   // ── Casino — Rutas públicas (auth opcional, sesiones dedicadas) ──
   // Auth del casino: register/login/logout no requieren sesión previa
+
+  // ── Liga RBG (inscripción + roster) ─────────────────────────
+  if (method === 'GET' && path === '/api/rbg/catalog') {
+    return jsonResponse(await handleRbgCatalog());
+  }
+  if (method === 'GET' && path === '/api/rbg/roster') {
+    const result = await handleRbgRoster(env);
+    return jsonResponse(result);
+  }
+  if (method === 'GET' && path.startsWith('/api/rbg/photo/')) {
+    const userId = decodeURIComponent(path.slice('/api/rbg/photo/'.length));
+    return await handleRbgPhoto(env, userId);
+  }
+  if (method === 'GET' && path.startsWith('/api/rbg/player/')) {
+    const userId = decodeURIComponent(path.slice('/api/rbg/player/'.length));
+    const result = await handleRbgPlayer(env, userId);
+    return jsonResponse(result, result.status || (result.error ? 404 : 200));
+  }
+  if (method === 'GET' && path === '/api/rbg/profile') {
+    const result = await handleRbgGetProfile(request, env);
+    return jsonResponse(result, result.status || 200);
+  }
+  if (method === 'PUT' && path === '/api/rbg/profile') {
+    const result = await handleRbgPutProfile(request, env);
+    return jsonResponse(result, result.status || (result.error ? 400 : 200));
+  }
 
   // Discord OAuth
   if (method === 'GET' && path === '/api/casino/auth/discord') {
