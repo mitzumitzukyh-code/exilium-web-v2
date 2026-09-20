@@ -1,0 +1,103 @@
+name: Deploy Exilium Worker
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - "worker/**"
+      - "wrangler.toml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: exilium-worker-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy exilium-blizzard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate Cloudflare credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || {
+            echo "::error::Missing CLOUDFLARE_API_TOKEN"
+            exit 1
+          }
+
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || {
+            echo "::error::Missing CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          }
+
+      - name: Deploy Worker only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@4 deploy --config wrangler.toml
+
+      - name: Smoke test production
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          retry_curl() {
+            local url="$1"
+
+            for attempt in 1 2 3 4 5; do
+              if curl \
+                --fail \
+                --silent \
+                --show-error \
+                --max-time 15 \
+                "$url" > /dev/null
+              then
+                return 0
+              fi
+
+              if [ "$attempt" -eq 5 ]; then
+                echo "::error::Smoke test failed: $url"
+                return 1
+              fi
+
+              sleep 3
+            done
+          }
+
+          retry_curl "https://api.guild-exilium.com/api/health"
+          retry_curl "https://api.guild-exilium.com/api/rbg/catalog"
+          retry_curl "https://api.guild-exilium.com/api/rbg/roster"
+
+          oauth_status="$(
+            curl \
+              --silent \
+              --output /dev/null \
+              --write-out "%{http_code}" \
+              --max-time 15 \
+              "https://api.guild-exilium.com/api/casino/auth/discord?redirect=https%3A%2F%2Fwww.guild-exilium.com%2Fliga-rbg.html"
+          )"
+
+          if [ "$oauth_status" != "302" ]; then
+            echo "::error::Discord OAuth expected HTTP 302, got $oauth_status"
+            exit 1
+          fi
+
+          echo "Exilium Worker deployed and smoke tests passed."
