@@ -25,6 +25,62 @@ function buildAvatarUrl(userId, avatarHash) {
   return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.${ext}`;
 }
 
+
+/** Orígenes de frontend permitidos para el redirect post-OAuth (anti open-redirect). */
+function allowedFrontendHosts(env) {
+  const hosts = new Set([
+    'www.guild-exilium.com',
+    'guild-exilium.com',
+    'exilium-battlepass.pages.dev',
+    'localhost',
+    '127.0.0.1',
+  ]);
+  try {
+    if (env.FRONTEND_URL) hosts.add(new URL(env.FRONTEND_URL).hostname);
+  } catch (_) {}
+  return hosts;
+}
+
+/**
+ * Resuelve a qué página del frontend volver tras Discord OAuth.
+ * Honra el path del `state`/`redirect` (liga-rbg, casino, etc.).
+ * Solo cae al casino cuando el path es vacío o el host no está permitido.
+ */
+function resolveOAuthFrontendPage(frontendBase, env) {
+  const casinoFallback = (() => {
+    try {
+      if (env.FRONTEND_URL) {
+        const u = new URL(env.FRONTEND_URL);
+        u.pathname = '/sala-pandacoins-standalone.html';
+        u.search = '';
+        u.hash = '';
+        return u.toString();
+      }
+    } catch (_) {}
+    return 'https://www.guild-exilium.com/sala-pandacoins-standalone.html';
+  })();
+
+  let parsed;
+  try {
+    parsed = new URL(frontendBase);
+  } catch (_) {
+    return casinoFallback;
+  }
+
+  const hosts = allowedFrontendHosts(env);
+  const hostOk = hosts.has(parsed.hostname) || parsed.hostname.endsWith('.pages.dev');
+  if (!hostOk) return casinoFallback;
+
+  // Path vacío → casino (comportamiento histórico del login directo)
+  if (parsed.pathname === '/' || parsed.pathname === '') {
+    parsed.pathname = '/sala-pandacoins-standalone.html';
+  }
+  // Limpiar query/hash del state; el token se añade después
+  parsed.search = '';
+  parsed.hash = '';
+  return parsed.toString();
+}
+
 /**
  * GET /api/casino/auth/discord
  * Redirige al usuario a Discord OAuth authorize, o directamente
@@ -34,10 +90,11 @@ export async function handleCasinoDiscordAuth(request, env) {
   const origin = new URL(request.url).origin;
   const redirectUri = `${origin}/api/casino/auth/discord/callback`;
 
-  // Determinar URL del frontend: Referer header, ?redirect=, o FRONTEND_URL env
+  // Preferir ?redirect= (Liga RBG, casino, etc.) sobre FRONTEND_URL genérico.
+  // Si FRONTEND_URL ganaba siempre, el callback ignoraba la página de origen.
   const referer = request.headers.get('Referer') || '';
   const queryRedirect = new URL(request.url).searchParams.get('redirect') || '';
-  const frontendBase = env.FRONTEND_URL || queryRedirect || referer.replace(/\/?$/, '') || origin;
+  const frontendBase = queryRedirect || referer.replace(/\/?$/, '') || env.FRONTEND_URL || origin;
 
   // Modo desarrollo sin Discord configurado
   if (!env.DISCORD_CLIENT_ID || !env.DISCORD_CLIENT_SECRET) {
@@ -93,24 +150,11 @@ export async function handleCasinoDiscordCallback(request, env) {
   const origin = url.origin;
   const state = url.searchParams.get('state') || '';
 
-  // Determinar URL del frontend base de forma segura
+  // Determinar URL del frontend de forma segura.
+  // Antes se FORZABA /sala-pandacoins-standalone.html aunque el state viniera
+  // de /liga-rbg — eso rompía Inscribirme/editar perfil de la Liga RBG.
   const frontendBase = state || env.FRONTEND_URL || origin;
-  let frontendPage;
-  try {
-    const parsed = new URL(frontendBase);
-    if (parsed.pathname === '/' || parsed.pathname === '') {
-      parsed.pathname = '/sala-pandacoins-standalone.html';
-    } else if (!parsed.pathname.includes('sala-pandacoins-standalone')) {
-      parsed.pathname = '/sala-pandacoins-standalone.html';
-    } else {
-      if (!parsed.pathname.endsWith('.html')) {
-        parsed.pathname += '.html';
-      }
-    }
-    frontendPage = parsed.toString();
-  } catch (_) {
-    frontendPage = frontendBase.replace(/\/?$/, '') + '/sala-pandacoins-standalone.html';
-  }
+  const frontendPage = resolveOAuthFrontendPage(frontendBase, env);
 
   if (!code) {
     return Response.redirect(`${frontendPage}?error=missing_code`, 302);
