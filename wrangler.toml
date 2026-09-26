@@ -31,9 +31,12 @@ id = "2d6d2badfc184b408f6c5af7e380d6be"
 binding = "KV"
 id = "2d6d2badfc184b408f6c5af7e380d6be"
 
-[[r2_buckets]]
-binding = "EXILIUM_MEDIA"
-bucket_name = "exilium-media"
+# R2 desactivado hasta activarlo en el Dashboard de Cloudflare (API code 10042).
+# Sin esto, `wrangler deploy` falla y bloquea todo el Worker.
+# Cuando R2 esté ON: crear bucket `exilium-media`, descomentar y redeploy.
+# [[r2_buckets]]
+# binding = "EXILIUM_MEDIA"
+# bucket_name = "exilium-media"
 
 [ai]
 binding = "AI"
