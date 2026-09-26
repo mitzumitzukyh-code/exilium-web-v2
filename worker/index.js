@@ -82,6 +82,17 @@ function cachedJsonResponse(data, maxAgeSecs = 60, status = 200) {
   });
 }
 
+/** Binding R2 de media; evita TypeError si no está configurado en el Worker. */
+function getMediaBucket(env) {
+  return env && env.EXILIUM_MEDIA ? env.EXILIUM_MEDIA : null;
+}
+
+function mediaUnavailableResponse() {
+  return jsonResponse({
+    error: 'Almacenamiento de media no configurado. Activa R2 (bucket exilium-media) y el binding EXILIUM_MEDIA.',
+  }, 503);
+}
+
 async function handleRequest(request, env, ctx) {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -285,14 +296,21 @@ async function handleRequest(request, env, ctx) {
 
   // Serve R2 media files publicly
   if (method === 'GET' && path.startsWith('/media/')) {
-    const key = 'media/' + path.slice(7);
-    const obj = await env.EXILIUM_MEDIA.get(key);
-    if (!obj) return new Response('Not found', { status: 404 });
-    const headers = new Headers();
-    obj.writeHttpMetadata(headers);
-    headers.set('Cache-Control', 'public, max-age=31536000');
-    Object.entries(CORS_HEADERS).forEach(([k, v]) => headers.set(k, v));
-    return new Response(obj.body, { headers });
+    const bucket = getMediaBucket(env);
+    if (!bucket) return mediaUnavailableResponse();
+    try {
+      const key = 'media/' + path.slice(7);
+      const obj = await bucket.get(key);
+      if (!obj) return new Response('Not found', { status: 404 });
+      const headers = new Headers();
+      obj.writeHttpMetadata(headers);
+      headers.set('Cache-Control', 'public, max-age=31536000');
+      Object.entries(CORS_HEADERS).forEach(([k, v]) => headers.set(k, v));
+      return new Response(obj.body, { headers });
+    } catch (err) {
+      console.error('[MEDIA] Error leyendo R2:', err);
+      return jsonResponse({ error: 'Error al leer archivo de media' }, 500);
+    }
   }
 
   if (method === 'GET' && path === '/api/guild-ranking') {
@@ -504,6 +522,8 @@ async function handleRequest(request, env, ctx) {
 
     // ── Media Upload (R2) — single PUT (small files < 90MB) ──
     if (method === 'POST' && path === '/admin/upload-media') {
+      const bucket = getMediaBucket(env);
+      if (!bucket) return mediaUnavailableResponse();
       const filename = request.headers.get('X-Filename') || ('upload-' + Date.now());
       const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
       const ext = safeFilename.split('.').pop().toLowerCase();
@@ -513,13 +533,15 @@ async function handleRequest(request, env, ctx) {
         contentType = extTypes[ext] || 'video/mp4';
       }
       const key = 'media/' + safeFilename;
-      await env.EXILIUM_MEDIA.put(key, request.body, { httpMetadata: { contentType } });
-      const publicUrl = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev/media/' + safeFilename;
+      await bucket.put(key, request.body, { httpMetadata: { contentType } });
+      const publicUrl = 'https://api.guild-exilium.com/media/' + safeFilename;
       return jsonResponse({ ok: true, url: publicUrl, key });
     }
 
     // ── Multipart Upload: Init ──
     if (method === 'POST' && path === '/admin/upload-media/init') {
+      const bucket = getMediaBucket(env);
+      if (!bucket) return mediaUnavailableResponse();
       const filename = request.headers.get('X-Filename') || ('upload-' + Date.now());
       const safeFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
       const ext = safeFilename.split('.').pop().toLowerCase();
@@ -529,39 +551,45 @@ async function handleRequest(request, env, ctx) {
         contentType = extTypes[ext] || 'video/mp4';
       }
       const key = 'media/' + safeFilename;
-      const upload = await env.EXILIUM_MEDIA.createMultipartUpload(key, { httpMetadata: { contentType } });
+      const upload = await bucket.createMultipartUpload(key, { httpMetadata: { contentType } });
       return jsonResponse({ uploadId: upload.uploadId, key, filename: safeFilename });
     }
 
     // ── Multipart Upload: Upload Part ──
     if (method === 'POST' && path === '/admin/upload-media/part') {
+      const bucket = getMediaBucket(env);
+      if (!bucket) return mediaUnavailableResponse();
       const uploadId = request.headers.get('X-Upload-Id');
       const key = request.headers.get('X-Upload-Key');
       const partNum = parseInt(request.headers.get('X-Part-Number') || '1', 10);
       if (!uploadId || !key) return jsonResponse({ error: 'Missing upload ID or key' }, 400);
-      const upload = env.EXILIUM_MEDIA.resumeMultipartUpload(key, uploadId);
+      const upload = bucket.resumeMultipartUpload(key, uploadId);
       const part = await upload.uploadPart(partNum, request.body);
       return jsonResponse({ partNumber: part.partNumber, etag: part.etag });
     }
 
     // ── Multipart Upload: Complete ──
     if (method === 'POST' && path === '/admin/upload-media/complete') {
+      const bucket = getMediaBucket(env);
+      if (!bucket) return mediaUnavailableResponse();
       const body = await request.json();
       const { uploadId, key, parts } = body;
       if (!uploadId || !key || !parts) return jsonResponse({ error: 'Missing fields' }, 400);
-      const upload = env.EXILIUM_MEDIA.resumeMultipartUpload(key, uploadId);
+      const upload = bucket.resumeMultipartUpload(key, uploadId);
       await upload.complete(parts);
       const filename = key.replace('media/', '');
-      const publicUrl = 'https://exilium-blizzard.mitzumitzukyhs.workers.dev/media/' + filename;
+      const publicUrl = 'https://api.guild-exilium.com/media/' + filename;
       return jsonResponse({ ok: true, url: publicUrl, key });
     }
 
     // ── Multipart Upload: Abort ──
     if (method === 'POST' && path === '/admin/upload-media/abort') {
+      const bucket = getMediaBucket(env);
+      if (!bucket) return mediaUnavailableResponse();
       const body = await request.json();
       const { uploadId, key } = body;
       if (!uploadId || !key) return jsonResponse({ error: 'Missing fields' }, 400);
-      const upload = env.EXILIUM_MEDIA.resumeMultipartUpload(key, uploadId);
+      const upload = bucket.resumeMultipartUpload(key, uploadId);
       await upload.abort();
       return jsonResponse({ ok: true });
     }
@@ -1076,8 +1104,19 @@ export default {
     // Debe devolverse TAL CUAL (status 101 + webSocket); no puede pasar por el
     // envoltorio CORS de abajo (new Response(...) perdería la propiedad webSocket).
     if (new URL(request.url).pathname === '/api/casino/ws') {
-      const id = env.CASINO_TABLE.idFromName('main');
-      return env.CASINO_TABLE.get(id).fetch(request);
+      if (!env.CASINO_TABLE) {
+        return jsonResponse({
+          error: 'Casino WebSocket no disponible (binding CASINO_TABLE ausente).',
+        }, 503);
+      }
+      try {
+        const id = env.CASINO_TABLE.idFromName('main');
+        return env.CASINO_TABLE.get(id).fetch(request);
+      } catch (err) {
+        console.error('[CASINO_WS] Error en Durable Object:', err);
+        ctx.waitUntil(logError(err, 'casino_ws', env, { path: request.url }));
+        return jsonResponse({ error: 'Error al conectar WebSocket del casino' }, 500);
+      }
     }
 
     let response;
@@ -1085,7 +1124,10 @@ export default {
       response = await handleRequest(request, env, ctx);
     } catch (err) {
       console.error('Error global no capturado:', err);
-      ctx.waitUntil(logError(err, 'global_unhandled', env, { path: request.url }));
+      ctx.waitUntil(logError(err, 'global_unhandled', env, {
+        path: request.url,
+        method: request.method,
+      }));
       response = jsonResponse({ error: 'Error interno del servidor' }, 500);
     }
 

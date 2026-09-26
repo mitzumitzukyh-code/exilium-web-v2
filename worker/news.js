@@ -11,8 +11,15 @@ function generateId() {
   return `auto_${ts}_${rand}`;
 }
 
+/** Preferir EXILIUM_KV; mantener alias KV por compatibilidad con wrangler.toml. */
+function newsKv(env) {
+  return env.EXILIUM_KV || env.KV;
+}
+
 async function getAllArticles(env) {
-  const raw = await env.KV.get(KV_KEY_ARTICLES);
+  const kv = newsKv(env);
+  if (!kv) return [];
+  const raw = await kv.get(KV_KEY_ARTICLES);
   if (!raw) return [];
   try {
     return JSON.parse(raw);
@@ -22,7 +29,9 @@ async function getAllArticles(env) {
 }
 
 async function saveAllArticles(env, articles) {
-  await env.KV.put(KV_KEY_ARTICLES, JSON.stringify(articles));
+  const kv = newsKv(env);
+  if (!kv) throw new Error('KV no configurado para news');
+  await kv.put(KV_KEY_ARTICLES, JSON.stringify(articles));
 }
 
 // ─── Handlers públicos ────────────────────────────────────────────────────────
@@ -89,7 +98,9 @@ export async function handleAdminDeleteNews(request, env, id) {
 }
 
 export async function handleAdminGetCronStatus(request, env) {
-  const raw = await env.KV.get(KV_KEY_CRON);
+  const kv = newsKv(env);
+  if (!kv) return Response.json({ lastRun: null });
+  const raw = await kv.get(KV_KEY_CRON);
   if (!raw) return Response.json({ lastRun: null });
   return Response.json(JSON.parse(raw));
 }
