@@ -269,13 +269,16 @@ export async function runNewsCron(env) {
 
   stats.newArticles = await insertArticles(env, articlesToInsert);
 
-  await env.KV.put('news:cron_last_run', JSON.stringify({
-    lastRun: new Date().toISOString(),
-    fetched: stats.fetched,
-    pvpFound: stats.pvpFound,
-    newArticles: stats.newArticles,
-    errors: stats.errors,
-  }));
+  const kv = env.EXILIUM_KV || env.KV;
+  if (kv) {
+    await kv.put('news:cron_last_run', JSON.stringify({
+      lastRun: new Date().toISOString(),
+      fetched: stats.fetched,
+      pvpFound: stats.pvpFound,
+      newArticles: stats.newArticles,
+      errors: stats.errors,
+    }));
+  }
 
   return stats;
 }
