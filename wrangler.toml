@@ -2,8 +2,9 @@ name = "exilium-blizzard"
 main = "worker/index.js"
 compatibility_date = "2024-01-01"
 
-# Mantener la URL ...workers.dev activa (el frontend la sigue usando hasta la migración).
-workers_dev = true
+# API principal: api.guild-exilium.com. workers.dev ya existe; el token de CI
+# no tiene permiso de subdomain (/workers/subdomain → 10000) y rompía el exit code.
+workers_dev = false
 
 # Dominio propio de la API (la zona guild-exilium.com está en la cuenta de Cloudflare).
 # El worker sigue accesible también por ...workers.dev.
