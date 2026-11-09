@@ -579,10 +579,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (frame) {
                 const embedUrl = hofGetEmbedUrl(videoUrl);
                 if (embedUrl) {
-                    frame.innerHTML = '<iframe src="' + embedUrl + '" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;" allow="autoplay;encrypted-media" allowfullscreen></iframe><div class="hof-video-overlay"></div>';
+                    frame.innerHTML = '<iframe src="' + escapeHtmlPublic(embedUrl) + '" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;" allow="autoplay;encrypted-media" allowfullscreen></iframe><div class="hof-video-overlay"></div>';
                     frame.style.position = 'relative';
                 } else {
-                    frame.innerHTML = '<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:contain;display:block;background:#000;"><source src="' + videoUrl + '" type="video/mp4"></video><div class="hof-video-overlay"></div>';
+                    frame.innerHTML = '<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:contain;display:block;background:#000;"><source src="' + escapeHtmlPublic(videoUrl) + '" type="video/mp4"></video><div class="hof-video-overlay"></div>';
                 }
             }
         }

@@ -831,7 +831,11 @@ async function gateLogin() {
         });
         const data = await res.json();
         if (data.error) {
-            alertEl.innerHTML = `<div class="gate-alert-msg">${data.error}</div>`;
+            alertEl.innerHTML = '';
+            const errDiv = document.createElement('div');
+            errDiv.className = 'gate-alert-msg';
+            errDiv.textContent = String(data.error);
+            alertEl.appendChild(errDiv);
             btn.disabled = false; btn.textContent = '⚔ Entrar';
             return;
         }
@@ -858,9 +862,10 @@ function updateHeaderAuth(user) {
     const bar = document.getElementById('auth-header-bar');
     if (!bar) return;
     if (user) {
-        bar.innerHTML = `<span style="color:var(--gold);font-size:.82rem;">👤 ${user.username}</span>
+        bar.innerHTML = `<span id="auth-header-name" style="color:var(--gold);font-size:.82rem;"></span>
         <a href="dashboard.html" style="color:var(--gold);font-size:.8rem;border:1px solid var(--gold);border-radius:5px;padding:3px 10px;">Mi Panel</a>
         <button onclick="clientLogout()" style="background:none;border:1px solid #555;border-radius:5px;color:#888;font-size:.78rem;padding:3px 10px;cursor:pointer;font-family:inherit;">Salir</button>`;
+        document.getElementById('auth-header-name').textContent = '👤 ' + (user.username || '');
     } else {
         bar.innerHTML = `<a href="login.html" style="color:var(--gold);font-size:.8rem;border:1px solid var(--gold);border-radius:5px;padding:4px 12px;">🔑 Iniciar Sesión</a>`;
     }
