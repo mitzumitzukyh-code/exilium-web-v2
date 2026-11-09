@@ -182,6 +182,8 @@ Configurar en Cloudflare Dashboard → Workers → Settings → Variables:
 
 ## Despliegue
 
+> 📘 **Runbook completo (flujo, secretos, emergencia, reversión, lecciones del 9-nov-2026): [`docs/DEPLOY.md`](docs/DEPLOY.md).** La ruleta vigente está en [`docs/RULETA.md`](docs/RULETA.md).
+
 > ✅ **GitHub es la fuente de la verdad.** El frontend (`deploy/`) se publica **solo** en cada merge a `main`
 > (workflow *Deploy Exilium Frontend (Pages)*) y el worker igual (*Deploy Exilium Worker*).
 > Lo que no está en `main` no llega a producción.
