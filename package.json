@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "deploy:front": "node scripts/deploy-front.mjs"
   },
   "devDependencies": {
     "vitest": "^3.1.1"

@@ -182,19 +182,29 @@ Configurar en Cloudflare Dashboard → Workers → Settings → Variables:
 
 ## Despliegue
 
-> ⚠️ **El frontend NO se despliega con `git push`.** Cloudflare Pages está como **subida directa**:
-> hay que ejecutar `wrangler pages deploy`. El `git push` solo guarda el código en el repo.
+> ✅ **GitHub es la fuente de la verdad.** El frontend (`deploy/`) se publica **solo** en cada merge a `main`
+> (workflow *Deploy Exilium Frontend (Pages)*) y el worker igual (*Deploy Exilium Worker*).
+> Lo que no está en `main` no llega a producción.
+>
+> ⛔ **No despliegues desde tu disco con `wrangler pages deploy`.** Sube la carpeta tal cual está
+> (trabajo sin commit o una copia vieja incluidos) y **pisa lo que está en vivo**. Así se perdió una vez la
+> conexión de la ruleta: un cambio local sin commit fue sobreescrito por un deploy desde un clon.
+
+**Flujo normal:** rama → Pull Request → merge a `main` → GitHub Actions despliega y corre un smoke test.
+
+**Emergencias** (Actions caído): `npm run deploy:front`. Se niega a desplegar si `deploy/` tiene cambios sin
+commit o si tu `main` local no es igual a `origin/main`.
+
+**Secrets del repo:** `CLOUDFLARE_API_TOKEN` (permisos *Workers Scripts: Edit* y *Cloudflare Pages: Edit*) y
+`CLOUDFLARE_ACCOUNT_ID`.
 
 ```bash
-# Worker (backend + Durable Object CasinoTable) — actualiza la API
+# Worker (backend + Durable Object CasinoTable): solo si Actions no está disponible
 npx wrangler deploy
-
-# Frontend a producción (sube TODA la carpeta deploy/ tal cual está en disco)
-npx wrangler pages deploy deploy/ --project-name exilium-battlepass --branch main --commit-dirty=true
 ```
 
-- El worker sirve en `api.guild-exilium.com` (custom domain en `wrangler.toml` con `custom_domain = true`)
-  y también en `...workers.dev` (mantener `workers_dev = true`; si se quita, wrangler **desactiva** esa URL).
+- El worker sirve en `api.guild-exilium.com` (custom domain en `wrangler.toml` con `custom_domain = true`).
+  La URL `...workers.dev` está **desactivada** (`workers_dev = false`): ninguna página debe apuntar ahí. El workflow del frontend falla si encuentra esa referencia en `deploy/`.
 - El Durable Object se declara en `wrangler.toml` (`[[durable_objects.bindings]]` + `[[migrations]] new_sqlite_classes`). Requiere **Workers Paid**.
 - Tras desplegar, **Ctrl+Shift+R** en el navegador (el HTML va con `max-age=0` pero las pestañas abiertas no recargan solas).
 
