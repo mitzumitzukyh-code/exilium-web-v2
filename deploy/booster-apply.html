@@ -329,7 +329,12 @@ async function submitApplication() {
         });
         const data = await res.json();
         if (data.error) {
-            alertEl.innerHTML = `<div class="alert alert-error" style="margin-bottom:1rem;">${data.error}</div>`;
+            alertEl.innerHTML = '';
+            const errDiv = document.createElement('div');
+            errDiv.className = 'alert alert-error';
+            errDiv.style.marginBottom = '1rem';
+            errDiv.textContent = String(data.error);
+            alertEl.appendChild(errDiv);
             btn.disabled = false; btn.textContent = '⚔ Enviar Aplicación';
         } else {
             document.getElementById('apply-form').style.display = 'none';

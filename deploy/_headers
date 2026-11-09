@@ -1,3 +1,18 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/exilium-app-mockup.html
+  X-Robots-Tag: noindex, nofollow
+
+/admin.html
+  X-Robots-Tag: noindex, nofollow
+
+/casino-shop-admin.html
+  X-Robots-Tag: noindex, nofollow
+
 /sitemap.xml
   Content-Type: application/xml; charset=utf-8
 

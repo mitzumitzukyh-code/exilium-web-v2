@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- PÁGINA PRIVADA (en construcción): requiere login del panel admin.
+     No enlazada desde el sitio; noindex + robots.txt. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Armario — Exilium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060a14;
+    --panel: rgba(8, 14, 28, .72);
+    --border: rgba(90, 130, 200, .18);
+    --text: #e8eaf2;
+    --muted: #8d97ad;
+    --dim: #5a6478;
+    --gold: #f8b700;
+    --red: #c41f3b;
+    --green: #1eff00;
+    --q-POOR: #9d9d9d; --q-COMMON: #ffffff; --q-UNCOMMON: #1eff00;
+    --q-RARE: #0070dd; --q-EPIC: #a335ee; --q-LEGENDARY: #ff8000;
+    --q-ARTIFACT: #e6cc80; --q-HEIRLOOM: #00ccff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Fondo ambiente (azul hielo tipo Reino de las Sombras) ── */
+  .scene {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 38%, rgba(30, 90, 160, .30), transparent 65%),
+      radial-gradient(ellipse 100% 40% at 50% 100%, rgba(5, 25, 55, .8), transparent),
+      linear-gradient(180deg, #081020 0%, #060a14 55%, #04060c 100%);
+  }
+
+  /* ── Gate de acceso ────────────────────────────────────── */
+  #gate {
+    position: fixed; inset: 0; z-index: 50;
+    background: #04060c;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .gate-box {
+    width: 340px; max-width: calc(100vw - 32px);
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px; text-align: center;
+  }
+  .gate-box h1 {
+    font-family: 'Cinzel', serif; font-size: 22px; letter-spacing: 4px;
+    color: var(--gold); margin-bottom: 4px;
+  }
+  .gate-box p { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .gate-box input {
+    width: 100%; padding: 11px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: #0a1222; color: var(--text);
+    font-size: 14px; margin-bottom: 10px; outline: none;
+  }
+  .gate-box input:focus { border-color: rgba(248, 183, 0, .5); }
+  .gate-box button {
+    width: 100%; padding: 11px; border: 0; border-radius: 8px;
+    background: var(--gold); color: #1a1200; font-weight: 700;
+    font-size: 14px; cursor: pointer;
+  }
+  .gate-box button:disabled { opacity: .5; cursor: wait; }
+  .gate-error { color: #ff5566; font-size: 12px; margin-top: 10px; display: none; }
+
+  /* ── Barra superior: selector de jugadores de la liga ──── */
+  .topbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 22px; border-bottom: 1px solid var(--border);
+    background: rgba(4, 8, 16, .85); backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 10;
+    flex-wrap: wrap;
+  }
+  .topbar .brand {
+    font-family: 'Cinzel', serif; font-weight: 800; letter-spacing: 3px;
+    color: var(--gold); font-size: 16px; white-space: nowrap;
+  }
+  .topbar .brand small {
+    display: block; font-family: 'Inter', sans-serif; font-weight: 500;
+    font-size: 9px; letter-spacing: 3px; color: var(--dim);
+  }
+  .players {
+    display: flex; gap: 8px; overflow-x: auto; flex: 1;
+    padding-bottom: 2px; scrollbar-width: thin;
+  }
+  .player-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(15, 25, 48, .8); border: 1px solid var(--border);
+    color: var(--text); border-radius: 999px; padding: 6px 14px 6px 8px;
+    font-size: 12.5px; cursor: pointer; white-space: nowrap;
+    transition: border-color .15s, background .15s;
+  }
+  .player-chip img {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #0a1222; object-fit: cover;
+  }
+  .player-chip.active {
+    border-color: var(--gold);
+    background: rgba(248, 183, 0, .1);
+  }
+  .player-chip .spec { color: var(--muted); font-size: 10.5px; }
+  .btn-refresh {
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); font-size: 11.5px; border-radius: 8px;
+    padding: 8px 12px; cursor: pointer; white-space: nowrap;
+  }
+  .btn-refresh:hover { color: var(--text); border-color: var(--gold); }
+
+  /* ── Cabecera del personaje ────────────────────────────── */
+  .char-head {
+    display: flex; align-items: center; gap: 18px;
+    padding: 26px 30px 10px; max-width: 1500px; margin: 0 auto;
+  }
+  .crest {
+    width: 74px; height: 74px; flex: none;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    border: 2px solid; position: relative;
+  }
+  .crest.ALLIANCE { border-color: #d4a017; background: radial-gradient(circle, #14335f, #081428); color: #ffd24a; }
+  .crest.HORDE    { border-color: #8c1616; background: radial-gradient(circle, #3d0a0a, #180404); color: #ff4433; }
+  .crest svg { width: 40px; height: 40px; }
+  .char-id .title {
+    font-size: 13px; font-weight: 600; letter-spacing: .5px; color: var(--red);
+  }
+  .char-id .name {
+    font-family: 'Cinzel', serif; font-size: 38px; font-weight: 800;
+    line-height: 1.05; letter-spacing: 1px;
+  }
+  .char-id .subline { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .char-id .subline .guild { color: #7fc46a; }
+  .char-id .subline .realm { color: var(--dim); }
+  .head-stats {
+    display: flex; gap: 26px; margin-left: auto; align-items: center;
+    font-weight: 700; font-size: 15px; color: var(--gold);
+    letter-spacing: .6px; flex-wrap: wrap;
+  }
+  .head-stats .stat { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .head-stats svg { width: 17px; height: 17px; fill: var(--gold); }
+  .head-stats .label { font-size: 11px; color: var(--muted); font-weight: 500; letter-spacing: 1.5px; }
+
+  .tabs {
+    max-width: 1500px; margin: 14px auto 0; padding: 0 30px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tabs span {
+    display: inline-block; padding: 9px 18px; font-size: 12px;
+    letter-spacing: 2px; font-weight: 700; color: #1a1200;
+    background: var(--gold); border-radius: 4px 4px 0 0;
+  }
+
+  /* ── Cuerpo: items + render ────────────────────────────── */
+  .armory {
+    max-width: 1500px; margin: 0 auto; padding: 26px 30px 60px;
+    display: grid; grid-template-columns: 1fr minmax(320px, 560px) 1fr;
+    gap: 10px; align-items: start;
+  }
+  .render-zone { text-align: center; position: relative; min-height: 540px; }
+  .render-zone img {
+    max-width: 100%; max-height: 720px;
+    filter: drop-shadow(0 0 45px rgba(40, 110, 200, .35));
+  }
+  .render-missing { color: var(--dim); font-size: 13px; padding-top: 200px; }
+
+  .col { display: flex; flex-direction: column; gap: 9px; }
+  .item {
+    display: flex; gap: 10px; align-items: flex-start;
+    min-height: 46px;
+  }
+  .col.right .item { flex-direction: row-reverse; text-align: right; }
+  .item .icon {
+    width: 44px; height: 44px; flex: none; border-radius: 5px;
+    border: 1px solid var(--dim); background: #0a1222;
+    object-fit: cover;
+  }
+  .item .icon.q-UNCOMMON { border-color: var(--q-UNCOMMON); }
+  .item .icon.q-RARE     { border-color: var(--q-RARE); }
+  .item .icon.q-EPIC     { border-color: var(--q-EPIC); }
+  .item .icon.q-LEGENDARY{ border-color: var(--q-LEGENDARY); }
+  .item .icon.empty {
+    border-style: dashed; opacity: .35;
+  }
+  .item .info { padding-top: 1px; min-width: 0; }
+  .item .iname { font-size: 12.5px; font-weight: 600; line-height: 1.25; }
+  .item .iname.q-POOR{color:var(--q-POOR)} .item .iname.q-COMMON{color:var(--q-COMMON)}
+  .item .iname.q-UNCOMMON{color:var(--q-UNCOMMON)} .item .iname.q-RARE{color:var(--q-RARE)}
+  .item .iname.q-EPIC{color:var(--q-EPIC)} .item .iname.q-LEGENDARY{color:var(--q-LEGENDARY)}
+  .item .iname.q-ARTIFACT{color:var(--q-ARTIFACT)} .item .iname.q-HEIRLOOM{color:var(--q-HEIRLOOM)}
+  .item .ench { font-size: 10.5px; color: var(--green); line-height: 1.3; margin-top: 2px; }
+  .item .gem  { font-size: 10.5px; color: #c9a227; line-height: 1.3; }
+  .item .ilvl { font-size: 11px; color: var(--gold); font-weight: 700; margin-top: 2px; }
+  .item .slotlab { font-size: 10px; color: var(--dim); letter-spacing: 1px; }
+
+  .weapons {
+    grid-column: 2; display: flex; justify-content: center; gap: 34px;
+    margin-top: -10px;
+  }
+  .weapons .item { max-width: 260px; }
+
+  .status {
+    grid-column: 1 / -1; text-align: center; color: var(--muted);
+    font-size: 13px; padding: 80px 0;
+  }
+  .meta-note {
+    max-width: 1500px; margin: 0 auto; padding: 0 30px 30px;
+    font-size: 10.5px; color: var(--dim); text-align: right;
+  }
+
+  @media (max-width: 1000px) {
+    .armory { grid-template-columns: 1fr 1fr; }
+    .render-zone { grid-column: 1 / -1; order: -1; min-height: 0; }
+    .render-zone img { max-height: 440px; }
+    .weapons { grid-column: 1 / -1; }
+    .char-head { flex-wrap: wrap; }
+    .head-stats { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── GATE: solo admin ─────────────────────────────────── -->
+<div id="gate">
+  <div class="gate-box">
+    <h1>ARMARIO</h1>
+    <p>Página privada en construcción. Ingresa la clave del panel de administración.</p>
+    <input type="password" id="gate-pass" placeholder="Clave de admin" autocomplete="current-password">
+    <button id="gate-btn">Entrar</button>
+    <div class="gate-error" id="gate-error"></div>
+  </div>
+</div>
+
+<div class="scene" id="app" style="display:none">
+  <div class="topbar">
+    <div class="brand">EXILIUM<small>ARMARIO · LIGA RBG</small></div>
+    <div class="players" id="players"></div>
+    <button class="btn-refresh" id="btn-refresh" title="Fuerza la lectura desde Blizzard (ignora el cache de 6h)">
+      ⟳ Actualizar desde Blizzard
+    </button>
+  </div>
+
+  <div id="view"></div>
+</div>
+
+<script>
+const API_URL = 'https://api.guild-exilium.com';
+
+// Mismo token de sesión que el panel admin (admin.html): si ya
+// iniciaste sesión ahí en esta pestaña, entras directo.
+const getToken   = () => sessionStorage.getItem('admin_token');
+const setToken   = (t) => sessionStorage.setItem('admin_token', t);
+const clearToken = () => sessionStorage.removeItem('admin_token');
+
+let players = [];
+let current = null; // {char_name, realm, nickname}
+
+// ── Orden de slots (réplica del armory de Blizzard) ─────────
+const LEFT  = ['HEAD','NECK','SHOULDER','BACK','CHEST','SHIRT','TABARD','WRIST'];
+const RIGHT = ['HANDS','WAIST','LEGS','FEET','FINGER_1','FINGER_2','TRINKET_1','TRINKET_2'];
+const BOTTOM = ['MAIN_HAND','OFF_HAND'];
+
+const SLOT_LABELS = {
+  HEAD:'Cabeza', NECK:'Cuello', SHOULDER:'Hombros', BACK:'Espalda', CHEST:'Pecho',
+  SHIRT:'Camisa', TABARD:'Tabardo', WRIST:'Muñecas', HANDS:'Manos', WAIST:'Cintura',
+  LEGS:'Piernas', FEET:'Pies', FINGER_1:'Anillo 1', FINGER_2:'Anillo 2',
+  TRINKET_1:'Abalorio 1', TRINKET_2:'Abalorio 2', MAIN_HAND:'Mano derecha', OFF_HAND:'Mano izquierda',
+};
+
+const CLASS_COLORS = {
+  'Guerrero':'#C69B6D','Paladín':'#F48CBA','Cazador':'#AAD372','Pícaro':'#FFF468',
+  'Sacerdote':'#FFFFFF','Caballero de la Muerte':'#C41E3A','Chamán':'#0070DD',
+  'Mago':'#3FC7EB','Brujo':'#8788EE','Monje':'#00FF98','Druida':'#FF7C0A',
+  'Cazador de Demonios':'#A330C9','Evocador':'#33937F',
+};
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g,
+  (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(path) {
+  const res = await fetch(API_URL + path, {
+    headers: { 'Authorization': 'Bearer ' + getToken() },
+  });
+  if (res.status === 401) { clearToken(); showGate(); throw new Error('401'); }
+  return res.json();
+}
+
+// ── Gate ─────────────────────────────────────────────────────
+function showGate() {
+  document.getElementById('gate').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+async function tryLogin() {
+  const btn = document.getElementById('gate-btn');
+  const errEl = document.getElementById('gate-error');
+  const pass = document.getElementById('gate-pass').value.trim();
+  if (!pass) return;
+  btn.disabled = true; errEl.style.display = 'none';
+  try {
+    const res = await fetch(API_URL + '/admin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass }),
+    });
+    const data = await res.json();
+    if (res.ok && data.token) { setToken(data.token); await enter(); }
+    else { errEl.textContent = data.error || 'Clave incorrecta.'; errEl.style.display = 'block'; }
+  } catch (_) {
+    errEl.textContent = 'Error de conexión.'; errEl.style.display = 'block';
+  } finally { btn.disabled = false; }
+}
+
+async function enter() {
+  // Valida el token cargando el roster; si es inválido vuelve al gate
+  const data = await api('/admin/armory/roster');
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  players = data.players || [];
+  renderPlayerChips();
+  if (players.length) selectPlayer(players[0]);
+  else document.getElementById('view').innerHTML =
+    '<div class="status">No hay jugadores de la liga RBG con personaje de WoW vinculado todavía.</div>';
+}
+
+// ── Selector de jugadores ────────────────────────────────────
+function renderPlayerChips() {
+  const box = document.getElementById('players');
+  box.innerHTML = players.map((p, i) => `
+    <button class="player-chip" data-i="${i}">
+      <img src="${API_URL}/api/rbg/photo/${encodeURIComponent(p.user_id)}"
+           onerror="this.style.visibility='hidden'" alt="">
+      <span>${esc(p.nickname || p.char_name)}
+        <span class="spec">${esc(p.char_name)} · ${esc(p.realm)}</span>
+      </span>
+    </button>`).join('');
+  box.querySelectorAll('.player-chip').forEach((el) =>
+    el.addEventListener('click', () => selectPlayer(players[+el.dataset.i])));
+}
+
+function markActive() {
+  document.querySelectorAll('.player-chip').forEach((el, i) =>
+    el.classList.toggle('active', players[i] === current));
+}
+
+// ── Ficha armory ─────────────────────────────────────────────
+async function selectPlayer(p, refresh = false) {
+  current = p;
+  markActive();
+  const view = document.getElementById('view');
+  view.innerHTML = '<div class="status">Consultando a Blizzard…</div>';
+  try {
+    const q = `name=${encodeURIComponent(p.char_name)}&realm=${encodeURIComponent(p.realm)}` +
+              (refresh ? '&refresh=1' : '');
+    const data = await api('/admin/armory/character?' + q);
+    if (data.error) {
+      view.innerHTML = `<div class="status">⚠ ${esc(data.error)} (${esc(p.char_name)}-${esc(p.realm)})</div>`;
+      return;
+    }
+    renderCharacter(data);
+  } catch (e) {
+    if (String(e.message) !== '401') {
+      view.innerHTML = '<div class="status">Error de conexión con la API.</div>';
+    }
+  }
+}
+
+function itemHtml(bySlot, slot) {
+  const it = bySlot[slot];
+  if (!it) {
+    return `<div class="item">
+      <div class="icon empty"></div>
+      <div class="info"><div class="slotlab">${esc(SLOT_LABELS[slot] || slot)}</div></div>
+    </div>`;
+  }
+  return `<div class="item">
+    ${it.icon
+      ? `<img class="icon q-${esc(it.quality)}" src="${esc(it.icon)}" alt="" loading="lazy">`
+      : `<div class="icon q-${esc(it.quality)}"></div>`}
+    <div class="info">
+      <div class="iname q-${esc(it.quality)}">${esc(it.name)}</div>
+      ${it.enchants.map((e) => `<div class="ench">${esc(e)}</div>`).join('')}
+      ${it.sockets.map((g) => `<div class="gem">◆ ${esc(g)}</div>`).join('')}
+      <div class="ilvl">${it.ilvl}</div>
+    </div>
+  </div>`;
+}
+
+function renderCharacter(data) {
+  const c = data.character;
+  const bySlot = {};
+  for (const it of data.items) bySlot[it.slot] = it;
+
+  const classColor = CLASS_COLORS[c.class] || '#e8eaf2';
+  const crestSvg = c.faction === 'HORDE'
+    ? '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 4 7v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-5zm0 3.2 5 3.1v4.4c0 3.4-2.2 5.6-5 6.6-2.8-1-5-3.2-5-6.6V8.3l5-3.1z"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 1 3 6v7c0 5.5 4 9 9 10 5-1 9-4.5 9-10V6l-9-5zm0 4.5L17.5 9v3.8c0 3.7-2.4 6-5.5 7.2-3.1-1.2-5.5-3.5-5.5-7.2V9L12 5.5z"/></svg>';
+
+  const subline = [
+    c.level, c.race, c.class, 'de ' + c.spec,
+    c.guild ? `<span class="guild">⟨${esc(c.guild)}⟩</span>` : '',
+    `<span class="realm">${esc(c.realm)}</span>`,
+  ].filter(Boolean).join(' ');
+
+  document.getElementById('view').innerHTML = `
+    <div class="char-head">
+      <div class="crest ${esc(c.faction)}">${crestSvg}</div>
+      <div class="char-id">
+        ${c.title ? `<div class="title">${esc(c.title)}</div>` : ''}
+        <div class="name" style="color:${classColor}">${esc(c.name)}</div>
+        <div class="subline">${subline}</div>
+      </div>
+      <div class="head-stats">
+        <div class="stat" title="Puntos de logro">
+          <svg viewBox="0 0 24 24"><path d="M5 3h14v2h3v4c0 2.2-1.8 4-4 4h-.3A7 7 0 0 1 13 16.9V19h4v2H7v-2h4v-2.1A7 7 0 0 1 6.3 13H6c-2.2 0-4-1.8-4-4V5h3V3zm0 4H4v2c0 1.1.9 2 2 2V7zm15 0h-1v4c1.1 0 2-.9 2-2V7z"/></svg>
+          ${c.achievement_points.toLocaleString()}
+        </div>
+        <div class="stat" title="Nivel de objeto equipado">
+          <svg viewBox="0 0 24 24"><path d="m12 2 3 6 6-1-4 5 4 5-6-1-3 6-3-6-6 1 4-5-4-5 6 1 3-6z"/></svg>
+          ${c.equipped_ilvl} <span class="label">NIVEL DE OBJETO</span>
+        </div>
+        ${c.mplus_rating ? `<div class="stat" title="Puntuación Míticas+"
+            ${c.mplus_color ? `style="color:rgb(${c.mplus_color.r},${c.mplus_color.g},${c.mplus_color.b})"` : ''}>
+          <svg viewBox="0 0 24 24"><path d="M12 2 2 12l10 10 10-10L12 2zm0 4.8 5.2 5.2-5.2 5.2L6.8 12 12 6.8z"/></svg>
+          M+: ${c.mplus_rating}</div>` : ''}
+      </div>
+    </div>
+
+    <div class="tabs"><span>PERSONAJE</span></div>
+
+    <div class="armory">
+      <div class="col left">${LEFT.map((s) => itemHtml(bySlot, s)).join('')}</div>
+      <div class="render-zone">
+        ${c.render
+          ? `<img src="${esc(c.render)}" alt="Modelo 2D de ${esc(c.name)}">`
+          : '<div class="render-missing">Blizzard no tiene render disponible para este personaje.</div>'}
+      </div>
+      <div class="col right">${RIGHT.map((s) => itemHtml(bySlot, s)).join('')}</div>
+      <div class="weapons">${BOTTOM.map((s) => bySlot[s] ? itemHtml(bySlot, s) : '').join('')}</div>
+    </div>
+
+    <div class="meta-note">
+      Datos en vivo de Blizzard (es_MX) · cache 6 h · actualizado: ${new Date(data.generated_at).toLocaleString()}
+    </div>`;
+}
+
+// ── Init ─────────────────────────────────────────────────────
+document.getElementById('gate-btn').addEventListener('click', tryLogin);
+document.getElementById('gate-pass').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') tryLogin();
+});
+document.getElementById('btn-refresh').addEventListener('click', () => {
+  if (current) selectPlayer(current, true);
+});
+
+(async () => {
+  if (getToken()) {
+    try { await enter(); return; } catch (_) { /* token viejo → gate */ }
+  }
+  showGate();
+})();
+</script>
+</body>
+</html>

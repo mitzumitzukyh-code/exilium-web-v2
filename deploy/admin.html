@@ -60,13 +60,16 @@
             <button data-tab="analytics"><span class="nav-icon">📈</span> Analíticas</button>
             <button data-tab="n8n"><span class="nav-icon">⚡</span> N8N / Discord</button>
             <button data-tab="errors"><span class="nav-icon">🔬</span> Errores</button>
+            <button data-tab="backups"><span class="nav-icon">💾</span> Backups</button>
             <div style="height:1px;background:var(--border);margin:8px 12px;"></div>
             <button data-tab="boost-orders"><span class="nav-icon">⚔️</span> Pedidos Carry</button>
             <button data-tab="boost-boosters"><span class="nav-icon">🏛️</span> Boosters</button>
             <button data-tab="boost-clients"><span class="nav-icon">👥</span> Clientes Portal</button>
             <button data-tab="rbg-strategies"><span class="nav-icon">🗺️</span> RBG Strategies</button>
+            <button data-tab="liga-rbg"><span class="nav-icon">⚔️</span> Liga RBG</button>
             <button data-tab="news"><span class="nav-icon">📰</span> Noticias</button>
             <button data-tab="casino"><span class="nav-icon">🎰</span> Casino PandaCoins</button>
+            <button data-tab="accounts"><span class="nav-icon">👤</span> Cuentas App</button>
         </nav>
         <div class="sidebar-footer">
             <button class="btn-logout" id="logout-btn">Cerrar sesión</button>
@@ -115,6 +118,59 @@
                         <tr><td colspan="11" class="empty-state"><p>Cargando...</p></td></tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- TAB: CUENTAS APP -->
+        <div id="tab-accounts" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">Cuentas de la App</h2>
+                <div class="tab-actions">
+                    <button class="btn" id="refresh-accounts-btn">🔄 Refresh</button>
+                </div>
+            </div>
+            <div class="stat-grid" style="margin-bottom:16px;">
+                <div class="stat-card"><div class="stat-val" id="acc-total">—</div><div class="stat-label">Cuentas totales</div></div>
+                <div class="stat-card"><div class="stat-val" id="acc-active">—</div><div class="stat-label">Activas</div></div>
+                <div class="stat-card"><div class="stat-val" id="acc-banned">—</div><div class="stat-label">Baneadas</div></div>
+                <div class="stat-card"><div class="stat-val" id="acc-pending">—</div><div class="stat-label">Pend. validación</div></div>
+                <div class="stat-card"><div class="stat-val" id="acc-new7d">—</div><div class="stat-label">Nuevas (7 días)</div></div>
+                <div class="stat-card"><div class="stat-val" id="acc-active7d">—</div><div class="stat-label">Con login (7 días)</div></div>
+            </div>
+            <div class="search-bar">
+                <input class="input" type="text" id="account-search" placeholder="Buscar por email, BattleTag, personaje o Discord...">
+                <select class="input" id="account-filter">
+                    <option value="">Todas</option>
+                    <option value="active">Activas</option>
+                    <option value="banned">Baneadas</option>
+                </select>
+                <span class="players-count" id="accounts-count">—</span>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Personaje</th>
+                            <th>BattleTag</th>
+                            <th>Email</th>
+                            <th>Discord</th>
+                            <th>Tier</th>
+                            <th>Validación</th>
+                            <th>Estado</th>
+                            <th>Registro</th>
+                            <th>Último login</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accounts-tbody">
+                        <tr><td colspan="10" class="empty-state"><p>Cargando...</p></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:center;margin-top:12px;">
+                <button class="btn btn-sm" id="acc-prev-btn">← Anterior</button>
+                <span id="acc-page-info" style="font-size:12px;opacity:.7;">—</span>
+                <button class="btn btn-sm" id="acc-next-btn">Siguiente →</button>
             </div>
         </div>
 
@@ -350,6 +406,7 @@
                 <h2 class="tab-title">Pase de Batalla</h2>
                 <div class="tab-actions">
                     <button class="btn btn-success" id="bp-add-reward-btn">➕ Agregar recompensa</button>
+                    <button class="btn" id="bp-restore-defaults-btn">🔄 Restaurar textos por defecto</button>
                     <button class="btn btn-primary" id="bp-save-btn">💾 Guardar cambios</button>
                 </div>
             </div>
@@ -717,6 +774,16 @@
                         <textarea class="input" id="hof-reason" rows="3" maxlength="250" placeholder="Ej: Alcanzó Gladiador esta semana con un rendimiento excepcional en arenas"></textarea>
                     </div>
                     <div class="form-group">
+                        <label>Imagen personalizada (opcional, reemplaza la foto del jugador)</label>
+                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                            <input type="file" id="hof-avatar-file" accept="image/*" style="flex:1;padding:6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-main);cursor:pointer;">
+                            <button class="btn btn-success" id="hof-avatar-upload-btn">⬆️ Subir</button>
+                        </div>
+                        <div id="hof-avatar-upload-status" style="font-size:.8em;color:var(--text-muted);margin-bottom:8px;display:none;"></div>
+                        <div style="text-align:center;color:var(--text-muted);font-size:.85em;margin:4px 0;">— o pega una URL —</div>
+                        <input class="input" type="text" id="hof-avatar-url" placeholder="URL de la imagen (deja vacío para usar la foto del jugador)" style="margin-top:4px;">
+                    </div>
+                    <div class="form-group">
                         <label>Video individual del jugador (opcional)</label>
                         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
                             <input type="file" id="hof-entry-video-file" accept="video/*" style="flex:1;padding:6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-main);cursor:pointer;">
@@ -834,6 +901,33 @@
                 <div class="card-body">
                     <div id="analytics-chart" style="display:flex;align-items:flex-end;gap:4px;height:180px;padding:10px 0;"></div>
                     <div id="analytics-table" style="margin-top:16px;"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🎰 Casino — entradas a la sala</span>
+                </div>
+                <div class="card-body">
+                    <div class="stat-grid" id="casino-analytics-stats">
+                        <div class="stat-card">
+                            <div class="stat-val" id="casino-analytics-total">—</div>
+                            <div class="stat-label">Entradas totales</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="casino-analytics-today">—</div>
+                            <div class="stat-label">Hoy</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="casino-analytics-week">—</div>
+                            <div class="stat-label">Últimos 7 días</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-val" id="casino-analytics-avg">—</div>
+                            <div class="stat-label">Promedio diario (7d)</div>
+                        </div>
+                    </div>
+                    <div id="casino-analytics-chart" style="display:flex;align-items:flex-end;gap:4px;height:180px;padding:10px 0;margin-top:12px;"></div>
+                    <div id="casino-analytics-table" style="margin-top:16px;"></div>
                 </div>
             </div>
         </div>
@@ -1038,6 +1132,46 @@
             </div>
         </div>
 
+        <!-- TAB: LIGA RBG (inscritos + core de 12) -->
+        <div id="tab-liga-rbg" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">⚔️ Liga RBG — Inscritos</h2>
+                <div class="tab-actions">
+                    <button class="btn" onclick="loadLigaRbg()">🔄 Refrescar</button>
+                    <button class="btn btn-primary" onclick="saveLigaRbgCore()">💾 Guardar core de 12</button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:1rem;">
+                <div class="card-body" style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;">
+                    <span id="liga-rbg-resumen" style="font-size:.85rem;color:var(--text-muted);">Cargando…</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body" style="overflow-x:auto;">
+                    <table class="data-table" id="liga-rbg-table">
+                        <thead>
+                            <tr>
+                                <th>Jugador</th>
+                                <th>Nickname PJ</th>
+                                <th>Spec</th>
+                                <th>Rol</th>
+                                <th>País</th>
+                                <th>Se anotó como</th>
+                                <th>Core</th>
+                                <th>Inscrito</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="liga-rbg-tbody">
+                            <tr><td colspan="9" style="text-align:center;color:var(--text-muted);">Cargando…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- â•â•â•â•â•â•â• TAB: NOTICIAS DE PARCHE â•â•â•â•â•â•â• -->
         <div id="tab-news" class="tab-content">
             <div class="admin-section-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:12px 0;">
@@ -1071,6 +1205,58 @@
             </div>
         </div>
 
+        <!-- ═══ TAB: BACKUPS ═══ -->
+        <div id="tab-backups" class="tab-content">
+            <div class="tab-header">
+                <h2 class="tab-title">💾 Copias de seguridad</h2>
+                <div class="tab-actions">
+                    <button class="btn" id="backup-refresh-btn">🔄 Refrescar</button>
+                    <button class="btn btn-primary" id="backup-run-btn">💾 Hacer copia ahora</button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+                <div class="card-body">
+                    <p style="font-size:13px; line-height:1.6; margin:0; opacity:.85;">
+                        Se hace una copia <strong>automática cada 6 horas</strong> y se conservan las
+                        <strong>12 más recientes</strong> (3 días). Guarda solo los datos irreemplazables
+                        —inscripciones de la Liga RBG, cuentas del casino, jugadores, config, comentarios—
+                        y omite la caché, que se regenera sola.
+                        Las copias viven en un <strong>namespace de KV distinto</strong>: si algo borra datos
+                        del principal, las copias no se van con ellos.
+                    </p>
+                </div>
+            </div>
+
+            <div class="stat-grid" style="margin-top:16px;">
+                <div class="stat-card"><div class="stat-val" id="bk-count">—</div><div class="stat-label">Copias guardadas</div></div>
+                <div class="stat-card"><div class="stat-val" id="bk-last">—</div><div class="stat-label">Última copia</div></div>
+                <div class="stat-card"><div class="stat-val" id="bk-keys">—</div><div class="stat-label">Claves respaldadas</div></div>
+                <div class="stat-card"><div class="stat-val" id="bk-total">—</div><div class="stat-label">Claves totales en KV</div></div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header"><h3>Copias disponibles</h3></div>
+                <div class="card-body">
+                    <div id="backups-list">
+                        <div class="empty-state"><p>Cargando...</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:16px; border:1px solid rgba(248,81,73,.5); background:rgba(248,81,73,.06);">
+                <div class="card-header"><h3>♻️ Restaurar desde un archivo</h3></div>
+                <div class="card-body">
+                    <p style="color:#f85149; font-size:13px; line-height:1.6; margin:0 0 14px;">
+                        Sobrescribe en KV cada clave contenida en el archivo. <strong>No borra</strong> las que
+                        no estén en la copia. Descarga antes una copia del estado actual por si acaso.
+                    </p>
+                    <input type="file" id="restore-file" accept="application/json" style="margin-bottom:12px;">
+                    <button class="btn btn-danger" id="restore-run-btn">♻️ Restaurar copia</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ═══ TAB: CASINO ═══ -->
         <div id="tab-casino" class="tab-content">
             <div class="tab-header">
@@ -1081,6 +1267,40 @@
                 </div>
             </div>
 
+            <!-- Reinicio de FÁBRICA: borra cuentas + historial + sesiones. Irreversible. -->
+            <div class="card" style="margin-top:16px; border:1px solid rgba(248,81,73,.5); background:rgba(248,81,73,.06);">
+                <div class="card-header"><h3>💣 Reinicio de fábrica (pre-inauguración)</h3></div>
+                <div class="card-body">
+                    <p style="color:#f85149; font-size:13px; line-height:1.6; margin:0 0 14px;">
+                        Borra <strong>TODAS</strong> las cuentas de casino (saldo, skins, avatar), transacciones, historial de rondas, leaderboard, chat y sesiones activas — y desconecta a todos los jugadores de la mesa en vivo. Es <strong>irreversible</strong>. Usar solo una vez, antes del lanzamiento público.
+                    </p>
+                    <button class="btn btn-danger" id="casino-factory-reset-btn">💣 Reinicio de fábrica (borra TODO)</button>
+                </div>
+            </div>
+
+            <!-- Dealer · Mantenimiento -->
+            <div class="card" style="margin-top:16px; border:1px solid rgba(240,165,46,.45);">
+                <div class="card-header"><h3>🛠️ Dealer · Mantenimiento del casino</h3></div>
+                <div class="card-body">
+                    <p style="color:#c9a368; font-size:13px; line-height:1.6; margin:0 0 14px;">
+                        Con el mantenimiento <strong>activo</strong>, ningún jugador puede entrar al casino: verán una pantalla de "en mantenimiento".
+                        Solo tú puedes entrar usando el botón <strong>Entrar como dealer</strong> (abre la sala con un token de acceso).
+                    </p>
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+                        <span style="font-size:13px; color:#c9a368;">Estado actual:</span>
+                        <span id="maint-status" style="font-weight:800; padding:4px 12px; border-radius:999px; font-size:13px;">—</span>
+                    </div>
+                    <label style="display:block; font-size:13px; color:#c9a368; margin-bottom:6px;">Mensaje que verán los jugadores
+                        <textarea class="input" id="maint-message" rows="2" style="width:100%; margin-top:6px;" placeholder="El casino está temporalmente en mantenimiento. ¡Vuelve pronto!"></textarea>
+                    </label>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                        <button class="btn btn-danger" id="maint-close-btn">🔒 Cerrar casino (mantenimiento)</button>
+                        <button class="btn btn-primary" id="maint-open-btn">🔓 Abrir casino</button>
+                        <button class="btn" id="maint-dealer-btn">👁️ Entrar como dealer</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Stats globales -->
             <div class="stat-grid" id="casino-stats-grid">
                 <div class="stat-card"><div class="stat-val" id="cs-status">—</div><div class="stat-label">Estado Sala</div></div>
@@ -1088,6 +1308,7 @@
                 <div class="stat-card"><div class="stat-val" id="cs-users">—</div><div class="stat-label">Usuarios</div></div>
                 <div class="stat-card"><div class="stat-val" id="cs-seats">—</div><div class="stat-label">Asientos Activos</div></div>
                 <div class="stat-card"><div class="stat-val" id="cs-balance">—</div><div class="stat-label">Saldo Total</div></div>
+                <div class="stat-card"><div class="stat-val" id="cs-gold">—</div><div class="stat-label">Equiv. en Oro (5.000/₡)</div></div>
                 <div class="stat-card"><div class="stat-val" id="cs-last">—</div><div class="stat-label">Último Resultado</div></div>
             </div>
 
@@ -1135,6 +1356,7 @@
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Saldo</th>
+                                    <th>Equiv. oro</th>
                                     <th>Apostado</th>
                                     <th>Ganado</th>
                                     <th>Rondas</th>
@@ -1143,7 +1365,7 @@
                                 </tr>
                             </thead>
                             <tbody id="casino-users-tbody">
-                                <tr><td colspan="7" class="empty-state"><p>Cargando...</p></td></tr>
+                                <tr><td colspan="8" class="empty-state"><p>Cargando...</p></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1155,6 +1377,7 @@
                 <div class="card-header">
                     <h3>🎯 Historial de Rondas</h3>
                     <div class="tab-actions">
+                        <button class="btn btn-danger" id="casino-clear-chat-btn">💬 Limpiar chat</button>
                         <button class="btn btn-danger" id="casino-clear-rounds-btn">🗑️ Limpiar historial</button>
                     </div>
                 </div>
@@ -1239,6 +1462,65 @@
                             <span style="font-size:11px;color:var(--ink-dim);opacity:0.6;">Sin datos suficientes.</span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- ═══ TIENDA DE DECORACIONES (migrado de casino-shop-admin) ═══ -->
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header">
+                    <h3>🎁 Tienda — Ventas</h3>
+                    <div class="tab-actions">
+                        <button class="btn" id="casino-shop-refresh-btn">🔄 Refresh</button>
+                        <button class="btn btn-danger" id="casino-shop-clear-sales-btn">🗑 Borrar historial</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="stat-grid">
+                        <div class="stat-card"><div class="stat-val" id="shop-total-sales">—</div><div class="stat-label">Ventas Totales</div></div>
+                        <div class="stat-card"><div class="stat-val" id="shop-total-revenue">—</div><div class="stat-label">Ingresos (PandaCoins)</div></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:14px;">
+                        <div>
+                            <div style="font-size:12px;color:var(--ink-dim);margin-bottom:6px;letter-spacing:0.04em;">Por decoración</div>
+                            <div class="table-wrap">
+                                <table class="data-table" id="shop-summary-table">
+                                    <thead><tr><th>Decoración</th><th>Vendidas</th><th>Ingresos</th></tr></thead>
+                                    <tbody id="shop-summary-tbody"><tr><td colspan="3" class="empty-state"><p>Cargando...</p></td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size:12px;color:var(--ink-dim);margin-bottom:6px;letter-spacing:0.04em;">Compras recientes</div>
+                            <div class="table-wrap" style="max-height:300px;overflow:auto;">
+                                <table class="data-table" id="shop-sales-table">
+                                    <thead><tr><th>Jugador</th><th>Decoración</th><th>Precio</th><th>Fecha</th></tr></thead>
+                                    <tbody id="shop-sales-tbody"><tr><td colspan="4" class="empty-state"><p>Cargando...</p></td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:16px;">
+                <div class="card-header">
+                    <h3>🛠️ Tienda — Catálogo</h3>
+                    <div class="tab-actions">
+                        <button class="btn" id="casino-shop-add-row-btn">＋ Añadir decoración</button>
+                        <button class="btn" id="casino-shop-restore-btn">↩ Restaurar por defecto</button>
+                        <button class="btn btn-primary" id="casino-shop-save-btn">💾 Guardar catálogo</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="shop-row shop-row-head">
+                        <span>ID (único)</span><span>Ranura</span><span>Nombre</span><span>Precio</span><span>Rareza</span><span>Imagen (opcional)</span><span></span>
+                    </div>
+                    <div id="shop-rows"></div>
+                    <p style="font-size:12px;color:var(--ink-dim);margin-top:10px;line-height:1.5;">
+                        Ranuras: <b>avatar_frame</b> (marco), <b>name_effect</b> (nombre), <b>chip_skin</b> (fichas).
+                        El aspecto lo define el CSS por el ID (ej. <code>frame_gold</code>). Para una decoración con imagen,
+                        pon la ruta en "Imagen" (ej. <code>assets/decorations/wings.png</code>).
+                    </p>
                 </div>
             </div>
         </div>

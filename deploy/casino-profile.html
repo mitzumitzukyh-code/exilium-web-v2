@@ -20,7 +20,7 @@
     background:
       radial-gradient(ellipse at 50% 0%, rgba(240,165,46,.10), transparent 55%),
       radial-gradient(ellipse at 50% 120%, rgba(139,0,0,.16), transparent 60%),
-      url(assets/fondo-casino.png) center/cover no-repeat fixed, var(--bg);
+      url(assets/Nuevo-fondo.png) center/cover no-repeat fixed, var(--bg);
     padding:clamp(14px,3vw,40px);
   }
   a{ color:inherit; text-decoration:none; }
@@ -36,13 +36,14 @@
   /* Cards */
   .card{ background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 20px 50px -22px rgba(0,0,0,.8); padding:20px; }
   .h-card{ display:flex; align-items:center; gap:18px; margin-bottom:18px; flex-wrap:wrap; }
-  .avatar{ width:72px; height:72px; border-radius:50%; border:3px solid var(--gold); box-shadow:0 0 0 3px rgba(240,165,46,.25),0 0 18px rgba(240,165,46,.4); object-fit:cover; background:linear-gradient(150deg,#5865F2,#404EED); display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-weight:800; font-size:30px; color:#fff; }
+  .avatar{ width:var(--skin-prof-avatar,60px); height:var(--skin-prof-avatar,60px); border-radius:50%; border:3px solid var(--gold); box-shadow:0 0 0 3px rgba(240,165,46,.25),0 0 18px rgba(240,165,46,.4); object-fit:cover; background:linear-gradient(150deg,#5865F2,#404EED); display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-weight:800; font-size:38px; color:#fff; }
   .who .name{ font-family:'Cinzel',serif; font-weight:700; font-size:24px; color:var(--gold-pale); }
   .who .tag{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
   .balance{ margin-left:auto; text-align:right; }
   .balance .lbl{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-dim); }
   .balance .val{ font-family:'Cinzel',serif; font-weight:800; font-size:34px; color:var(--ink); font-variant-numeric:tabular-nums; }
   .balance .val span{ color:var(--gold); font-size:.55em; }
+  .balance .gold-eq{ margin-top:2px; font-size:12.5px; font-weight:700; color:var(--gold); font-variant-numeric:tabular-nums; }
   /* Stats grid */
   .stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:18px; }
   .stat{ background:rgba(0,0,0,.3); border:1px solid rgba(240,165,46,.14); border-radius:11px; padding:13px; text-align:center; }
@@ -80,6 +81,21 @@
   .ne-fire{ background:linear-gradient(90deg,#ff3d00,#ffb000,#ff3d00); background-size:200% auto; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent!important; animation:neSlide 2s linear infinite; }
   .ne-rainbow{ background:linear-gradient(90deg,#ff3d3d,#ffb000,#54d18a,#3fc7eb,#8788ee,#ff3d3d); background-size:300% auto; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent!important; animation:neSlide 3s linear infinite; }
   @keyframes neSlide{ to{ background-position:300% center; } }
+  /* Celda del avatar: reserva espacio para el marco/skin → NUNCA invade el nombre ni el saldo. */
+  .exi-av-cell{ position:relative; flex-shrink:0; width:var(--skin-prof-cell,204px); height:var(--skin-prof-cell,204px); display:inline-grid; place-items:center; overflow:visible; }
+  .who{ position:relative; z-index:2; min-width:0; }
+  .who .name{ overflow-wrap:anywhere; text-shadow:0 1px 4px rgba(0,0,0,.85); }
+  /* Botón "Borrar historial" (verbo + objeto, touch target ≥40px, feedback al pulsar). */
+  .clear-hist-btn{ margin-left:auto; display:inline-flex; align-items:center; gap:6px; padding:9px 14px; min-height:40px; border-radius:10px; border:1px solid rgba(207,106,100,.45); background:rgba(207,106,100,.1); color:#e58b85; font-family:'Inter',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:.02em; cursor:pointer; transition:transform .14s cubic-bezier(.23,1,.32,1), background .14s ease, border-color .14s ease; }
+  .clear-hist-btn:hover{ background:rgba(207,106,100,.2); border-color:#cf6a64; }
+  .clear-hist-btn:active{ transform:scale(.97); }
+  header .back{ min-height:44px; display:inline-flex; align-items:center; transition:background .14s ease; }
+  :focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  /* Accesibilidad: respeta a quien prefiere menos movimiento (pausa glows decorativos). */
+  @media (prefers-reduced-motion: reduce){
+    .df-gold,.df-emerald,.df-flame,.df-ice,.df-dragon,.ne-fire,.ne-rainbow{ animation:none!important; }
+    *{ transition-duration:.01ms!important; }
+  }
 </style>
 </head>
 <body>
@@ -101,8 +117,14 @@ const API = 'https://api.guild-exilium.com';
 
 function tk(){ try{ return localStorage.getItem('exi_tk') || ''; }catch(e){ return ''; } }
 function fmt(n){ return Number(n||0).toLocaleString('es'); }
+// Tasa oficial del casino: 1 PandaCoin = 5.000 oro de WoW (misma tabla que la guía de la sala).
+const GOLD_RATE=5000;
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const DECO_CLASS={ frame_gold:'df-gold', frame_emerald:'df-emerald', frame_flame:'df-flame', frame_ice:'df-ice', frame_dragon:'df-dragon', name_gold:'ne-gold', name_fire:'ne-fire', name_rainbow:'ne-rainbow' };
+// Respaldo de imágenes de skins (mismo mapa que la Sala): garantiza que la skin se vea
+// aunque el servidor no devuelva equipped_images (catálogo cacheado/editado).
+const DECO_IMAGE={ frame_tiger:'assets/decorations/tigre-ancestral.webp', frame_felfire:'assets/decorations/fuego-fel.webp', frame_dragonwings:'assets/decorations/dragon-alas.webm', frame_redaura:'assets/decorations/aura-phonk.webm', frame_dragonlegend:'assets/decorations/dragon-legendario.webm' };
+function isVideoUrl(u){ return /\.(mp4|webm|mov)(\?|$)/i.test(u||''); }
 function decoClass(id){ return (id&&DECO_CLASS[id])||''; }
 
 // Si volvemos del OAuth con ?token=..., guardarlo (defensivo; el callback suele ir a la Sala)
@@ -162,16 +184,27 @@ function render(user, txs, rank){
   const rtp = user.total_bet>0 ? Math.round((user.total_won/user.total_bet)*1000)/10 : 0;
   const winRate = (wins+losses)>0 ? Math.round((wins/(wins+losses))*100) : 0;
   const initial = (user.name||'?').charAt(0).toUpperCase();
+  // Override inmediato desde localStorage (lo que el jugador acaba de equipar en la Sala),
+  // para no esperar a que la caché de KV de /me se refresque (~60s). Solo afecta TU propio perfil.
+  try{ const le=JSON.parse(localStorage.getItem('exi_eq')||'null');
+    if(le && le.equipped){ user.equipped=Object.assign({}, user.equipped||{}, le.equipped); user.equipped_images=Object.assign({}, user.equipped_images||{}, le.images||{}); }
+  }catch(e){}
   const eq = user.equipped || {};
   const eqImg = user.equipped_images || {};
-  const frameImg = eqImg.avatar_frame;
+  const frameImg = eqImg.avatar_frame || DECO_IMAGE[eq.avatar_frame] || '';
   const frameCls = frameImg ? '' : decoClass(eq.avatar_frame);
   const avInner = user.avatar_url
     ? '<img class="avatar '+frameCls+'" src="'+esc(user.avatar_url)+'" alt="">'
     : '<div class="avatar '+frameCls+'">'+esc(initial)+'</div>';
+  // El marco/skin se contiene dentro de la celda (116px): enmarca el avatar (72px) sin
+  // desbordar hacia el nombre. El avatar va z-index encima; la skin detrás.
+  const _frameStyle='position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:100%; height:100%; pointer-events:none; object-fit:contain; z-index:0;';
+  const frameMedia = frameImg ? (isVideoUrl(frameImg)
+      ? '<video src="'+esc(frameImg)+'" autoplay loop muted playsinline preload="auto" style="'+_frameStyle+'"></video>'
+      : '<img src="'+esc(frameImg)+'" alt="" style="'+_frameStyle+'">') : '';
   const avatar = frameImg
-    ? '<span style="position:relative; display:inline-flex; overflow:visible;"><img src="'+esc(frameImg)+'" alt="" style="position:absolute; left:50%; top:48%; transform:translate(-50%,-50%); width:330%; height:330%; pointer-events:none; object-fit:contain; z-index:0;"><span style="position:relative; z-index:1; display:inline-flex;">'+avInner+'</span></span>'
-    : avInner;
+    ? '<span class="exi-av-cell">'+frameMedia+'<span style="position:relative; z-index:1; display:inline-flex;">'+avInner+'</span></span>'
+    : '<span class="exi-av-cell">'+avInner+'</span>';
 
   const rows = txs.length ? txs.map(t=>{
     let amount='', color='var(--ink-dim)', detail='';
@@ -195,14 +228,15 @@ function render(user, txs, rank){
   }).join('') : '<tr><td colspan="5" class="empty">Aún no tienes movimientos. ¡Ve a la Sala y haz tu primera apuesta!</td></tr>';
 
   document.getElementById('content').innerHTML =
-    '<div class="card">' +
+    '<div class="card" id="exi-prof-card">' +
       '<div class="h-card">' + avatar +
         '<div class="who"><div class="name '+decoClass(eq.name_effect)+'">'+esc(user.name)+'</div>'+
           (user.discord_username?'<div class="tag">@'+esc(user.discord_username)+'</div>':'')+'</div>'+
         '<div class="balance"><div class="lbl">Saldo · PandaCoins</div>'+
-          '<div class="val">'+fmt(user.balance)+' <span>₡</span></div></div>'+
+          '<div class="val">'+fmt(user.balance)+' <span>₡</span></div>'+
+          '<div class="gold-eq">≈ '+fmt((Number(user.balance)||0)*GOLD_RATE)+' 🪙 oro</div></div>'+
       '</div>'+
-      '<div class="stats">'+
+      '<div class="stats" id="exi-prof-stats">'+
         '<div class="stat"><span class="lbl">Total apostado</span><span class="num">'+fmt(user.total_bet)+'</span></div>'+
         '<div class="stat"><span class="lbl">Total ganado</span><span class="num" style="color:var(--green);">'+fmt(user.total_won)+'</span></div>'+
         '<div class="stat"><span class="lbl">Neto</span><span class="num" style="color:'+netColor+';">'+(net>0?'+':(net<0?'−':''))+fmt(Math.abs(net))+'</span></div>'+
@@ -214,14 +248,29 @@ function render(user, txs, rank){
         '<div class="stat"><span class="lbl">Ranking</span><span class="num" style="color:var(--gold);">'+(rank?('#'+rank):'—')+'</span></div>'+
       '</div>'+
     '</div>'+
-    '<div class="card mt">'+
-      '<div class="sect-title"><span class="dot"></span>Historial de movimientos</div>'+
+    '<div class="card mt" id="exi-prof-history">'+
+      '<div class="sect-title"><span class="dot"></span>Historial de movimientos'+
+        (txs.length ? '<button class="clear-hist-btn" type="button" onclick="exiClearHistory()" aria-label="Borrar historial de movimientos">🗑️ Borrar historial</button>' : '')+
+      '</div>'+
       '<div style="overflow:auto;max-height:50vh;">'+
         '<table><thead><tr><th>Tipo</th><th>Cantidad</th><th>Detalle</th><th>Saldo tras</th><th>Fecha</th></tr></thead>'+
         '<tbody>'+rows+'</tbody></table>'+
       '</div>'+
     '</div>';
+  // Reaplicar overrides de layout (modo edición) a las tarjetas recién generadas.
+  try{ if(window.exiApplyLayout) window.exiApplyLayout(); }catch(e){}
 }
+
+// El jugador borra su propio historial de movimientos (saldo y estadísticas no cambian).
+window.exiClearHistory = async function(){
+  if(!confirm('¿Borrar tu historial de movimientos?\n\nEsta acción no se puede deshacer. Tu saldo y tus estadísticas NO cambian.')) return;
+  try{
+    const res = await fetch(API + '/api/casino/clear-my-transactions', { method:'POST', headers:{ 'Authorization':'Bearer ' + tk() } });
+    if(res.ok){ load(); }
+    else if(res.status === 401){ loggedOut(); }
+    else { alert('No se pudo borrar el historial. Inténtalo de nuevo.'); }
+  }catch(e){ alert('Error de conexión al borrar el historial.'); }
+};
 
 async function load(){
   if(!tk()){ loggedOut(); return; }
@@ -245,5 +294,6 @@ async function load(){
 
 load();
 </script>
+
 </body>
 </html>

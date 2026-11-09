@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<!--
+  RULETA ANTIGUA / LEGACY — NO USAR COMO RULETA NUEVA.
+  Esta es la ruleta SVG con dragones (bundle x-dc, casino-build/). El dueño confirmo el 2026-11-09
+  que NO es la ruleta 3D nueva. Se mantiene tal cual solo porque es lo que sirve hoy produccion.
+  No tomarla como fuente de la ruleta nueva ni basarse en ella para rediseños. Ver docs/RULETA_LEGACY.md
+-->
+
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sala de PandaCoins — Ruleta Exilium Guild</title>
+<link rel="prefetch" href="assets/celebration.mp4" as="video" type="video/mp4">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cinzel+Decorative:wght@700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ background:#0a0a0c; }
+  @keyframes exiFloat{ 0%,100%{ transform:translateY(-50%) rotate(-2deg); } 50%{ transform:translateY(calc(-50% - 14px)) rotate(2deg); } }
+  @keyframes exiFloatR{ 0%,100%{ transform:translateY(-50%) scaleX(-1) rotate(2deg); } 50%{ transform:translateY(calc(-50% - 14px)) scaleX(-1) rotate(-2deg); } }
+  @keyframes exiGlow{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+  @keyframes exiPop{ 0%{ transform:translate(-50%,8px) scale(.9); opacity:0; } 60%{ transform:translate(-50%,0) scale(1.04); } 100%{ transform:translate(-50%,0) scale(1); opacity:1; } }
+  @keyframes exiBadge{ 0%{ transform:scale(.3); opacity:0; } 55%{ transform:scale(1.18); } 100%{ transform:scale(1); opacity:1; } }
+  .exi-scroll::-webkit-scrollbar{ width:5px; }
+  .exi-scroll::-webkit-scrollbar-thumb{ background:rgba(240,165,46,.4); border-radius:6px; }
+  .exi-scroll::-webkit-scrollbar-track{ background:transparent; }
+  [data-bet-key]{ transition:box-shadow .12s ease,filter .12s ease,transform .12s ease; }
+  [data-bet-key].exi-hv-self{ box-shadow:0 0 0 2px #f0a52e,0 0 26px rgba(240,165,46,.9)!important; transform:translateY(-3px) scale(1.08)!important; filter:brightness(1.4) saturate(1.15)!important; z-index:20!important; position:relative!important; }
+  [data-bet-key].exi-hv-rel{ box-shadow:inset 0 0 0 2px rgba(240,165,46,.65),0 0 16px rgba(240,165,46,.5)!important; filter:brightness(1.22)!important; z-index:8!important; position:relative!important; }
+  .exi-act{ transition:all .15s ease; }
+  .exi-act:hover{ border-color:#f0a52e!important; background:rgba(240,165,46,.2)!important; color:#f7c168!important; transform:translateY(-2px); box-shadow:0 4px 14px rgba(240,165,46,.45); }
+  .exi-act-clear:hover{ border-color:#cf6a64!important; background:rgba(181,26,26,.24)!important; color:#ff9a93!important; box-shadow:0 4px 14px rgba(207,106,100,.45); }
+  /* Animación universal de TODOS los botones: hover con brillo, "press" al click, disabled atenuado */
+  button{ transition:transform .12s ease, filter .15s ease, box-shadow .15s ease, background .15s ease; }
+  button:not(:disabled):hover{ filter:brightness(1.13) saturate(1.06); }
+  button:not(:disabled):active{ transform:scale(.94)!important; }
+  button:disabled{ filter:grayscale(.35) brightness(.82); cursor:default; }
+  @keyframes exiPulseBtn{ 0%,100%{ box-shadow:0 0 0 0 rgba(240,165,46,.55), 0 10px 26px -8px rgba(240,165,46,.6); } 50%{ box-shadow:0 0 0 7px rgba(240,165,46,0), 0 10px 26px -8px rgba(240,165,46,.6); } }
+  #readybtn:not(:disabled){ animation:exiPulseBtn 2.1s ease-in-out infinite; }
+  /* Botón Sentarse: grande, llamativo, animación de casino (pulso + brillo que barre) */
+  @keyframes seatPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(240,165,46,.6), 0 10px 26px -6px rgba(240,165,46,.7); } 50%{ box-shadow:0 0 0 12px rgba(240,165,46,0), 0 10px 30px -6px rgba(240,165,46,.85); } }
+  @keyframes seatShine{ 0%{ transform:translateX(-160%) skewX(-18deg); } 100%{ transform:translateX(360%) skewX(-18deg); } }
+  .exi-seatbtn{ position:relative; overflow:hidden; animation:seatPulse 1.7s ease-in-out infinite; }
+  .exi-seatbtn::after{ content:''; position:absolute; top:0; bottom:0; left:0; width:40%; background:linear-gradient(90deg, transparent, rgba(255,255,255,.6), transparent); animation:seatShine 2.4s ease-in-out infinite; pointer-events:none; }
+  .exi-seatbtn:hover{ filter:brightness(1.08); transform:translateY(-1px); }
+  /* ── Decoraciones de la tienda (estilo Nitro) ── */
+  .df-gold{ border-color:#f0a52e!important; animation:dfGold 1.8s ease-in-out infinite; }
+  @keyframes dfGold{ 0%,100%{ box-shadow:0 0 0 2px #f0a52e,0 0 10px rgba(240,165,46,.7),0 0 22px rgba(240,165,46,.4); } 50%{ box-shadow:0 0 0 3px #ffd98a,0 0 18px rgba(255,200,90,1),0 0 36px rgba(240,165,46,.7); } }
+  .df-emerald{ border-color:#54d18a!important; animation:dfEmerald 1.8s ease-in-out infinite; }
+  @keyframes dfEmerald{ 0%,100%{ box-shadow:0 0 0 2px #2f9c63,0 0 10px rgba(84,209,138,.7),0 0 22px rgba(47,156,99,.4); } 50%{ box-shadow:0 0 0 3px #9fffd0,0 0 18px rgba(120,255,180,1),0 0 36px rgba(84,209,138,.7); } }
+  .df-flame{ border-color:#ff6a00!important; animation:dfFlame .85s ease-in-out infinite; }
+  @keyframes dfFlame{ 0%,100%{ box-shadow:0 0 0 2px #ff6a00,0 -2px 12px 2px rgba(255,60,0,.9),0 0 18px 4px rgba(255,140,0,.85),0 0 32px 8px rgba(255,80,0,.45); } 50%{ box-shadow:0 0 0 3px #ffb000,0 -3px 18px 3px rgba(255,120,0,1),0 0 26px 6px rgba(255,205,40,.95),0 0 46px 11px rgba(255,90,0,.55); } }
+  .df-ice{ border-color:#7ec8ff!important; animation:dfIce 1.5s ease-in-out infinite; }
+  @keyframes dfIce{ 0%,100%{ box-shadow:0 0 0 2px #7ec8ff,0 0 12px rgba(126,200,255,.8),0 0 26px rgba(126,200,255,.45); } 50%{ box-shadow:0 0 0 3px #eaf7ff,0 0 22px rgba(210,240,255,1),0 0 42px rgba(150,210,255,.7); } }
+  .df-dragon{ border-color:#b51a1a!important; animation:dfDragon 1.6s ease-in-out infinite; }
+  @keyframes dfDragon{ 0%,100%{ box-shadow:0 0 0 2px #b51a1a,0 0 14px 2px rgba(181,26,26,.9),0 0 30px 6px rgba(240,165,46,.5); } 50%{ box-shadow:0 0 0 4px #f0a52e,0 0 24px 5px rgba(240,165,46,1),0 0 48px 11px rgba(181,26,26,.7); } }
+  .ne-gold{ background:linear-gradient(90deg,#f7c168,#fff0c0,#f0a52e); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent!important; }
+  .ne-fire{ background:linear-gradient(90deg,#ff3d00,#ffb000,#ff3d00); background-size:200% auto; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent!important; animation:neSlide 2s linear infinite; }
+  .ne-rainbow{ background:linear-gradient(90deg,#ff3d3d,#ffb000,#54d18a,#3fc7eb,#8788ee,#ff3d3d); background-size:300% auto; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent!important; animation:neSlide 3s linear infinite; }
+  @keyframes neSlide{ to{ background-position:300% center; } }
+  .cs-neon{ filter:drop-shadow(0 0 6px #3fc7eb) drop-shadow(0 0 3px #8788ee); }
+  .cs-royal{ filter:drop-shadow(0 0 6px #b388ff) drop-shadow(0 0 3px #f0a52e); }
+  /* ════════════════ RESPONSIVE (auditoría RWD) ════════════════ */
+  /* Desktop ≥1280px: layout original intacto (3 columnas, stage 100vh). */
+  /* El botón de colapsar chat solo aparece en móvil. */
+  .exi-chat-toggle{ display:none; }
+  /* ── Tablet landscape (1024–1279px): 3 columnas más estrechas + scroll vertical de seguridad ── */
+  @media (max-width:1279px){
+    #exi-stage{ height:auto!important; min-height:100vh!important; overflow-y:auto!important; padding-top:62px!important; }
+    #exi-arena{ grid-template-columns:minmax(148px,178px) minmax(0,1fr) minmax(166px,200px)!important; gap:8px!important; }
+    #exi-topbar{ position:fixed!important; top:8px!important; flex-wrap:wrap!important; justify-content:center!important; max-width:96vw!important; }
+  }
+  /* ── Tablet portrait (768–1023px): reordenar columnas → ruleta arriba, controles + chat debajo ── */
+  @media (max-width:1023px){
+    #exi-arena{ grid-template-columns:1fr 1fr!important; grid-template-areas:"center center" "right left"!important; gap:12px!important; }
+    #exi-arena>:nth-child(1){ grid-area:left; min-height:0!important; }
+    #exi-arena>:nth-child(2){ grid-area:center; }
+    #exi-arena>:nth-child(3){ grid-area:right; align-self:stretch!important; }
+    .exi-dragon-deco{ display:none!important; } /* dragones decorativos: estorban al estrechar */
+    #exi-status{ margin-top:clamp(16px,3vh,40px)!important; }
+    #exi-topbar{ gap:6px!important; }
+    #exi-topbar .exi-hide-sm{ display:none!important; }
+    #exi-topbar button{ padding:7px 11px!important; }
+  }
+  /* ── Móvil (<768px): vertical, ruleta centrada, chat colapsable, tablero con scroll horizontal ── */
+  @media (max-width:767px){
+    #exi-stage{ overflow:visible!important; padding-top:8px!important; padding-bottom:84px!important; }
+    #exi-arena{ grid-template-columns:1fr!important; grid-template-areas:"center" "right" "left"!important; gap:12px!important; }
+    /* Cabecera fija arriba → el SALDO PandaCoins SIEMPRE visible al hacer scroll */
+    .exi-header{ position:sticky; top:0; z-index:6; flex-wrap:nowrap!important; gap:9px!important; margin-bottom:8px!important; padding:6px 4px!important; background:linear-gradient(180deg,rgba(10,8,6,.97),rgba(10,8,6,.86))!important; }
+    .exi-header > div:first-child{ width:42px!important; height:42px!important; }
+    .exi-header > div:nth-child(2) > span:first-child{ display:none!important; } /* eyebrow "Exilium·Quel'Thalas" fuera */
+    .exi-header h1{ font-size:clamp(15px,4.6vw,20px)!important; }
+    .exi-header > div:nth-child(3){ padding:6px 11px 6px 7px!important; gap:7px!important; }
+    /* Barra de acciones (perfil/tienda/sonido) fija ABAJO: accesible sin tapar la cabecera */
+    #exi-topbar{ position:fixed!important; top:auto!important; bottom:0!important; left:0!important; right:0!important; transform:none!important; width:100%!important; max-width:none!important; justify-content:center!important; padding:7px 6px!important; background:rgba(10,8,6,.96)!important; border-top:1px solid rgba(240,165,46,.3); }
+    /* Tablero: scroll horizontal y celdas tapeables (≥40px de alto) */
+    #exi-board{ overflow-x:auto!important; -webkit-overflow-scrolling:touch; }
+    #exi-board > div{ min-width:560px!important; }
+    #board-numbers{ grid-template-rows:repeat(3,minmax(40px,46px))!important; }
+    /* Chat colapsable (toggle) + altura acotada cuando está abierto */
+    .exi-chat-toggle{ display:inline-flex!important; }
+    #exi-chat-panel #chat{ max-height:150px!important; }
+    #exi-chat-panel.exi-chat-collapsed{ flex:0 0 auto!important; min-height:0!important; }
+    #exi-chat-panel.exi-chat-collapsed #chat,
+    #exi-chat-panel.exi-chat-collapsed .exi-chat-inputrow{ display:none!important; }
+    #exi-status{ margin-top:14px!important; }
+    /* TODO (mejora futura, requiere mover el DOM o usar JS): en móvil el orden es
+       ruleta → controles → historial → chat → tablero de números. Lo ideal sería
+       ruleta → tablero → controles. El tablero (#exi-board) es hermano de #exi-arena
+       (no hijo), por eso no se puede intercalar solo con CSS sin refactor. */
+  }
+</style>
+</head>
+<body>
+
+<div id="exi-stage" style="position:relative; height:100vh; width:100%; box-sizing:border-box; background:radial-gradient(ellipse at 50% 0%, rgba(240,165,46,.10), transparent 55%), radial-gradient(ellipse at 50% 120%, rgba(139,0,0,.16), transparent 60%), url(assets/fondo-casino.png) center/cover no-repeat, #0a0a0c; font-family:'Inter',sans-serif; color:#f3ead6; overflow:hidden; padding:8px clamp(10px,1.4vw,20px) 8px; display:flex; flex-direction:column; gap:0;">
+
+  <div aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(118deg, rgba(0,0,0,.13) 0 2px, transparent 2px 5px); opacity:.35; mix-blend-mode:overlay;"></div>
+  <div aria-hidden="true" style="position:absolute; inset:0; pointer-events:none; box-shadow:inset 0 0 220px 60px rgba(0,0,0,.7);"></div>
+
+  <!-- HEADER -->
+  <header class="exi-header" style="position:relative; z-index:3; display:flex; align-items:center; gap:16px; margin-bottom:6px; flex-shrink:0;">
+    <div style="width:60px; height:60px; flex-shrink:0; border-radius:14px; background:linear-gradient(150deg,#1c150f,#0c0a08); border:1.5px solid rgba(240,165,46,.4); box-shadow:0 0 22px -6px rgba(240,165,46,.5), inset 0 1px 0 rgba(255,255,255,.06); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+      <img src="assets/logo.png" style="width:100%; height:100%; object-fit:contain; border-radius:12px;" alt="Exilium" />
+    </div>
+    <div style="display:flex; flex-direction:column; line-height:1.05;">
+      <span style="font-size:11px; letter-spacing:.34em; color:#b08d57; text-transform:uppercase; margin-bottom:5px; font-weight:600;">Exilium · Quel'Thalas</span>
+      <h1 style="font-family:'Cinzel Decorative',serif; font-weight:700; font-size:clamp(20px,2.1vw,30px); letter-spacing:.02em; color:#f3e6c4; text-transform:uppercase; text-shadow:0 0 24px rgba(240,165,46,.35), 0 2px 0 rgba(0,0,0,.6);">Ruleta <span style="color:#f0a52e;">Exilium</span> Guild</h1>
+    </div>
+    <div style="margin-left:auto; display:flex; align-items:center; gap:11px; padding:9px 18px 9px 12px; border-radius:999px; background:linear-gradient(180deg,#16110c,#0c0907); border:1.5px solid rgba(240,165,46,.42); box-shadow:0 18px 44px -16px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05);">
+      <div style="width:34px; height:34px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#ffd98a,#c8861f 55%,#7a4e12); box-shadow:0 0 14px rgba(240,165,46,.55), inset 0 1px 2px rgba(255,255,255,.5); display:flex; align-items:center; justify-content:center; overflow:hidden;"><img src="assets/coin_3.png" style="width:22px; height:22px; object-fit:contain;" alt="C" /></div>
+      <div style="line-height:1.1;">
+        <span style="display:block; font-size:10px; letter-spacing:.2em; color:#b08d57; text-transform:uppercase;">Tu saldo · PandaCoins</span>
+        <span style="font-family:'Cinzel',serif; font-weight:700; font-size:clamp(18px,1.7vw,24px); color:#f3ead6; font-variant-numeric:tabular-nums;"><span id="bal">—</span> <span style="color:#f0a52e; font-size:.7em;">C</span></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ARENA -->
+  <div id="exi-arena" style="position:relative; z-index:2; display:grid; grid-template-columns:minmax(178px,212px) minmax(0,1fr) minmax(198px,242px); gap:clamp(8px,1vw,16px); align-items:stretch; margin-bottom:6px; flex:1; min-height:0;">
+
+    <!-- LEFT -->
+    <div style="display:flex; flex-direction:column; gap:12px; min-height:0;">
+      <section style="background:linear-gradient(180deg,rgba(22,16,12,.82),rgba(12,9,7,.82)); border:1px solid rgba(240,165,46,.16); border-radius:14px; box-shadow:0 20px 50px -22px rgba(0,0,0,.8); padding:13px 14px 14px;">
+        <h2 style="display:flex; align-items:center; gap:8px; font-family:'Cinzel',serif; font-weight:600; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#e9d4a0; margin-bottom:11px;"><span style="width:6px; height:6px; border-radius:50%; background:#f0a52e; box-shadow:0 0 9px #f0a52e;"></span>Últimos números</h2>
+        <div id="history" style="display:grid; grid-template-columns:repeat(5,1fr); gap:6px;"></div>
+      </section>
+
+      <section id="exi-chat-panel" style="flex:1; min-height:240px; display:flex; flex-direction:column; background:linear-gradient(180deg,rgba(26,18,12,.9),rgba(14,9,7,.92)); border:1px solid rgba(240,165,46,.28); border-radius:14px; box-shadow:0 20px 50px -22px rgba(0,0,0,.8), inset 0 0 38px -18px rgba(240,165,46,.25); overflow:hidden;">
+        <div style="display:flex; align-items:center; gap:8px; padding:12px 14px 10px; border-bottom:1px solid rgba(240,165,46,.18); background:linear-gradient(180deg,rgba(240,165,46,.1),transparent);">
+          <span style="width:7px; height:7px; border-radius:50%; background:#54d18a; box-shadow:0 0 10px #54d18a;"></span>
+          <h2 style="font-family:'Cinzel',serif; font-weight:600; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#e9d4a0;">Chat de sala</h2>
+          <span style="margin-left:auto; font-size:10px; color:#8aa37a; letter-spacing:.08em;"><span id="online">0</span> en línea</span>
+          <button type="button" class="exi-chat-toggle" aria-label="Mostrar u ocultar el chat" onclick="var p=document.getElementById('exi-chat-panel');var c=p.classList.toggle('exi-chat-collapsed');this.firstChild.textContent=c?'Mostrar ▾':'Ocultar ▴';" style="align-items:center; margin-left:8px; background:rgba(240,165,46,.12); border:1px solid rgba(240,165,46,.4); color:#f0a52e; border-radius:7px; padding:4px 9px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap;"><span>Ocultar ▴</span></button>
+        </div>
+        <div id="chat" class="exi-scroll" style="flex:1; min-height:0; overflow-y:auto; padding:8px 10px; display:flex; flex-direction:column; gap:6px;"></div>
+        <div class="exi-chat-inputrow" style="display:flex; gap:7px; padding:10px 12px; border-top:1px solid rgba(240,165,46,.18);">
+          <input id="chatinput" type="text" maxlength="160" placeholder="Escribe a la guild…" style="flex:1; min-width:0; background:rgba(0,0,0,.4); border:1px solid rgba(240,165,46,.22); border-radius:8px; padding:8px 10px; color:#f3ead6; font-family:'Inter',sans-serif; font-size:12px; outline:none;">
+          <button id="chatsend" type="button" style="flex-shrink:0; background:linear-gradient(180deg,#f7c168,#f0a52e 60%,#b97916); color:#2a1a06; border:none; border-radius:8px; padding:8px 14px; font-weight:800; font-size:12px; cursor:pointer; box-shadow:0 4px 12px -4px rgba(240,165,46,.6);">Enviar</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- CENTER -->
+    <section style="position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:0; overflow:visible;">
+      <div class="exi-dragon-deco" aria-hidden="true" style="position:absolute; top:50%; right:calc(50% + min(15vw,200px)); width:clamp(130px,15vw,210px); z-index:1; pointer-events:none; animation:exiFloat 5s ease-in-out infinite; filter:drop-shadow(0 0 20px rgba(139,0,0,.55));">
+        <img src="assets/pandadragon.png" style="width:100%; aspect-ratio:1; object-fit:contain;" alt="" />
+      </div>
+      <div class="exi-dragon-deco" aria-hidden="true" style="position:absolute; top:50%; left:calc(50% + min(15vw,200px)); width:clamp(130px,15vw,210px); z-index:1; pointer-events:none; animation:exiFloatR 5s ease-in-out infinite; animation-delay:-2.5s; filter:drop-shadow(0 0 20px rgba(139,0,0,.55));">
+        <img src="assets/pandadragon.png" style="width:100%; aspect-ratio:1; object-fit:contain; transform:scaleX(-1);" alt="" />
+      </div>
+
+      <div id="seats" style="display:flex; justify-content:center; align-items:flex-end; gap:clamp(12px,2vw,32px); margin-bottom:8px; z-index:5; flex-wrap:nowrap;"></div>
+
+      <div style="position:relative; width:min(40vw,50vh,470px); height:min(40vw,50vh,470px); min-width:200px; min-height:200px; display:flex; align-items:center; justify-content:center;">
+        <div aria-hidden="true" style="position:absolute; top:-6px; left:50%; transform:translateX(-50%); z-index:6; width:0; height:0; border-left:13px solid transparent; border-right:13px solid transparent; border-top:22px solid #f7c168; filter:drop-shadow(0 2px 5px rgba(0,0,0,.7));"></div>
+
+        <div id="result" style="position:absolute; top:-14px; left:50%; z-index:7; display:none;"></div>
+
+        <div style="position:relative; width:100%; height:100%; border-radius:50%; padding:11px; background:conic-gradient(from 0deg,#3a2a10,#f0a52e 7%,#3a2a10 14%,#f0a52e 21%,#3a2a10 28%,#f0a52e 35%,#3a2a10 42%,#f0a52e 49%,#3a2a10 56%,#f0a52e 63%,#3a2a10 70%,#f0a52e 77%,#3a2a10 84%,#f0a52e 91%,#3a2a10 98%,#3a2a10 100%); box-shadow:0 0 0 1px rgba(240,165,46,.3), 0 26px 64px -12px rgba(0,0,0,.92), 0 0 48px -10px rgba(240,165,46,.32);">
+          <div aria-hidden="true" style="position:absolute; inset:-3px; border-radius:50%; border:2px dashed rgba(240,165,46,.3); animation:exiGlow 4s ease-in-out infinite;"></div>
+          <div style="width:100%; height:100%; border-radius:50%; overflow:hidden; background:#0c0807; box-shadow:inset 0 0 26px rgba(0,0,0,.85);">
+            <div id="wheel-rot" style="width:100%; height:100%; transform:rotate(0deg); transition:transform 4.7s cubic-bezier(.16,.62,.18,1);"></div>
+          </div>
+          <div aria-hidden="true" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:22%; height:22%; border-radius:50%; background:radial-gradient(circle at 35% 30%,#ffd98a,#c8861f 55%,#6e4710); box-shadow:0 0 0 3px #1a1208,0 6px 14px rgba(0,0,0,.7),0 0 18px rgba(240,165,46,.45); display:flex; align-items:center; justify-content:center; overflow:hidden;"><img src="assets/coin_3.png" style="width:70%; height:70%; object-fit:contain;" alt="C" /></div>
+        </div>
+      </div>
+
+      <p id="exi-status" style="margin:clamp(40px,5.5vh,72px) auto 0; display:table; padding:6px 18px; background:rgba(20,14,10,.72); border:1px solid rgba(240,165,46,.2); border-radius:20px; font-size:13px; font-weight:600; letter-spacing:.04em; color:#e9d4a0; text-align:center; min-height:18px;">Conectando con la mesa…</p>
+      <button id="seatbtn" class="exi-seatbtn" type="button" style="margin-top:14px; padding:14px 46px; border-radius:13px; border:2px solid #f7c168; background:linear-gradient(180deg,#f7c168,#f0a52e 58%,#b97916); color:#2a1a06; font-family:'Cinzel',serif; font-weight:800; font-size:16px; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; z-index:5;">Sentarse</button>
+    </section>
+
+    <!-- RIGHT -->
+    <section style="align-self:start; display:flex; flex-direction:column; gap:8px; background:linear-gradient(180deg,rgba(22,16,12,.84),rgba(12,9,7,.86)); border:1px solid rgba(240,165,46,.2); border-radius:14px; box-shadow:0 20px 50px -22px rgba(0,0,0,.8); padding:13px 14px 15px;">
+      <h2 style="display:flex; align-items:center; gap:8px; font-family:'Cinzel',serif; font-weight:600; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#e9d4a0;"><span style="width:6px; height:6px; border-radius:50%; background:#f0a52e; box-shadow:0 0 9px #f0a52e;"></span>Tu ficha</h2>
+      <div style="display:flex; gap:10px; font-size:10px; color:#9c8156; letter-spacing:.04em;">
+        <span>Min <strong id="minbet" style="color:#e9d4a0;">—</strong></span><span>Max <strong id="maxbet" style="color:#e9d4a0;">—</strong></span><span>Apuestas <strong id="betcount" style="color:#e9d4a0;">0</strong></span>
+      </div>
+
+      <div id="chips" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:4px 0 2px;"></div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:9px; background:rgba(0,0,0,.34); border:1px solid rgba(240,165,46,.16); font-size:11px; color:#9c8156;">
+        <span>Total apostado</span><span style="font-family:'Cinzel',serif; color:#f0a52e; font-weight:700; font-size:15px;"><span id="totalbet">0</span> C</span>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:7px 12px; border-radius:9px; background:rgba(0,0,0,.22); border:1px solid rgba(240,165,46,.12); font-size:11px; color:#9c8156;">
+        <span>Selección</span><strong id="selection" style="color:#e9d4a0; text-align:right; font-weight:600;">Ninguna</strong>
+      </div>
+
+      <button id="readybtn" data-exi-spin="1" type="button" style="margin-top:3px; width:100%; padding:14px 16px; border-radius:11px; border:1px solid rgba(240,165,46,.5); background:linear-gradient(180deg,#f7c168,#f0a52e 58%,#b97916); color:#2a1a06; font-family:'Cinzel',serif; font-weight:700; font-size:15px; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; box-shadow:0 10px 26px -8px rgba(240,165,46,.6), inset 0 1px 0 rgba(255,255,255,.45);">LISTO · Apostar</button>
+
+      <div style="display:flex; gap:7px; margin-top:1px;">
+        <button id="btn-half" class="exi-act" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(240,165,46,.2); background:rgba(0,0,0,.26); color:#c9b182; font-family:'Cinzel',serif; font-weight:700; font-size:14px; cursor:pointer;">½</button>
+        <button id="btn-double" class="exi-act" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(240,165,46,.2); background:rgba(0,0,0,.26); color:#c9b182; font-family:'Cinzel',serif; font-weight:700; font-size:14px; cursor:pointer;">×2</button>
+        <button id="btn-clear" class="exi-act exi-act-clear" type="button" style="flex:1; padding:8px 4px; border-radius:9px; border:1px solid rgba(181,26,26,.28); background:rgba(0,0,0,.26); color:#cf6a64; font-family:'Inter',sans-serif; font-weight:600; font-size:12px; cursor:pointer;">Limpiar</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- BOARD -->
+  <section id="exi-board" style="position:relative; z-index:2; background:linear-gradient(180deg, rgba(20,14,10,.92), rgba(10,7,6,.95)); border:1px solid rgba(240,165,46,.22); border-radius:14px; box-shadow:0 18px 50px -22px rgba(0,0,0,.85), inset 0 0 60px -30px rgba(0,0,0,.9); padding:7px clamp(8px,1vw,14px) 7px;">
+    <div id="board-numbers" style="display:grid; grid-template-columns:54px repeat(12,1fr) 50px; grid-template-rows:repeat(3,minmax(26px,34px)); gap:3px;"></div>
+    <div style="display:grid; grid-template-columns:54px 1fr 50px; gap:5px; margin-top:5px;">
+      <div></div>
+      <div id="board-dozens" style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px;"></div>
+      <div></div>
+    </div>
+    <div style="display:grid; grid-template-columns:54px 1fr 50px; gap:5px; margin-top:5px;">
+      <div></div>
+      <div id="board-outside" style="display:grid; grid-template-columns:repeat(6,1fr); gap:5px;"></div>
+      <div></div>
+    </div>
+  </section>
+</div>
+
+<!-- ███ Diagnóstico de errores · se activa con ?debug=1 (persiste). Tecla «`» abre/cierra el panel. ?debug=0 lo apaga. ███ -->
+<script>
+window.EXIDBG=(function(){
+  var LS_LOG='exi_dbg_log', FLAG='exi_debug', MAX=300;
+  var enabled=false;
+  try{
+    var q=new URLSearchParams(location.search);
+    if(q.has('debug')){ enabled=q.get('debug')!=='0'; localStorage.setItem(FLAG, enabled?'1':'0'); }
+    else enabled=localStorage.getItem(FLAG)==='1';
+  }catch(e){}
+
+  var buf=[];
+  try{ var s=JSON.parse(localStorage.getItem(LS_LOG)||'[]'); if(Array.isArray(s)) buf=s; }catch(e){}
+  var saveT=null;
+  function persist(){ if(saveT) return; saveT=setTimeout(function(){ saveT=null; try{ localStorage.setItem(LS_LOG, JSON.stringify(buf.slice(-MAX))); }catch(e){} }, 500); }
+
+  var COLORS={error:'#cf6a64', warn:'#f0c56b', info:'#7fb2e8', net:'#54d18a', event:'#caa15a', debug:'#9c8156'};
+  function fmtTime(ms){ var d=new Date(ms); function p(n,l){ n=String(n); while(n.length<(l||2)) n='0'+n; return n; } return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds())+'.'+p(d.getMilliseconds(),3); }
+  function escH(s){ return String(s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+
+  function log(level, tag, msg, data){
+    var e={ t:Date.now(), level:level||'info', tag:tag||'', msg:(msg==null?'':String(msg)), data:(data===undefined?undefined:data) };
+    buf.push(e); if(buf.length>MAX+60) buf=buf.slice(-MAX);
+    persist();
+    if(enabled && window.console){
+      var fn = level==='error'?console.error:(level==='warn'?console.warn:console.log);
+      try{ fn('%c[EXI:'+e.tag+']','color:'+(COLORS[e.level]||'#aaa')+';font-weight:bold', e.msg, e.data!==undefined?e.data:''); }catch(_){}
+    }
+    if(panelOpen) renderPanel();
+    if(level==='error'||level==='warn') updateBadge();
+    return e;
+  }
+
+  // ── Toasts (siempre visibles, también sin modo debug) ──
+  var toastWrap=null, lastToast={};
+  function ensureWrap(){ if(toastWrap) return toastWrap; if(!document.body) return null;
+    toastWrap=document.createElement('div');
+    toastWrap.style.cssText='position:fixed; right:14px; bottom:14px; z-index:9800; display:flex; flex-direction:column; gap:8px; max-width:min(360px,86vw); pointer-events:none; font-family:Inter,sans-serif;';
+    document.body.appendChild(toastWrap); return toastWrap; }
+  function toast(msg, type, ttl){
+    var w=ensureWrap(); if(!w){ setTimeout(function(){ toast(msg,type,ttl); },150); return; }
+    type=type||'error';
+    var col=type==='error'?'#cf6a64':(type==='warn'?'#f0c56b':'#54d18a');
+    var card=document.createElement('div');
+    card.style.cssText='pointer-events:auto; position:relative; background:linear-gradient(180deg,#1a120c,#0c0807); border:1px solid '+col+'; border-left:4px solid '+col+'; border-radius:10px; padding:9px 30px 9px 12px; color:#f3ead6; font-size:12px; line-height:1.45; box-shadow:0 12px 30px -10px rgba(0,0,0,.85); opacity:0; transform:translateY(8px); transition:opacity .2s,transform .2s; word-break:break-word;';
+    var h=document.createElement('div'); h.style.cssText='color:'+col+'; font-weight:700; font-size:11px; margin-bottom:2px;'; h.textContent=type==='error'?'⚠ Error':(type==='warn'?'⚠ Aviso':'✓ OK');
+    var b=document.createElement('div'); b.textContent=msg;
+    var x=document.createElement('button'); x.type='button'; x.textContent='×'; x.style.cssText='position:absolute; top:4px; right:8px; background:none; border:none; color:#9c8156; cursor:pointer; font-size:15px; line-height:1;';
+    var dead=false; function kill(){ if(dead) return; dead=true; card.style.opacity='0'; card.style.transform='translateY(8px)'; setTimeout(function(){ if(card.parentNode) card.parentNode.removeChild(card); }, 220); }
+    x.onclick=kill; card.appendChild(h); card.appendChild(b); card.appendChild(x); w.appendChild(card);
+    requestAnimationFrame(function(){ card.style.opacity='1'; card.style.transform='translateY(0)'; });
+    setTimeout(kill, ttl||7000);
+  }
+
+  function friendlyPath(p){
+    if(p.indexOf('/chat')>=0) return 'Chat';
+    if(p.indexOf('/clear')>=0) return 'Limpiar apuestas';
+    if(p.indexOf('/bet')>=0) return 'Apuesta';
+    if(p.indexOf('/ready')>=0) return 'Confirmar (Listo)';
+    if(p.indexOf('/seat')>=0) return 'Asiento';
+    if(p.indexOf('/state')>=0) return 'Estado de la mesa';
+    if(p.indexOf('/auth')>=0) return 'Login Discord';
+    return 'Servidor';
+  }
+  function dedup(key){ var t=Date.now(); if(lastToast[key] && t-lastToast[key]<4000) return false; lastToast[key]=t; return true; }
+  function reportHttp(method,path,status,data,raw){
+    if(status===401 && path.indexOf('/state')>=0) return; // sesión caducada en polls: silencioso
+    if(!dedup(method+' '+path+' '+status)) return;
+    var srv=(data&&(data.error||data.message)) || (raw?String(raw).slice(0,180):'');
+    toast(friendlyPath(path)+' falló ('+status+')'+(srv?': '+srv:''),'error');
+  }
+  function reportNet(method,path){
+    if(!dedup('net '+path)) return;
+    toast(friendlyPath(path)+': sin conexión con el servidor','error');
+  }
+
+  // ── Panel de debug + lanzador (solo si enabled) ──
+  var panel=null, panelBody=null, panelOpen=false, launcher=null, errBadge=null, errCount=0;
+  function updateBadge(){ errCount++; if(!errBadge) return; errBadge.style.display='inline-block'; errBadge.textContent=errCount; }
+  function buildPanel(){
+    if(panel||!document.body) return;
+    panel=document.createElement('div');
+    panel.style.cssText='position:fixed; left:0; right:0; bottom:0; height:44vh; z-index:9900; background:rgba(8,6,5,.98); border-top:2px solid #f0a52e; box-shadow:0 -16px 40px rgba(0,0,0,.7); display:none; flex-direction:column; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; color:#e6dcc6;';
+    var bar=document.createElement('div'); bar.style.cssText='display:flex; align-items:center; gap:8px; padding:6px 12px; border-bottom:1px solid rgba(240,165,46,.25); background:rgba(20,14,10,.95); flex-shrink:0;';
+    var ttl=document.createElement('strong'); ttl.textContent='🐞 EXI Debug'; ttl.style.color='#f0a52e';
+    var cnt=document.createElement('span'); cnt.id='exi-dbg-cnt'; cnt.style.cssText='color:#9c8156; margin-right:auto;';
+    function mkBtn(txt){ var b=document.createElement('button'); b.type='button'; b.textContent=txt; b.style.cssText='background:rgba(240,165,46,.12); border:1px solid rgba(240,165,46,.4); color:#f0a52e; border-radius:7px; padding:4px 10px; cursor:pointer; font-size:11px;'; return b; }
+    var bCopy=mkBtn('Copiar'), bClr=mkBtn('Limpiar'), bClose=mkBtn('Cerrar ✕');
+    bCopy.onclick=function(){ var txt=buf.map(rowText).join('\n'); try{ navigator.clipboard.writeText(txt); bCopy.textContent='¡Copiado!'; setTimeout(function(){bCopy.textContent='Copiar';},1200); }catch(e){} };
+    bClr.onclick=function(){ buf=[]; try{ localStorage.removeItem(LS_LOG); }catch(e){} errCount=0; if(errBadge){ errBadge.style.display='none'; } renderPanel(); };
+    bClose.onclick=function(){ togglePanel(false); };
+    bar.appendChild(ttl); bar.appendChild(cnt); bar.appendChild(bCopy); bar.appendChild(bClr); bar.appendChild(bClose);
+    panelBody=document.createElement('div'); panelBody.className='exi-scroll'; panelBody.style.cssText='flex:1; min-height:0; overflow:auto; padding:6px 10px;';
+    panel.appendChild(bar); panel.appendChild(panelBody); document.body.appendChild(panel);
+  }
+  function rowText(e){ var d=e.data!==undefined?('  '+(typeof e.data==='string'?e.data:JSON.stringify(e.data))):''; return fmtTime(e.t)+' ['+e.level+'] '+e.tag+' '+e.msg+d; }
+  function renderPanel(){
+    if(!panelBody) return;
+    var atBottom=(panelBody.scrollHeight-panelBody.scrollTop-panelBody.clientHeight)<40;
+    var rows=buf.slice(-220).map(function(e){
+      var col=COLORS[e.level]||'#ccc';
+      var data=e.data!==undefined?'<span style="color:#7a6a4d;">  '+escH(typeof e.data==='string'?e.data:JSON.stringify(e.data))+'</span>':'';
+      return '<div style="padding:1px 0; border-bottom:1px solid rgba(255,255,255,.04);"><span style="color:#6a5c42;">'+fmtTime(e.t)+'</span> <span style="color:'+col+'; font-weight:700;">'+escH(e.tag||e.level)+'</span> <span>'+escH(e.msg)+'</span>'+data+'</div>';
+    }).join('');
+    panelBody.innerHTML=rows||'<span style="color:#6a5c42;">— sin registros —</span>';
+    var c=document.getElementById('exi-dbg-cnt'); if(c) c.textContent=buf.length+' registros';
+    if(atBottom) panelBody.scrollTop=panelBody.scrollHeight;
+  }
+  function togglePanel(open){ if(!panel) buildPanel(); if(!panel) return; panelOpen=(open===undefined?!panelOpen:open); panel.style.display=panelOpen?'flex':'none'; if(panelOpen) renderPanel(); }
+  function buildLauncher(){
+    if(launcher||!document.body) return;
+    launcher=document.createElement('button'); launcher.type='button';
+    launcher.style.cssText='position:fixed; left:12px; bottom:12px; z-index:9700; background:linear-gradient(180deg,#1a120c,#0c0807); border:1px solid #f0a52e; color:#f0a52e; border-radius:20px; padding:7px 13px; font-size:12px; font-family:Inter,sans-serif; font-weight:700; cursor:pointer; box-shadow:0 8px 20px -8px rgba(0,0,0,.8);';
+    launcher.textContent='🐞 Debug';
+    errBadge=document.createElement('span'); errBadge.style.cssText='display:none; margin-left:6px; background:#cf6a64; color:#1a120c; border-radius:10px; padding:0 6px; font-size:10px;';
+    launcher.appendChild(errBadge);
+    launcher.onclick=function(){ togglePanel(); };
+    document.body.appendChild(launcher);
+  }
+
+  // errores JS globales
+  window.addEventListener('error', function(ev){ if(ev.message && ev.message.indexOf('ResizeObserver loop')>=0){ log('warn','resize-observer', ev.message); return; } log('error','js-error', ev.message, { file:ev.filename, line:ev.lineno, col:ev.colno }); if(enabled) toast('JS: '+ev.message,'error'); });
+  window.addEventListener('unhandledrejection', function(ev){ var r=ev.reason; log('error','promise', (r&&r.message)||String(r), r&&r.stack); if(enabled) toast('Promesa rechazada: '+((r&&r.message)||r),'error'); });
+
+  function mount(){ if(!document.body){ setTimeout(mount,60); return; }
+    if(enabled){ buildLauncher(); buildPanel(); }
+    document.addEventListener('keydown', function(e){ if(enabled && e.key==='`'){ togglePanel(); } });
+  }
+  mount();
+  if(enabled) log('info','debug','Modo debug ACTIVO. Pulsa «`» para abrir/cerrar el panel. ?debug=0 lo desactiva.');
+
+  return { enabled:enabled, log:log, event:function(tag,msg,data){ log('event',tag,msg,data); },
+           toast:toast, reportHttp:reportHttp, reportNet:reportNet, open:function(){ togglePanel(true); } };
+})();
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+//  Sala de PandaCoins — Ruleta Exilium Guild (web limpia, cableada)
+// ════════════════════════════════════════════════════════════════════
+const API='https://api.guild-exilium.com';
+const EURO=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const RED=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const CELL_BORDER='1.5px solid rgba(240,165,46,.5)';
+const NAME_PALETTE=['#F58CBA','#3FC7EB','#C69B6D','#AAD372','#8788EE','#F0EBE0','#FFF468','#FF7C0A','#0070DD','#f0a52e'];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function colorOf(n){ return n===0?'green':(RED.has(n)?'red':'black'); }
+function numBg(n){ if(n===0) return 'linear-gradient(150deg,#2f9c63,#155a34)'; return RED.has(n)?'linear-gradient(150deg,#b51a1a,#7a0606)':'linear-gradient(150deg,#26211d,#100c0a)'; }
+function histBg(n){ if(n===0) return 'linear-gradient(150deg,#2f9c63,#155a34)'; return RED.has(n)?'linear-gradient(150deg,#c2362f,#8b0000)':'linear-gradient(150deg,#2a2422,#15110f)'; }
+function fmt(n){ return Number(n||0).toLocaleString('es'); }
+function nameColor(name){ let h=0; const s=String(name||''); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return NAME_PALETTE[h%NAME_PALETTE.length]; }
+function token(){ try{ return localStorage.getItem('exi_tk')||''; }catch(e){ return ''; } }
+function keyToServer(k){ if(k==='red'||k==='black') return 'color:'+k; if(k==='even'||k==='odd') return 'parity:'+k; if(k==='low'||k==='high') return 'half:'+k; return k; }
+function keyFromServer(k){ if(k.startsWith('color:')) return k.split(':')[1]; if(k.startsWith('parity:')) return k.split(':')[1]; if(k.startsWith('half:')) return k.split(':')[1]; return k; }
+
+const S={
+  loggedIn:!!token(), balance:null, status:'connecting', roundId:0,
+  cfg:{ min_bet:50, max_bet:1000, max_seats:5, max_bets_per_round:3 },
+  serverSeats:[], mySeat:null, chat:[], history:[],
+  resultNumber:null, resultIndex:null, countdown:0,
+  chip:5, pendingBets:{}, wheelDeg:0, result:null,
+  stats:{ wins:0, losses:0, net:0 }, statusLine:'Conectando con la mesa…',
+  shop:{ catalog:[], owned:[], equipped:{} },
+};
+// Mapa id de decoración → clase CSS (el aspecto visual lo define el CSS de abajo)
+const DECO_CLASS={ frame_gold:'df-gold', frame_emerald:'df-emerald', frame_flame:'df-flame', frame_ice:'df-ice', frame_dragon:'df-dragon', name_gold:'ne-gold', name_fire:'ne-fire', name_rainbow:'ne-rainbow', chip_neon:'cs-neon', chip_royal:'cs-royal' };
+function decoClass(id){ return (id&&DECO_CLASS[id])||''; }
+function rarityColor(r){ return r==='legendario'?'#f0a52e':(r==='epico'?'#b388ff':(r==='raro'?'#3fc7eb':'#9c8156')); }
+// Si la decoración de marco tiene IMAGEN en el catálogo (PNG/APNG animado), se usa como overlay; si no, CSS.
+function frameImageUrl(id){ if(!id) return null; const it=((S.shop&&S.shop.catalog)||[]).find(x=>x&&x.id===id); return (it&&it.image)?it.image:null; }
+// Devuelve el avatar (círculo) + la decoración: imagen-overlay que sobresale, o clase CSS.
+function avatarDecoHtml(inner, frameId, sizeCss, circleStyle){
+  const img=frameImageUrl(frameId); const cls=img?'':decoClass(frameId);
+  // El avatar (opaco) va ENCIMA; la decoración con imagen va DETRÁS y grande, enmarcando
+  // lo que sobresale del borde del avatar (así el avatar siempre se ve nítido).
+  const circle='<span class="'+cls+'" style="position:relative; z-index:1; width:100%; height:100%; border-radius:50%; '+circleStyle+' display:flex; align-items:center; justify-content:center; overflow:hidden;">'+inner+'</span>';
+  const overlay=img?'<img src="'+esc(img)+'" alt="" style="position:absolute; left:50%; top:42%; transform:translate(-50%,-50%); width:340%; height:340%; pointer-events:none; object-fit:contain; z-index:0;">':'';
+  return '<span style="position:relative; display:inline-flex; flex-shrink:0; width:'+sizeCss+'; height:'+sizeCss+'; overflow:visible;">'+overlay+circle+'</span>';
+}
+// Decora el avatar+nombre de la barra superior con lo equipado (la barra se construye en otro script).
+function applyTopbarDeco(){
+  const eq=(S.shop&&S.shop.equipped)||{};
+  const nameEl=document.getElementById('exi-top-name');
+  if(nameEl) nameEl.className=decoClass(eq.name_effect);
+  const wrap=document.getElementById('exi-top-avatar');
+  if(wrap){
+    const inner=wrap.querySelector('.exi-top-avatar-inner');
+    const img=frameImageUrl(eq.avatar_frame);
+    if(inner){ inner.style.position='relative'; inner.style.zIndex='1'; inner.classList.remove('df-gold','df-emerald','df-flame','df-ice','df-dragon'); const c=img?'':decoClass(eq.avatar_frame); if(c) inner.classList.add(c); }
+    const old=wrap.querySelector('.exi-top-deco'); if(old) old.remove();
+    if(img){ const o=document.createElement('img'); o.className='exi-top-deco'; o.src=img; o.alt=''; o.style.cssText='position:absolute; left:50%; top:46%; transform:translate(-50%,-50%); width:300%; height:300%; object-fit:contain; pointer-events:none; z-index:0;'; wrap.insertBefore(o, wrap.firstChild); }
+  }
+}
+window.exiApplyTopbarDeco=applyTopbarDeco;
+let _offset=0, _endsAt=null, _spunRound=null, _resolvedRound=null, _busy=false, _pt=null, _lastDbgStatus=null, _wheelSettled=true, _pendingSound=null, _confirmDismissed=false, _confirmRound=null, _bigwinRound=null;
+
+// ── WebSocket en tiempo real (Durable Object) ──
+// Todos los jugadores conectados a la MISMA mesa ven lo mismo al instante: mismo
+// countdown, mismas apuestas, mismo giro. Reemplaza el viejo polling a KV.
+let _ws=null, _wsReconnect=null, _wsBackoff=1000;
+function wsUrl(){ const base=API.replace(/^http/i,'ws'); const tk=token(); return base+'/api/casino/ws'+(tk?('?token='+encodeURIComponent(tk)):''); }
+function wsSend(obj){
+  try{
+    if(_ws && _ws.readyState===1){ _ws.send(JSON.stringify(obj)); if(window.EXIDBG) EXIDBG.event('ws→', obj.type, obj.type==='chat'?undefined:obj); return true; }
+  }catch(e){}
+  if(window.EXIDBG) EXIDBG.log('warn','ws','sin conexión, no se envió '+(obj&&obj.type));
+  return false;
+}
+function connectWS(){
+  clearTimeout(_wsReconnect);
+  if(_ws && (_ws.readyState===0 || _ws.readyState===1)) return; // ya conectando/abierto
+  // Limpiar cualquier socket viejo (cerrando/cerrado) para que su onclose no dispare otra reconexión.
+  if(_ws){ try{ _ws.onopen=_ws.onmessage=_ws.onclose=_ws.onerror=null; _ws.close(); }catch(e){} _ws=null; }
+  let sock; try{ sock=new WebSocket(wsUrl()); }catch(e){ scheduleReconnect(); return; }
+  _ws=sock;
+  sock.onopen=()=>{ _wsBackoff=1000; if(window.EXIDBG) EXIDBG.event('ws','conectado'); };
+  sock.onmessage=(ev)=>{ if(_ws!==sock) return; let d; try{ d=JSON.parse(ev.data); }catch(e){ return; } onWsMessage(d); };
+  sock.onclose=()=>{ if(_ws!==sock) return; if(window.EXIDBG) EXIDBG.event('ws','cerrado · reconectando…'); scheduleReconnect(); };
+  sock.onerror=()=>{ if(_ws!==sock) return; if(window.EXIDBG) EXIDBG.log('warn','ws','error de socket'); try{ sock.close(); }catch(e){} };
+}
+function scheduleReconnect(){ clearTimeout(_wsReconnect); if(document.hidden) return; _wsReconnect=setTimeout(connectWS, _wsBackoff); _wsBackoff=Math.min(_wsBackoff*1.6, 10000); }
+function reconnectWS(){ try{ if(_ws) _ws.close(); }catch(e){} _ws=null; connectWS(); }
+function onWsMessage(d){
+  if(d.type==='state'){ applyState(d); }
+  else if(d.type==='me'){ if(d.balance!=null){ S.balance=d.balance; render(); const sb=document.getElementById('exi-shop-bal'); if(sb) sb.textContent=fmt(S.balance); } }
+  else if(d.type==='shop'){ S.shop={ catalog:d.catalog||[], owned:d.owned||[], equipped:d.equipped||{} }; renderShop(); render(); applyTopbarDeco(); }
+  else if(d.type==='error'){ const m=d.message||d.error||'Error'; flash(m); if(window.EXIDBG&&EXIDBG.toast) EXIDBG.toast(m,'error'); }
+  else if(d.type==='activity'){ const e=d.event||{}; if(window.EXIDBG) EXIDBG.log(e.level==='error'?'warn':'event', 'mesa·'+(e.kind||'?'), (e.name||'?')+': '+(e.detail||'')); }
+  else if(d.type==='pong'){ /* keepalive */ }
+}
+// keepalive + watchdog de reconexión
+setInterval(()=>{ if(_ws && _ws.readyState===1) wsSend({type:'ping'}); else if(!document.hidden) connectWS(); }, 20000);
+// Compatibilidad: las acciones ya no sondean; poll() solo garantiza conexión.
+function poll(){ connectWS(); }
+function applyState(d){
+  const st=d.state||{};
+  _offset=(st.server_time||Date.now())-Date.now();
+  S.cfg=d.config||S.cfg;
+  S.serverSeats=Array.isArray(d.seats)?d.seats:[];
+  S.history=(Array.isArray(d.history)?d.history:[]).map(h=>(typeof h==='number'?h:h.result));
+  S.mySeat=d.my_seat||null;
+  // El servidor envía last_result en el asiento (seats[is_me]), no en my_seat: lo adjuntamos
+  // para que la detección de victoria/derrota, estadísticas y sonido funcionen.
+  const _meSeat=S.serverSeats.find(x=>x&&x.is_me);
+  if(S.mySeat) S.mySeat.last_result=_meSeat?_meSeat.last_result:null;
+  S.loggedIn=(d.logged_in!=null)?d.logged_in:!!token(); // el saldo (S.balance) llega por mensajes 'me'
+  S.status=st.status; S.roundId=st.round_id;
+  if(S.roundId!==_confirmRound){ _confirmRound=S.roundId; _confirmDismissed=false; } // reabrir el cartel cada ronda
+  S.resultNumber=st.result_number; S.resultIndex=st.result_index;
+  S.chat=Array.isArray(d.chat)?d.chat:[];
+
+  if(window.EXIDBG && st.status!==_lastDbgStatus){ EXIDBG.event('estado', (_lastDbgStatus||'—')+' → '+st.status+' (ronda '+st.round_id+', result_number='+(st.result_number==null?'·':st.result_number)+', result_index='+(st.result_index==null?'·':st.result_index)+')'); _lastDbgStatus=st.status; }
+
+  if(st.status==='betting') _endsAt=st.betting_ends_at;
+  else if(st.status==='spinning') _endsAt=st.spinning_ends_at;
+  else if(st.status==='result') _endsAt=st.result_ends_at;
+  else _endsAt=null;
+
+  if(st.status==='spinning' && st.result_index!=null && _spunRound!==st.round_id){ _spunRound=st.round_id; animateWheel(st.result_index); }
+  if(st.status==='result' && S.mySeat && S.mySeat.last_result && _resolvedRound!==st.round_id){
+    _resolvedRound=st.round_id; const lr=S.mySeat.last_result; const net=(lr.net!=null)?lr.net:((lr.total_win||0)-(lr.total_bet||0));
+    S.stats={ wins:S.stats.wins+(lr.won?1:0), losses:S.stats.losses+(lr.won?0:1), net:S.stats.net+net };
+    _pendingSound=lr.won?'win':'lose'; flushSound(); // suena al terminar el giro (ver flushSound)
+  }
+
+  S.result=null;
+  if((st.status==='result'||st.status==='spinning') && st.result_number!=null){
+    const n=st.result_number, col=colorOf(n); const lr=S.mySeat&&S.mySeat.last_result; const isWin=lr&&lr.won;
+    const sw=col==='green'?'#2f9c63':(col==='red'?'#b51a1a':'#1d1816');
+    S.result={ n, win:!!isWin,
+      status: lr?(isWin?'¡Victoria!':'La casa gana'):'Resultado',
+      statusColor: lr?(isWin?'#54d18a':'#e9d4a0'):'#e9d4a0',
+      border: isWin?'#2f9c63':'rgba(240,165,46,.5)',
+      glow: isWin?'0 0 30px rgba(47,156,99,.55)':'0 0 22px rgba(240,165,46,.35)',
+      sw, detail: lr?(()=>{ const nt=(lr.net!=null)?lr.net:((lr.total_win||0)-(lr.total_bet||0)); return nt>0?('+'+fmt(nt)+' C'):(nt<0?('−'+fmt(Math.abs(nt))+' C'):'±0 C'); })():('Salió el '+n) };
+  }
+
+  if(window.EXIDBG && S.result) EXIDBG.event('resultado','cartel n='+S.result.n+' win='+S.result.win+' · fase='+st.status+' · wheelDeg='+Math.round(S.wheelDeg)+' (ojo: si fase=spinning, el cartel sale antes de frenar la rueda)');
+
+  S.bigwin = st.bigwin || null;   // celebración de pleno (la pinta maybePlayBigwin al frenar la rueda)
+  maybePlayBigwin();
+
+  if(st.status!=='betting') S.pendingBets={};
+  { const cv=chipValues(); if(!cv.includes(S.chip)) S.chip=cv[Math.min(1,cv.length-1)]||cv[0]; }
+  S.statusLine=buildStatusLine(st.status, S.mySeat);
+  render();
+  scrollChat();
+}
+function tickClock(){
+  const now=Date.now()+(_offset||0);
+  const cd=_endsAt!=null?Math.max(0,Math.ceil((_endsAt-now)/1000)):0;
+  if(cd!==S.countdown){ S.countdown=cd; $('exi-status').textContent=statusLineWithCd(); updateConfirmCard(cd); }
+}
+function statusLineWithCd(){
+  let l=S.statusLine;
+  if(S.status==='betting' && S.mySeat && S.countdown>0) l=l+'  ('+S.countdown+'s)';
+  return l;
+}
+function buildStatusLine(status, mySeat){
+  if(!token()) return 'Entra con Discord para sentarte y apostar.';
+  if(status==='spinning') return 'La rueda gira… que la suerte arcana te acompañe.';
+  if(status==='result') return 'Resultado en la mesa. Nueva ronda en breve…';
+  if(status==='betting'){
+    if(!mySeat) return 'Siéntate en la mesa para unirte a la ronda.';
+    if(mySeat.ready) return 'Listo ✓ — esperando a la mesa…';
+    if(mySeat.bets&&mySeat.bets.length) return 'Apuesta confirmada. Pulsa LISTO o añade más fichas.';
+    return 'Coloca tu ficha y apuesta en el tablero.';
+  }
+  return 'Conectando…';
+}
+function flash(msg){ S.statusLine=msg; $('exi-status').textContent=statusLineWithCd(); }
+
+// ── Popup grande: avatares + qué apostó cada jugador + tiempo restante ──
+function buildConfirmCard(){
+  const card=document.createElement('div'); card.id='exi-confirm';
+  card.style.cssText='display:none; position:fixed; top:64px; left:50%; transform:translateX(-50%); z-index:9600; width:min(700px,94vw); pointer-events:none; font-family:Inter,sans-serif;';
+  const inner=document.createElement('div');
+  inner.style.cssText='pointer-events:auto; background:linear-gradient(180deg,rgba(26,18,12,.97),rgba(12,9,7,.97)); border:2px solid #f0a52e; border-radius:16px; padding:12px 16px; box-shadow:0 18px 50px -10px rgba(0,0,0,.85), 0 0 32px -8px rgba(240,165,46,.5);';
+  inner.innerHTML='<div style="display:flex; align-items:center; gap:12px; margin-bottom:9px;"><span style="font-family:\'Cinzel\',serif; color:#f0a52e; font-size:16px; font-weight:700; white-space:nowrap;">⏳ <span id="exi-cf-cd">0</span>s para apostar</span><span style="flex:1; height:7px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden;"><span id="exi-cf-bar" style="display:block; height:100%; width:100%; background:linear-gradient(90deg,#f7c168,#f0a52e); transition:width .25s linear;"></span></span></div><div id="exi-cf-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div><div id="exi-cf-actions"></div>';
+  card.appendChild(inner); document.body.appendChild(card);
+  return card;
+}
+function betChipLabel(key){
+  const [t,v]=String(key).split(':');
+  if(t==='number') return '#'+v;
+  if(t==='color') return v==='red'?'Rojo':'Negro';
+  if(t==='parity') return v==='even'?'Par':'Impar';
+  if(t==='half') return v==='low'?'1-18':'19-36';
+  if(t==='dozen') return v+'ª doc';
+  if(t==='col') return 'Col '+v;
+  return labelFor(key);
+}
+function updateConfirmCard(cd){
+  const bettors=(S.serverSeats||[]).filter(s=>s&&s.name&&Array.isArray(s.bets)&&s.bets.length);
+  const show = S.status==='betting' && bettors.length>0 && cd>0;
+  let card=document.getElementById('exi-confirm');
+  if(!show){ if(card) card.style.display='none'; return; }
+  card=card||buildConfirmCard();
+  const cdEl=document.getElementById('exi-cf-cd'); if(cdEl) cdEl.textContent=cd;
+  const bar=document.getElementById('exi-cf-bar'); if(bar){ const dur=(S.cfg&&S.cfg.betting_duration)||20; bar.style.width=Math.max(0,Math.min(100,(cd/dur)*100))+'%'; }
+  const list=document.getElementById('exi-cf-list');
+  if(list){ list.innerHTML=bettors.map(sv=>{
+    const av=sv.avatar_url
+      ? '<img src="'+esc(sv.avatar_url)+'" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      : '<span style="width:28px;height:28px;border-radius:50%;background:'+nameColor(sv.name)+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#0a0a0c;flex-shrink:0;">'+esc((sv.name[0]||'?').toUpperCase())+'</span>';
+    const bets=sv.bets.map(b=>'<span style="background:rgba(240,165,46,.14);border:1px solid rgba(240,165,46,.3);border-radius:6px;padding:1px 6px;font-size:11px;color:#f3e6c4;white-space:nowrap;">'+esc(betChipLabel(b.bet_key||b.key))+' <b style="color:#f0a52e;">'+fmt(b.amount)+'</b></span>').join(' ');
+    return '<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.3);border:1px solid '+(sv.is_me?'#f7c168':'rgba(240,165,46,.18)')+';border-radius:11px;padding:5px 10px 5px 5px;">'+av+'<div style="display:flex;flex-direction:column;gap:3px;min-width:0;"><span style="font-size:11px;font-weight:700;color:'+(sv.is_me?'#f0a52e':'#e9d4a0')+';white-space:nowrap;">'+esc(sv.name)+(sv.ready?' <span style=\'color:#54d18a\'>✓</span>':'')+'</span><div style="display:flex;flex-wrap:wrap;gap:4px;">'+bets+'</div></div></div>';
+  }).join(''); }
+  const act=document.getElementById('exi-cf-actions'); const myPend=Object.keys(S.pendingBets||{}).length>0;
+  if(act){
+    if(S.mySeat && !S.mySeat.ready && (myPend || (S.mySeat.bets&&S.mySeat.bets.length))){
+      act.innerHTML='<button id="exi-cf-yes" type="button" style="width:100%;padding:9px;border-radius:9px;border:1px solid rgba(240,165,46,.5);background:linear-gradient(180deg,#f7c168,#f0a52e 60%,#b97916);color:#2a1a06;font-family:\'Cinzel\',serif;font-weight:700;font-size:13px;cursor:pointer;">✓ Confirmar mi apuesta (LISTO)</button>';
+      const y=document.getElementById('exi-cf-yes'); if(y) y.onclick=()=>spin();
+    } else if(S.mySeat && S.mySeat.ready){
+      act.innerHTML='<div style="text-align:center;color:#54d18a;font-size:12px;font-weight:600;">Listo ✓ — esperando a la mesa…</div>';
+    } else { act.innerHTML=''; }
+  }
+  card.style.display='block';
+}
+
+function chipValues(){
+  // Fichas fijas de 1, 5 y 10 PandaCoins (acotadas al min/max de la config).
+  const {min_bet,max_bet}=S.cfg;
+  const cand=[1,5,10].filter(v=>v>=min_bet && v<=max_bet);
+  return cand.length?cand:[Math.max(1,min_bet)];
+}
+function selectChip(v){ S.chip=v; render(); }
+function mergedBets(){
+  const m={};
+  if(S.mySeat&&Array.isArray(S.mySeat.bets)){ for(const b of S.mySeat.bets){ const k=keyFromServer(b.bet_key||b.key); m[k]=(m[k]||0)+(Number(b.amount)||0); } }
+  for(const k in S.pendingBets) m[k]=(m[k]||0)+S.pendingBets[k];
+  return m;
+}
+function totalBet(){ const m=mergedBets(); let t=0; for(const k in m) t+=m[k]; return t; }
+function placeBet(key){
+  if(!token()){ flash('Entra con Discord para apostar.'); return; }
+  if(S.status!=='betting'){ flash('Solo puedes apostar en la fase de apuestas.'); return; }
+  if(!S.mySeat){ flash('Siéntate primero (botón bajo la ruleta).'); return; }
+  if(S.mySeat.ready){ flash('Ya marcaste LISTO. Limpia para cambiar tu apuesta.'); return; }
+  const {min_bet,max_bet,max_bets_per_round}=S.cfg;
+  const merged=mergedBets(); const pending={...S.pendingBets};
+  const newAmt=(merged[key]||0)+S.chip;
+  if(newAmt>max_bet){ flash('Máximo '+max_bet+' por apuesta.'); return; }
+  const distinct=new Set(Object.keys(merged)); distinct.add(key);
+  if(distinct.size>max_bets_per_round){ flash('Máximo '+max_bets_per_round+' apuestas por ronda.'); return; }
+  const totalPending=Object.values(pending).reduce((a,b)=>a+b,0)+S.chip;
+  if(S.balance!=null && totalPending>S.balance){ flash('No tienes PandaCoins suficientes.'); return; }
+  pending[key]=(pending[key]||0)+S.chip; S.pendingBets=pending; S.result=null; render();
+  if(window.EXISFX) EXISFX.chip(); // sonido solo cuando la ficha se coloca realmente
+}
+function half(){ if(S.status!=='betting') return; const p={}; for(const k in S.pendingBets){ const v=Math.round(S.pendingBets[k]/2); if(v>0) p[k]=v; } S.pendingBets=p; render(); }
+function double(){ if(S.status!=='betting') return; const {max_bet}=S.cfg; const merged=mergedBets(); const p={}; for(const k in S.pendingBets){ const committed=(merged[k]||0)-S.pendingBets[k]; p[k]=Math.min(S.pendingBets[k]*2, max_bet-committed); } S.pendingBets=p; render(); }
+function clearBets(){
+  if(S.status!=='betting') return;
+  S.pendingBets={}; _confirmDismissed=true; render();
+  if(S.mySeat && S.mySeat.bets && S.mySeat.bets.length) wsSend({type:'clear'});
+}
+function spin(){
+  if(!token()){ flash('Entra con Discord para jugar.'); return; }
+  if(S.status!=='betting'){ flash('Espera a la siguiente ronda.'); return; }
+  if(!S.mySeat){ flash('Siéntate primero para apostar.'); return; }
+  const pend=S.pendingBets; const keys=Object.keys(pend); const committed=(S.mySeat.bets||[]).length;
+  if(keys.length===0 && committed===0){ flash('Coloca una apuesta en el tablero primero.'); return; }
+  if(keys.length>0){
+    const bets=keys.map(k=>({ bet_key:keyToServer(k), amount:pend[k] }));
+    wsSend({type:'bet', bets});       // el servidor cobra y difunde; el saldo vuelve por 'me'
+    S.pendingBets={};
+  }
+  wsSend({type:'ready'});             // marca listo (gira si es solo / todos listos)
+  _confirmDismissed=true; render();
+}
+function toggleSeat(){
+  if(!token()){ flash('Entra con Discord para sentarte.'); return; }
+  wsSend({type: S.mySeat?'stand':'sit'});
+}
+function sendChat(){
+  const el=$('chatinput'); if(!el) return; const text=el.value.trim(); if(!text) return;
+  if(!token()){ flash('Entra con Discord para chatear.'); return; }
+  el.value='';
+  wsSend({type:'chat', message:text});
+}
+function scrollChat(){ requestAnimationFrame(()=>{ const el=$('chat'); if(el) el.scrollTop=el.scrollHeight; }); }
+function labelFor(key){
+  const [type,val]=key.split(':');
+  if(type==='number') return 'Pleno '+val;
+  if(key==='red') return 'Rojo'; if(key==='black') return 'Negro';
+  if(key==='even') return 'Par'; if(key==='odd') return 'Impar';
+  if(key==='low') return '1–18'; if(key==='high') return '19–36';
+  if(type==='dozen') return val+'ª docena';
+  if(type==='col') return 'Columna '+val;
+  return key;
+}
+
+function animateWheel(idx){ if(window.EXIDBG) EXIDBG.event('rueda','girar → índice '+idx+' (n='+EURO[idx]+'), fase='+S.status+' · animación CSS 4.7s'); const step=360/37; const cur=S.wheelDeg; const base=cur-(cur%360); S.wheelDeg=base+360*6+((360-idx*step)%360);
+  _wheelSettled=false; render(); // oculta el cartel de resultado mientras gira
+  const el=$('wheel-rot'); el.style.transform='rotate('+S.wheelDeg+'deg)';
+  let done=false; const finish=()=>{ if(done) return; done=true; onWheelSettled(); };
+  el.addEventListener('transitionend', finish, { once:true });
+  setTimeout(finish, 5000); // respaldo por si transitionend no dispara
+}
+function onWheelSettled(){ _wheelSettled=true; if(window.EXIDBG) EXIDBG.event('rueda','frenó · revelar resultado'); flushSound(); render(); maybePlayBigwin(); }
+
+// ── Video de celebración: SOLO cuando alguien gana al PLENO (number:X). Lo ven todos. ──
+function maybePlayBigwin(){
+  if(!S.bigwin || !_wheelSettled) return;
+  if(_bigwinRound===S.roundId) return;        // una sola vez por ronda en esta sesión
+  // No repetir un pleno ya visto (al volver de "Mi Perfil" o reconectar). Se recuerda en localStorage.
+  let seen=0; try{ seen=Number(localStorage.getItem('exi_bw_seen')||0)||0; }catch(e){}
+  _bigwinRound=S.roundId;
+  if(S.roundId<=seen) return;                 // ya se mostró esta ronda (o una anterior)
+  try{ localStorage.setItem('exi_bw_seen', String(S.roundId)); }catch(e){}
+  if(window.EXIDBG) EXIDBG.event('bigwin','PLENO '+S.bigwin.number+' · '+(S.bigwin.winners||[]).map(w=>w.name).join(', '));
+  playWinVideo(S.bigwin);
+}
+function playWinVideo(bw){
+  if(document.getElementById('exi-winvid')) return;
+  const ov=document.createElement('div'); ov.id='exi-winvid';
+  ov.style.cssText='position:fixed; inset:0; z-index:99999; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden; font-family:Inter,sans-serif;';
+  const vid=document.createElement('video');
+  vid.style.cssText='position:absolute; inset:0; width:100%; height:100%; object-fit:cover;';
+  vid.playsInline=true; vid.autoplay=true; vid.preload='auto';
+  try{ vid.muted = localStorage.getItem('exi_mute')==='1'; }catch(e){}
+  vid.innerHTML='<source src="assets/celebration.mp4" type="video/mp4">';
+  const info=document.createElement('div');
+  info.style.cssText='position:relative; z-index:2; text-align:center; pointer-events:none; text-shadow:0 3px 16px rgba(0,0,0,.95);';
+  const avs=(bw.winners||[]).slice(0,5).map(w=> w.avatar_url
+    ? '<img src="'+esc(w.avatar_url)+'" alt="" style="width:clamp(60px,9vw,96px); height:clamp(60px,9vw,96px); border-radius:50%; border:3px solid #f0a52e; object-fit:cover; margin:0 5px; box-shadow:0 0 34px rgba(240,165,46,.85);">'
+    : '<span style="display:inline-flex; width:clamp(60px,9vw,96px); height:clamp(60px,9vw,96px); border-radius:50%; border:3px solid #f0a52e; background:'+nameColor(w.name)+'; align-items:center; justify-content:center; font-size:36px; font-weight:800; color:#0a0a0c; margin:0 5px;">'+esc((w.name[0]||'?').toUpperCase())+'</span>'
+  ).join('');
+  const names=(bw.winners||[]).map(w=>esc(w.name)).join(', ');
+  const totalWin=(bw.winners||[]).reduce((t,w)=>t+(Number(w.win)||0),0);
+  info.innerHTML='<div style="display:flex; justify-content:center; align-items:center; margin-bottom:18px; flex-wrap:wrap;">'+avs+'</div>'+
+    '<div style="font-family:\'Cinzel Decorative\',serif; font-size:clamp(64px,13vw,150px); font-weight:900; color:#f7c168; line-height:.95;">'+esc(bw.number)+'</div>'+
+    '<div style="font-family:\'Cinzel\',serif; font-size:clamp(20px,3.2vw,36px); font-weight:800; color:#fff; margin-top:10px; text-transform:uppercase; letter-spacing:.05em;">¡'+names+' ganó al pleno!</div>'+
+    (totalWin?'<div style="font-family:\'Cinzel\',serif; font-size:clamp(18px,2.6vw,30px); color:#54d18a; margin-top:6px;">+'+fmt(totalWin)+' C</div>':'');
+  const skip=document.createElement('button'); skip.type='button'; skip.textContent='Saltar ✕';
+  skip.style.cssText='position:absolute; top:16px; right:18px; z-index:3; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.4); color:#fff; border-radius:20px; padding:7px 14px; font-size:13px; cursor:pointer;';
+  let done=false; function close(){ if(done) return; done=true; try{ vid.pause(); }catch(e){} if(ov.parentNode) ov.parentNode.removeChild(ov); }
+  skip.onclick=close;
+  vid.addEventListener('ended', close);
+  vid.addEventListener('error', ()=>{ setTimeout(close, 6000); }); // sin archivo de video → muestra el cartel 6s
+  ov.appendChild(vid); ov.appendChild(info); ov.appendChild(skip);
+  document.body.appendChild(ov);
+  const p=vid.play&&vid.play(); if(p&&p.catch) p.catch(()=>{});
+  setTimeout(close, 20000); // tope de seguridad
+}
+function flushSound(){ if(_wheelSettled && _pendingSound && window.EXISFX){ try{ _pendingSound==='win'?EXISFX.win():EXISFX.lose(); }catch(e){} _pendingSound=null; } }
+function buildWheelSVG(){
+  const cx=100,cy=100,rOut=99,rIn=46,rT=73,step=360/37; let p='';
+  EURO.forEach((num,k)=>{
+    const a0=(k*step-step/2-90)*Math.PI/180, a1=(k*step+step/2-90)*Math.PI/180;
+    const x0o=cx+rOut*Math.cos(a0),y0o=cy+rOut*Math.sin(a0), x1o=cx+rOut*Math.cos(a1),y1o=cy+rOut*Math.sin(a1);
+    const x1i=cx+rIn*Math.cos(a1),y1i=cy+rIn*Math.sin(a1), x0i=cx+rIn*Math.cos(a0),y0i=cy+rIn*Math.sin(a0);
+    const d='M'+x0o.toFixed(2)+','+y0o.toFixed(2)+' A'+rOut+','+rOut+' 0 0 1 '+x1o.toFixed(2)+','+y1o.toFixed(2)+' L'+x1i.toFixed(2)+','+y1i.toFixed(2)+' A'+rIn+','+rIn+' 0 0 0 '+x0i.toFixed(2)+','+y0i.toFixed(2)+' Z';
+    const fill=num===0?'#1f7d4d':(RED.has(num)?'#9e1414':'#1a1614');
+    p+='<path d="'+d+'" fill="'+fill+'" stroke="#0a0a0c" stroke-width="0.6"/>';
+    const am=(k*step-90)*Math.PI/180, tx=cx+rT*Math.cos(am), ty=cy+rT*Math.sin(am);
+    p+='<text x="'+tx.toFixed(2)+'" y="'+ty.toFixed(2)+'" fill="#f3ead6" font-size="8" font-weight="700" text-anchor="middle" dominant-baseline="central" font-family="Cinzel, serif" transform="rotate('+(k*step).toFixed(2)+','+tx.toFixed(2)+','+ty.toFixed(2)+')">'+num+'</text>';
+  });
+  // cubo central (cono) para que el centro no quede vacío
+  p+='<circle cx="'+cx+'" cy="'+cy+'" r="'+rIn+'" fill="#0c0807"/>';
+  p+='<circle cx="'+cx+'" cy="'+cy+'" r="'+rIn+'" fill="none" stroke="#caa15a" stroke-width="1.4" opacity="0.65"/>';
+  p+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(rIn*0.62).toFixed(1)+'" fill="none" stroke="#caa15a" stroke-width="0.8" opacity="0.4"/>';
+  p+='<circle cx="'+cx+'" cy="'+cy+'" r="'+rOut+'" fill="none" stroke="#caa15a" stroke-width="1" opacity="0.4"/>';
+  return '<svg viewBox="0 0 200 200" width="100%" height="100%" style="display:block">'+p+'</svg>';
+}
+
+const CHIP_DEFS=[
+  { edgeBg:'repeating-conic-gradient(#fff 0 7deg, #caa15a 7deg 30deg)', face:'radial-gradient(circle at 35% 30%, #f1d79a, #a87623)', text:'#3a2808' },
+  { edgeBg:'repeating-conic-gradient(#f3ead6 0 7deg, #b51a1a 7deg 30deg)', face:'radial-gradient(circle at 35% 30%, #d94b4b, #7a0d0d)', text:'#ffe9e0' },
+  { edgeBg:'repeating-conic-gradient(#f0a52e 0 7deg, #1a1a1f 7deg 30deg)', face:'radial-gradient(circle at 35% 30%, #34343c, #0c0c10)', text:'#f0c56b' },
+];
+const BADGE="position:absolute; top:-7px; right:-7px; animation:exiBadge .22s ease both; min-width:22px; height:22px; padding:0 5px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#ffd98a,#c8861f); border:1.5px solid #2a1a06; color:#2a1a06; font-family:'Cinzel',serif; font-weight:800; font-size:10px; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 7px rgba(0,0,0,.6);";
+const BADGE_SM=BADGE.replace('min-width:22px; height:22px; padding:0 5px','min-width:20px; height:20px; padding:0 4px').replace('font-size:10px','font-size:9px');
+
+function buildBoard(){
+  let html='<button data-bet-key="number:0" type="button" style="position:relative; grid-row:1/4; grid-column:1; border-radius:8px; border:'+CELL_BORDER+"; background:linear-gradient(150deg,#2f9c63,#155a34); color:#fff; font-family:'Cinzel',serif; font-weight:800; font-size:clamp(16px,1.5vw,22px); cursor:pointer; display:flex; align-items:center; justify-content:center;\">0<span class=\"bet-badge\" data-for=\"number:0\" style=\""+BADGE+'display:none;">0</span></button>';
+  for(let j=1;j<=12;j++){
+    [{n:3*j,row:1},{n:3*j-1,row:2},{n:3*j-2,row:3}].forEach(t=>{
+      const key='number:'+t.n;
+      html+='<button data-bet-key="'+key+'" type="button" style="position:relative; grid-column:'+(j+1)+'; grid-row:'+t.row+'; border-radius:7px; border:'+CELL_BORDER+'; background:'+numBg(t.n)+"; color:#fff; font-family:'Cinzel',serif; font-weight:700; font-size:clamp(12px,1.05vw,16px); cursor:pointer; display:flex; align-items:center; justify-content:center; text-shadow:0 1px 2px rgba(0,0,0,.6);\">"+t.n+'<span class="bet-badge" data-for="'+key+'" style="'+BADGE+'display:none;">0</span></button>';
+    });
+  }
+  [{row:1,key:'col:3'},{row:2,key:'col:2'},{row:3,key:'col:1'}].forEach(c=>{
+    html+='<button data-bet-key="'+c.key+'" type="button" style="position:relative; grid-column:14; grid-row:'+c.row+'; border-radius:7px; border:'+CELL_BORDER+"; background:rgba(240,165,46,.08); color:#e9d4a0; font-family:'Cinzel',serif; font-weight:700; font-size:clamp(10px,.85vw,13px); cursor:pointer; display:flex; align-items:center; justify-content:center;\">2:1<span class=\"bet-badge\" data-for=\""+c.key+'" style="'+BADGE_SM+'display:none;">0</span></button>';
+  });
+  $('board-numbers').innerHTML=html;
+  $('board-dozens').innerHTML=[{key:'dozen:1',label:'1ª 1–12'},{key:'dozen:2',label:'2ª 13–24'},{key:'dozen:3',label:'3ª 25–36'}].map(d=>
+    '<button data-bet-key="'+d.key+'" type="button" style="position:relative; padding:9px 4px; border-radius:7px; border:'+CELL_BORDER+"; background:rgba(240,165,46,.06); color:#e9d4a0; font-family:'Cinzel',serif; font-weight:600; font-size:clamp(10px,.85vw,13px); letter-spacing:.04em; cursor:pointer; display:flex; align-items:center; justify-content:center;\">"+d.label+'<span class="bet-badge" data-for="'+d.key+'" style="'+BADGE_SM+'display:none;">0</span></button>'
+  ).join('');
+  const outDefs=[
+    {key:'low',label:'1–18'},{key:'even',label:'PAR'},
+    {key:'red',label:'ROJO',sw:'#b51a1a',bg:'rgba(139,0,0,.22)'},
+    {key:'black',label:'NEGRO',sw:'#1d1816',bg:'rgba(0,0,0,.4)'},
+    {key:'odd',label:'IMPAR'},{key:'high',label:'19–36'},
+  ];
+  $('board-outside').innerHTML=outDefs.map(o=>
+    '<button data-bet-key="'+o.key+'" type="button" style="position:relative; padding:10px 4px; border-radius:7px; border:'+CELL_BORDER+'; background:'+(o.bg||'rgba(0,0,0,.24)')+"; color:#e9d4a0; font-family:'Inter',sans-serif; font-weight:600; font-size:clamp(10px,.85vw,12px); letter-spacing:.04em; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;\">"+
+    (o.sw?'<span style="width:14px; height:14px; border-radius:4px; background:'+o.sw+'; box-shadow:inset 0 0 0 1px rgba(255,255,255,.25); flex-shrink:0;"></span>':'')+
+    o.label+'<span class="bet-badge" data-for="'+o.key+'" style="'+BADGE_SM+'display:none;">0</span></button>'
+  ).join('');
+}
+
+function render(){
+  $('bal').textContent=S.balance==null?'—':fmt(S.balance);
+  $('minbet').textContent=S.cfg.min_bet; $('maxbet').textContent=S.cfg.max_bet;
+  const bets=mergedBets(); const keys=Object.keys(bets);
+  $('betcount').textContent=keys.length;
+  $('totalbet').textContent=fmt(totalBet());
+  $('selection').textContent=keys.length===1?labelFor(keys[0]):(keys.length>1?keys.length+' apuestas':'Ninguna');
+
+  $('history').innerHTML=(S.history||[]).map(n=>'<div style="width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:8px; font-family:\'Cinzel\',serif; font-weight:700; font-size:13px; color:#fff; background:'+histBg(n)+'; border:1px solid rgba(255,255,255,.1); box-shadow:inset 0 0 0 1px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.45);">'+n+'</div>').join('');
+
+  $('chat').innerHTML=(S.chat||[]).map(m=>{
+    const ts=m.ts?new Date(m.ts).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'}):'';
+    const tss=ts?'<span style="color:#6a5c42; font-size:9px; margin-right:5px; font-variant-numeric:tabular-nums;">'+ts+'</span>':'';
+    if(m.system) return '<div style="font-size:12px; line-height:1.45;">'+tss+'<span style="color:#9c8156; font-style:italic;">'+esc(m.message||m.text)+'</span></div>';
+    return '<div style="font-size:12px; line-height:1.45;">'+tss+'<span class="'+decoClass(m.name_effect)+'" style="font-weight:700; color:'+nameColor(m.name)+';">'+esc(m.name)+'</span><span style="color:#7a6a4d;"> · </span><span style="color:#e6dcc6;">'+esc(m.message||m.text)+'</span></div>';
+  }).join('');
+  $('online').textContent=S.serverSeats.filter(x=>x&&x.name).length;
+
+  let seatsHtml='';
+  for(let i=0;i<S.cfg.max_seats;i++){
+    const sv=S.serverSeats[i];
+    if(!sv||!sv.name){
+      seatsHtml+='<div style="display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0;"><span style="width:clamp(32px,3.2vw,46px); height:clamp(32px,3.2vw,46px); border-radius:50%; background:rgba(240,165,46,.15); border:2px dashed rgba(240,165,46,.3); box-shadow:0 3px 9px rgba(0,0,0,.5), inset 0 1px 2px rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-family:\'Cinzel\',serif; font-weight:800; font-size:clamp(12px,1.2vw,15px); color:#6e5d3f;">+</span><span style="font-size:10px; font-weight:700; color:#6e5d3f; white-space:nowrap;">Libre</span><span style="font-size:8px; color:#5a4c34; white-space:nowrap;">Asiento '+(i+1)+'</span></div>';
+    } else {
+      const cc=nameColor(sv.name); const me=!!sv.is_me;
+      const ring=me?'3px solid #f7c168':'2px solid rgba(240,165,46,.5)';
+      const glow=me?'0 0 0 3px rgba(240,165,46,.4), 0 0 16px rgba(240,165,46,.55), 0 4px 12px rgba(0,0,0,.6)':'0 3px 9px rgba(0,0,0,.6)';
+      const sub=me?'Tú':(sv.ready?'Listo ✓':(sv.has_bet?'Apostando…':'En mesa'));
+      const frameId=sv.equipped&&sv.equipped.avatar_frame; const nameCls=decoClass(sv.equipped&&sv.equipped.name_effect);
+      const avInner=(sv.avatar_url?'<img src="'+esc(sv.avatar_url)+'" alt="" style="width:100%; height:100%; object-fit:cover; display:block;" onerror="this.style.display=\'none\';this.parentNode.textContent=\''+esc((sv.name[0]||'?').toUpperCase())+'\'">':esc((sv.name[0]||'?').toUpperCase()));
+      const avBlock=avatarDecoHtml(avInner, frameId, 'clamp(32px,3.2vw,46px)', 'background:'+cc+'; border:'+ring+'; box-shadow:'+glow+', inset 0 1px 2px rgba(255,255,255,.25); font-family:\'Cinzel\',serif; font-weight:800; font-size:clamp(12px,1.2vw,15px); color:#0a0a0c;');
+      seatsHtml+='<div style="display:flex; flex-direction:column; align-items:center; gap:2px; min-width:0;">'+avBlock+'<div style="position:relative; z-index:6; margin-top:5px; display:flex; flex-direction:column; align-items:center; padding:3px 10px; border-radius:9px; background:rgba(12,9,6,.82); border:1px solid rgba(240,165,46,.28); box-shadow:0 3px 9px rgba(0,0,0,.6);"><span class="'+nameCls+'" style="font-family:\'Cinzel\',serif; font-size:clamp(12px,1.3vw,15px); font-weight:800; letter-spacing:.02em; color:'+(me?'#f7c168':'#f0e2c2')+'; white-space:nowrap; max-width:110px; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 3px rgba(0,0,0,.9);">'+esc(sv.name)+'</span><span style="font-size:9px; letter-spacing:.05em; font-weight:700; color:'+(sv.ready?'#54d18a':'#b8945c')+'; white-space:nowrap; margin-top:1px;">'+sub+'</span></div></div>';
+    }
+  }
+  $('seats').innerHTML=seatsHtml;
+
+  $('wheel-rot').style.transform='rotate('+S.wheelDeg+'deg)';
+
+  const rc=$('result');
+  if(S.result && _wheelSettled){
+    const r=S.result;
+    rc.style.cssText='position:absolute; top:-14px; left:50%; z-index:7; display:flex; flex-direction:column; align-items:center; gap:4px; padding:13px 30px; border-radius:14px; background:linear-gradient(180deg,#1a120c,#0c0807); border:2px solid '+r.border+'; box-shadow:0 24px 60px -18px rgba(0,0,0,.9), '+r.glow+'; animation:exiPop .45s ease both;';
+    rc.innerHTML='<span style="font-family:\'Cinzel\',serif; font-weight:800; font-size:18px; letter-spacing:.1em; text-transform:uppercase; color:'+r.statusColor+';">'+r.status+'</span><span style="display:flex; align-items:center; gap:9px; font-family:\'Cinzel\',serif; font-weight:800; font-size:30px; color:#f3ead6;"><span style="width:16px; height:16px; border-radius:5px; background:'+r.sw+'; box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);"></span>'+r.n+'</span><span style="font-size:12px; color:#b08d57; letter-spacing:.04em;">'+r.detail+'</span>';
+  } else { rc.style.display='none'; rc.innerHTML=''; }
+
+  $('exi-status').textContent=statusLineWithCd();
+  $('seatbtn').textContent=S.mySeat?'Levantarse':'Sentarse';
+
+  const chipVals=chipValues();
+  const chipCls=decoClass(S.shop&&S.shop.equipped&&S.shop.equipped.chip_skin);
+  $('chips').innerHTML=chipVals.map((value,i)=>{
+    const c=CHIP_DEFS[i%CHIP_DEFS.length]; const seld=S.chip===value;
+    const scale=seld?'translateY(-3px) scale(1.07)':'translateY(0) scale(1)';
+    const glow=seld?'0 0 0 2px #f0a52e, 0 0 18px rgba(240,165,46,.6),':'';
+    return '<button data-chip="'+value+'" class="'+chipCls+'" type="button" style="position:relative; aspect-ratio:1; border:none; background:transparent; cursor:pointer; padding:0; transform:'+scale+'; transition:transform .16s ease; outline:none;"><div style="position:absolute; inset:0; border-radius:50%; background:'+c.edgeBg+'; box-shadow:'+glow+' 0 4px 10px rgba(0,0,0,.6), inset 0 1px 1px rgba(255,255,255,.3);"></div><div style="position:absolute; inset:19%; border-radius:50%; background:'+c.face+'; box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.35), inset 0 2px 5px rgba(255,255,255,.18), inset 0 -3px 7px rgba(0,0,0,.45); display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;"><span style="font-family:\'Cinzel\',serif; font-weight:800; font-size:clamp(13px,1.2vw,16px); color:'+c.text+';">'+value+'</span><span style="font-size:8px; letter-spacing:.1em; color:'+c.text+'; opacity:.8;">C</span></div></button>';
+  }).join('');
+
+  document.querySelectorAll('.bet-badge').forEach(b=>{
+    const k=b.getAttribute('data-for'); const amt=bets[k]||0;
+    if(amt>0){ b.textContent=amt; b.style.display='flex'; } else b.style.display='none';
+  });
+
+  // Apuestas de OTROS jugadores (sincronizadas en tiempo real): puntito de color por jugador en cada casilla
+  const otherByKey={};
+  for(const sv of (S.serverSeats||[])){
+    if(!sv || sv.is_me || !Array.isArray(sv.bets)) continue;
+    for(const bb of sv.bets){ const k=keyFromServer(bb.bet_key||bb.key); (otherByKey[k]=otherByKey[k]||[]).push({ c:nameColor(sv.name), amt:bb.amount, name:sv.name }); }
+  }
+  document.querySelectorAll('[data-bet-key]').forEach(el=>{
+    const k=el.getAttribute('data-bet-key'); const arr=otherByKey[k]; let dots=el.querySelector('.bet-others');
+    if(arr && arr.length){
+      if(!dots){ dots=document.createElement('span'); dots.className='bet-others'; dots.style.cssText='position:absolute; left:3px; bottom:3px; display:flex; gap:2px; z-index:6; pointer-events:none;'; el.appendChild(dots); }
+      dots.innerHTML=arr.slice(0,6).map(o=>'<span title="'+esc(o.name)+': '+fmt(o.amt)+' C" style="width:8px; height:8px; border-radius:50%; background:'+o.c+'; box-shadow:0 0 0 1px rgba(0,0,0,.55);"></span>').join('');
+    } else if(dots){ dots.remove(); }
+  });
+
+  updateConfirmCard(S.countdown);
+
+  let readyLabel='LISTO · Apostar', dis=false;
+  if(!S.loggedIn){ readyLabel='Entra con Discord'; dis=true; }
+  else if(S.status==='spinning'){ readyLabel='Girando…'; dis=true; }
+  else if(S.status==='result'){ readyLabel='Ronda en curso'; dis=true; }
+  else if(!S.mySeat){ readyLabel='Siéntate primero'; dis=true; }
+  else if(S.mySeat.ready){ readyLabel='Listo ✓'; dis=true; }
+  const rb=$('readybtn'); rb.textContent=readyLabel; rb.disabled=dis; rb.style.opacity=dis?0.6:1; rb.style.cursor=dis?'default':'pointer';
+}
+
+// ── Tienda de decoraciones (estilo Nitro) ──
+const SLOT_LABEL={ avatar_frame:'Marcos de avatar', name_effect:'Nombres', chip_skin:'Fichas' };
+function buildShopModal(){
+  let ov=document.getElementById('exi-shop'); if(ov) return ov;
+  ov=document.createElement('div'); ov.id='exi-shop';
+  ov.style.cssText='display:none; position:fixed; inset:0; z-index:9550; background:rgba(0,0,0,.74); align-items:center; justify-content:center; font-family:Inter,sans-serif;';
+  const card=document.createElement('div'); card.className='exi-scroll';
+  card.style.cssText='width:min(820px,94vw); max-height:88vh; overflow:auto; background:linear-gradient(180deg,#1a120c,#0e0907); border:1px solid rgba(240,165,46,.35); border-radius:16px; padding:20px 22px; box-shadow:0 24px 60px rgba(0,0,0,.7);';
+  card.innerHTML='<div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;"><h3 style="font-family:\'Cinzel\',serif; color:#f0a52e; font-size:20px; flex:1; margin:0;">🎁 Tienda de decoraciones</h3><span style="font-size:12px; color:#b08d57;">Saldo: <strong id="exi-shop-bal" style="color:#f3ead6;">—</strong> C</span><button id="exi-shop-close" type="button" style="background:rgba(207,106,100,.15); border:1px solid rgba(207,106,100,.4); color:#cf6a64; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:13px;">Cerrar ✕</button></div><div id="exi-shop-body"></div>';
+  ov.appendChild(card); document.body.appendChild(ov);
+  ov.addEventListener('click', e=>{
+    const buy=e.target.closest&&e.target.closest('[data-shop-buy]');
+    if(buy){ wsSend({type:'shop_buy', id:buy.getAttribute('data-shop-buy')}); return; }
+    const eq=e.target.closest&&e.target.closest('[data-shop-equip]');
+    if(eq){ wsSend({type:'shop_equip', slot:eq.getAttribute('data-shop-equip'), id:eq.getAttribute('data-shop-id')||null}); return; }
+    if(e.target===ov || (e.target.id==='exi-shop-close')) ov.style.display='none';
+  });
+  return ov;
+}
+function decoPreview(item){
+  const cls=decoClass(item.id);
+  if(item.slot==='avatar_frame'){
+    if(item.image) return '<span style="position:relative;display:inline-flex;width:48px;height:48px;"><span style="width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3a2a10,#0c0807);border:2px solid rgba(240,165,46,.4);"></span><img src="'+esc(item.image)+'" alt="" style="position:absolute;left:-45%;top:-45%;width:190%;height:190%;object-fit:contain;pointer-events:none;z-index:2;"></span>';
+    return '<span class="'+cls+'" style="width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#3a2a10,#0c0807);border:2px solid rgba(240,165,46,.5);display:inline-flex;align-items:center;justify-content:center;color:#f0a52e;font-weight:800;">★</span>';
+  }
+  if(item.slot==='name_effect') return '<span class="'+cls+'" style="font-family:\'Cinzel\',serif;font-weight:800;font-size:20px;">Nombre</span>';
+  if(item.slot==='chip_skin') return '<span class="'+cls+'" style="display:inline-flex;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f1d79a,#a87623);border:3px solid #caa15a;align-items:center;justify-content:center;font-weight:800;color:#3a2808;">5</span>';
+  return '';
+}
+function renderShop(){
+  const ov=document.getElementById('exi-shop'); if(!ov) return;
+  const bal=document.getElementById('exi-shop-bal'); if(bal) bal.textContent=S.balance==null?'—':fmt(S.balance);
+  const body=document.getElementById('exi-shop-body'); if(!body) return;
+  const sh=S.shop||{catalog:[],owned:[],equipped:{}};
+  if(!sh.catalog.length){ body.innerHTML='<div style="color:#9c8156; text-align:center; padding:24px;">Cargando tienda…</div>'; return; }
+  body.innerHTML=['avatar_frame','name_effect','chip_skin'].map(slot=>{
+    const cards=sh.catalog.filter(it=>it.slot===slot).map(it=>{
+      const owned=sh.owned.includes(it.id); const equipped=sh.equipped[slot]===it.id; let btn;
+      if(equipped) btn='<button data-shop-equip="'+slot+'" data-shop-id="" type="button" style="width:100%;padding:7px;border-radius:8px;border:1px solid rgba(84,209,138,.5);background:rgba(84,209,138,.15);color:#54d18a;font-weight:700;font-size:12px;cursor:pointer;">Equipado ✓ · quitar</button>';
+      else if(owned) btn='<button data-shop-equip="'+slot+'" data-shop-id="'+it.id+'" type="button" style="width:100%;padding:7px;border-radius:8px;border:1px solid rgba(240,165,46,.5);background:rgba(240,165,46,.14);color:#f0a52e;font-weight:700;font-size:12px;cursor:pointer;">Equipar</button>';
+      else btn='<button data-shop-buy="'+it.id+'" type="button" style="width:100%;padding:7px;border-radius:8px;border:1px solid rgba(240,165,46,.5);background:linear-gradient(180deg,#f7c168,#f0a52e 60%,#b97916);color:#2a1a06;font-weight:800;font-size:12px;cursor:pointer;">Comprar · '+fmt(it.price)+' C</button>';
+      return '<div style="background:rgba(0,0,0,.3);border:1px solid '+rarityColor(it.rarity)+';border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;"><div style="height:52px;display:flex;align-items:center;justify-content:center;">'+decoPreview(it)+'</div><div style="font-weight:700;color:#f3ead6;font-size:13px;">'+esc(it.name)+'</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:'+rarityColor(it.rarity)+';">'+esc(it.rarity)+'</div>'+btn+'</div>';
+    }).join('');
+    return '<div style="margin-bottom:18px;"><div style="font-family:\'Cinzel\',serif;color:#e9d4a0;font-size:14px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid rgba(240,165,46,.18);padding-bottom:6px;">'+SLOT_LABEL[slot]+'</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">'+cards+'</div></div>';
+  }).join('');
+}
+function openShop(){ if(!token()){ flash('Entra con Discord para ver la tienda.'); return; } const ov=buildShopModal(); renderShop(); ov.style.display='flex'; }
+window.exiOpenShop=openShop;
+
+function init(){
+  $('wheel-rot').innerHTML=buildWheelSVG();
+  buildBoard();
+  render();
+  $('exi-board').addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-bet-key]'); if(b) placeBet(b.getAttribute('data-bet-key')); });
+  $('chips').addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-chip]'); if(b) selectChip(Number(b.getAttribute('data-chip'))); });
+  $('readybtn').addEventListener('click',spin);
+  $('seatbtn').addEventListener('click',toggleSeat);
+  $('btn-half').addEventListener('click',half);
+  $('btn-double').addEventListener('click',double);
+  $('btn-clear').addEventListener('click',clearBets);
+  $('chatsend').addEventListener('click',sendChat);
+  $('chatinput').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); sendChat(); } });
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) connectWS(); });
+  // Cambio de sesión en otra pestaña (login/logout): reconectar con el nuevo token.
+  window.addEventListener('storage',()=>{ S.loggedIn=!!token(); reconnectWS(); render(); });
+  setInterval(tickClock,250);
+  connectWS();
+}
+window.exiReconnectWS=function(){ try{ reconnectWS(); }catch(e){} }; // para que el logout de la barra reconecte sin sesión
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+</script>
+
+<!-- hover: iluminar apuestas relacionadas -->
+<script>
+(function(){
+var R=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+function affected(key){
+var s=new Set();var p=key.split(':');var t=p[0];var v=p[1]!==undefined?Number(p[1]):null;var n;
+if(t==='number'){s.add(key);n=v;if(n===0)return s;s.add(R.has(n)?'red':'black');s.add(n%2===0?'even':'odd');s.add(n<=18?'low':'high');s.add('dozen:'+(n<=12?1:(n<=24?2:3)));s.add('col:'+(n%3===0?3:n%3));}
+else if(t==='red'){s.add('red');R.forEach(function(x){s.add('number:'+x);});}
+else if(t==='black'){s.add('black');for(n=1;n<=36;n++){if(!R.has(n))s.add('number:'+n);}}
+else if(t==='even'){s.add('even');for(n=2;n<=36;n+=2)s.add('number:'+n);}
+else if(t==='odd'){s.add('odd');for(n=1;n<=36;n+=2)s.add('number:'+n);}
+else if(t==='low'){s.add('low');for(n=1;n<=18;n++)s.add('number:'+n);}
+else if(t==='high'){s.add('high');for(n=19;n<=36;n++)s.add('number:'+n);}
+else if(t==='dozen'){s.add(key);var st=(v-1)*12+1;for(n=st;n<st+12;n++)s.add('number:'+n);}
+else if(t==='col'){s.add(key);for(n=1;n<=36;n++){if(n%3===(v%3))s.add('number:'+n);}}
+return s;}
+function apply(key){clr();var aff=affected(key);var els=document.querySelectorAll('[data-bet-key]');for(var i=0;i<els.length;i++){var el=els[i];var k=el.getAttribute('data-bet-key');if(aff.has(k))el.classList.add(k===key?'exi-hv-self':'exi-hv-rel');}}
+function clr(){var els=document.querySelectorAll('.exi-hv-self,.exi-hv-rel');for(var i=0;i<els.length;i++)els[i].classList.remove('exi-hv-self','exi-hv-rel');}
+document.addEventListener('mouseover',function(e){var b=e.target.closest&&e.target.closest('[data-bet-key]');if(b){var k=b.getAttribute('data-bet-key');if(k)apply(k);}});
+document.addEventListener('mouseout',function(e){var b=e.target.closest&&e.target.closest('[data-bet-key]');if(b){var to=e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('[data-bet-key]');if(!to)clr();}});
+})();
+</script>
+
+<!-- barra superior: login Discord + Mi Perfil + Cómo jugar + sonido -->
+<script>
+(function(){
+var API='https://api.guild-exilium.com';
+function el(t,css,txt){var e=document.createElement(t);if(css)e.style.cssText=css;if(txt!=null)e.textContent=txt;return e;}
+try{var q=new URLSearchParams(location.search);var tk=q.get('token');
+if(tk){localStorage.setItem('exi_tk',tk);localStorage.setItem('exi_nm',q.get('name')||'');localStorage.setItem('exi_av',q.get('avatar')||'');history.replaceState({},'',location.pathname);}
+var er=q.get('error');if(er){var msg=decodeURIComponent(er);setTimeout(function(){alert('Discord: '+msg);},400);history.replaceState({},'',location.pathname);}}catch(e){}
+function logged(){return !!localStorage.getItem('exi_tk');}
+var bar=el('div','position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:9000; display:flex; gap:10px; align-items:center; font-family:Inter,sans-serif;');bar.id='exi-topbar';
+var help=el('button');help.type='button';help.appendChild(el('span',null,'❔'));var _ht=el('span',null,' Cómo jugar');_ht.className='exi-hide-sm';help.appendChild(_ht);
+help.style.cssText='padding:6px 14px; border-radius:20px; border:1px solid rgba(240,165,46,.4); background:rgba(20,14,10,.88); color:#f0a52e; font-weight:700; font-size:12px; cursor:pointer;';
+help.onclick=function(){modal.style.display='flex';};bar.appendChild(help);
+var shopBtn=el('button','padding:6px 14px; border-radius:20px; border:1px solid rgba(240,165,46,.4); background:rgba(20,14,10,.88); color:#f0a52e; font-weight:700; font-size:12px; cursor:pointer;');shopBtn.type='button';shopBtn.appendChild(el('span',null,'🎁'));var _st=el('span',null,' Tienda');_st.className='exi-hide-sm';shopBtn.appendChild(_st);shopBtn.onclick=function(){if(window.exiOpenShop)window.exiOpenShop();};bar.appendChild(shopBtn);
+var dc=el('div');
+function renderDc(){while(dc.firstChild)dc.removeChild(dc.firstChild);
+if(logged()){
+var av=localStorage.getItem('exi_av');var nm=localStorage.getItem('exi_nm')||'Aventurero';
+var wrap=el('div','display:flex; align-items:center; gap:8px; padding:4px 10px 4px 4px; border-radius:24px; border:1px solid rgba(240,165,46,.35); background:rgba(20,14,10,.88);');
+var avWrap=el('span','position:relative; display:inline-flex; width:30px; height:30px; flex-shrink:0;');avWrap.id='exi-top-avatar';
+var ic;if(av){ic=el('img','width:100%; height:100%; border-radius:50%; object-fit:cover;');ic.src=av;}else{ic=el('div','width:100%; height:100%; border-radius:50%; background:linear-gradient(150deg,#5865F2,#404EED); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:13px;',nm.charAt(0).toUpperCase());}
+ic.className='exi-top-avatar-inner';avWrap.appendChild(ic);
+var sp=el('span','color:#f3ead6; font-weight:700; font-size:12px; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;',nm);sp.id='exi-top-name';
+var prof=el('a','padding:3px 10px; border-radius:14px; border:1px solid rgba(240,165,46,.4); background:rgba(240,165,46,.1); color:#f0a52e; font-size:10px; text-decoration:none;','Mi Perfil');prof.href='casino-profile.html';
+var out=el('button','padding:3px 9px; border-radius:14px; border:1px solid rgba(207,106,100,.4); background:transparent; color:#cf6a64; font-size:10px; cursor:pointer;','Salir');out.type='button';
+out.onclick=function(){localStorage.removeItem('exi_tk');localStorage.removeItem('exi_nm');localStorage.removeItem('exi_av');renderDc();try{S.loggedIn=false;render();}catch(e){}try{window.exiReconnectWS&&window.exiReconnectWS();}catch(e){}};
+wrap.appendChild(avWrap);wrap.appendChild(sp);wrap.appendChild(prof);wrap.appendChild(out);dc.appendChild(wrap);
+try{window.exiApplyTopbarDeco&&window.exiApplyTopbarDeco();}catch(e){}
+}else{
+var btn=el('button','display:flex; align-items:center; gap:7px; padding:7px 16px; border-radius:24px; border:none; background:linear-gradient(150deg,#5865F2,#4752C4); color:#fff; font-weight:700; font-size:12px; cursor:pointer; box-shadow:0 4px 14px rgba(88,101,242,.45);');btn.type='button';
+btn.appendChild(el('span','font-size:14px;','🎮'));var _dt=el('span',null,'Entrar con Discord');_dt.className='exi-hide-sm';btn.appendChild(_dt);
+btn.onclick=function(){location.href=API+'/api/casino/auth/discord?redirect='+encodeURIComponent(location.origin+location.pathname);};
+dc.appendChild(btn);}}
+renderDc();bar.appendChild(dc);
+var modal=el('div','display:none; position:fixed; inset:0; z-index:9500; background:rgba(0,0,0,.74); align-items:center; justify-content:center;');
+var card=el('div','max-width:440px; width:90%; background:linear-gradient(180deg,#1a120c,#0e0907); border:1px solid rgba(240,165,46,.35); border-radius:16px; padding:24px; box-shadow:0 24px 60px rgba(0,0,0,.7);');
+card.appendChild(el('h3','font-family:Cinzel,serif; color:#f0a52e; font-size:20px; margin-bottom:18px; text-align:center;','Cómo jugar'));
+var steps=[['1','Siéntate','Pulsa SENTARSE (bajo la ruleta) para ocupar un asiento libre en la mesa.'],['2','Apuesta','Elige una ficha y haz clic en los números o casillas del tapete. Pasa el mouse para ver qué cubre cada apuesta. Luego pulsa LISTO para confirmar.'],['3','El giro','Cuando la mesa esté lista (o expire el tiempo), el servidor gira la ruleta: todos comparten el mismo número. Tus PandaCoins quedan en tu cuenta.']];
+var box=el('div','display:flex; flex-direction:column; gap:14px;');
+steps.forEach(function(s){var row=el('div','display:flex; gap:12px; align-items:flex-start;');
+row.appendChild(el('span','flex-shrink:0; width:26px; height:26px; border-radius:50%; background:rgba(240,165,46,.16); border:1px solid rgba(240,165,46,.5); color:#f0a52e; font-family:Cinzel,serif; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center;',s[0]));
+var d=el('div');d.appendChild(el('div','color:#f3ead6; font-weight:700; font-size:14px; margin-bottom:2px;',s[1]));d.appendChild(el('div','color:#b08d57; font-size:12px; line-height:1.5;',s[2]));
+row.appendChild(d);box.appendChild(row);});card.appendChild(box);
+var close=el('button','margin-top:20px; width:100%; padding:10px; border-radius:10px; border:1px solid rgba(240,165,46,.4); background:rgba(240,165,46,.14); color:#f0a52e; font-weight:700; cursor:pointer; font-family:Cinzel,serif;','Entendido');close.type='button';
+close.onclick=function(){modal.style.display='none';};card.appendChild(close);
+modal.appendChild(card);modal.addEventListener('click',function(e){if(e.target===modal)modal.style.display='none';});
+function mount(){if(document.body){document.body.appendChild(bar);document.body.appendChild(modal);}else{setTimeout(mount,60);}}mount();
+var ctx=null,muted=false;try{muted=localStorage.getItem('exi_mute')==='1';}catch(e){}
+function AC(){if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(ctx&&ctx.state==='suspended')ctx.resume();return ctx;}
+function tone(f,dur,type,vol,to){var c=AC();if(!c||muted)return;var o=c.createOscillator(),g=c.createGain();o.type=type||'sine';o.frequency.value=f;if(to)o.frequency.exponentialRampToValueAtTime(to,c.currentTime+dur);g.gain.value=vol||0.16;g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+dur);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+dur);}
+var SFX={chip:function(){tone(880,0.07,'square',0.1);},spin:function(){tone(520,0.7,'sawtooth',0.13,120);},win:function(){[523,659,784].forEach(function(f,i){setTimeout(function(){tone(f,0.35,'triangle',0.15);},i*120);});},lose:function(){tone(165,0.4,'sine',0.15,90);}};
+window.EXISFX=SFX; // el resultado (win/lose) lo dispara el script principal al frenar la rueda
+document.addEventListener('click',function(e){AC();if(muted)return;var sp=e.target.closest&&e.target.closest('[data-exi-spin]');if(sp)SFX.spin();});
+document.addEventListener('keydown',function(){AC();},false);
+// (el antiguo watchStatus que adivinaba win/lose por el texto del estado se eliminó: hacía sonar
+//  "perder" en cada giro por la palabra "acompañe" y nunca el de victoria. Ahora se controla en JS.)
+var mb=el('button','padding:6px 10px; border-radius:20px; border:1px solid rgba(240,165,46,.4); background:rgba(20,14,10,.88); color:#f0a52e; font-size:13px; cursor:pointer;');mb.type='button';function lbl(){mb.textContent=muted?'🔇':'🔊';}lbl();mb.onclick=function(){muted=!muted;try{localStorage.setItem('exi_mute',muted?'1':'0');}catch(e){}lbl();if(!muted)AC();};bar.insertBefore(mb,bar.firstChild);
+})();
+</script>
+</body>
+</html>

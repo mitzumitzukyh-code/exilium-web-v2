@@ -39,31 +39,67 @@ jobs:
           # workers_dev = false en wrangler.toml: esa URL ya no existe.
           # Si alguna pagina vuelve a apuntar ahi, la ruleta se queda en
           # "Conectando con la mesa..." para siempre.
-          if grep -rn --include='*.html' --include='*.js' "workers\.dev" deploy \
+          # Solo se bloquea el host de exilium-blizzard (el resto de workers, p. ej.
+          # exilium-app-auth, tienen su propio workers.dev y siguen activos).
+          if grep -rnE --include='*.html' --include='*.js' "exilium-blizzard\.[a-z0-9-]+\.workers\.dev" deploy \
               --exclude-dir=assets; then
-            echo "::error::deploy/ referencia workers.dev (URL desactivada). Usa https://api.guild-exilium.com"
+            echo "::error::deploy/ referencia exilium-blizzard en workers.dev (URL desactivada). Usa https://api.guild-exilium.com"
             exit 1
           fi
           echo "OK: sin referencias a workers.dev"
 
+      - name: Verify critical files (roulette, banner, RBG)
+        shell: bash
+        run: |
+          # Si algo critico no esta en git, NO se despliega: asi un deploy nunca
+          # vuelve a borrar la ruleta 3D ni el banner de produccion.
+          missing=0
+          for f in \
+            deploy/sala-pandacoins-standalone.html \
+            deploy/assets/vendor/three.min.js \
+            deploy/assets/vendor/gsap.min.js \
+            deploy/assets/ruleta/ruleta-aro-exterior.png \
+            deploy/assets/ruleta/ruleta-numeros.png \
+            deploy/assets/ruleta/asientos.png \
+            deploy/assets/casino/reverso.png \
+            deploy/assets/audio/giro-ruleta.mp3 \
+            deploy/assets/movimiento-exilium.webp \
+            deploy/liga-rbg.html deploy/armario.html deploy/index.html deploy/admin.html; do
+            [ -f "$f" ] || { echo "::error::Falta archivo critico: $f"; missing=1; }
+          done
+          grep -q "three.min.js" deploy/sala-pandacoins-standalone.html || { echo "::error::La ruleta ya no es la version 3D (Three.js)"; missing=1; }
+          grep -q "hof-campaign" deploy/js/app.js || { echo "::error::Falta el banner del movimiento en app.js"; missing=1; }
+          [ "$missing" -eq 0 ] || exit 1
+          echo "OK: archivos criticos presentes"
+
       - name: Validate Cloudflare credentials
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Token propio de Pages (recomendado). Si no existe, cae al token generico
+          # para no romper el flujo; el token del Worker NO se toca.
+          PAGES_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          test -n "$CLOUDFLARE_API_TOKEN" || {
-            echo "::error::Missing CLOUDFLARE_API_TOKEN"
+          test -n "$PAGES_TOKEN" || {
+            echo "::error::Falta el secreto CLOUDFLARE_PAGES_API_TOKEN (o CLOUDFLARE_API_TOKEN). Ver README > Despliegue."
             exit 1
           }
-
           test -n "$CLOUDFLARE_ACCOUNT_ID" || {
-            echo "::error::Missing CLOUDFLARE_ACCOUNT_ID"
+            echo "::error::Falta el secreto CLOUDFLARE_ACCOUNT_ID"
             exit 1
           }
+          # Diagnostico sin mostrar el secreto: verifica el token contra la API.
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $PAGES_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/exilium-battlepass")
+          if [ "$code" != "200" ]; then
+            echo "::error::Cloudflare respondio HTTP $code al consultar el proyecto Pages exilium-battlepass. El token necesita Account > Cloudflare Pages > Edit sobre la cuenta correcta (ver README)."
+            exit 1
+          fi
+          echo "OK: token con acceso al proyecto Pages"
 
       - name: Deploy Pages
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PAGES_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           npx --yes wrangler@4 pages deploy deploy \
@@ -96,6 +132,11 @@ jobs:
 
           echo "$roulette" | grep -q "api.guild-exilium.com" || {
             echo "::error::La ruleta no apunta a api.guild-exilium.com"
+            exit 1
+          }
+
+          echo "$roulette" | grep -q "three.min.js" || {
+            echo "::error::La ruleta en produccion no es la version 3D"
             exit 1
           }
 

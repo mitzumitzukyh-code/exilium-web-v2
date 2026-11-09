@@ -213,7 +213,7 @@ function showTab(tab) {
 function setAlert(id, msg, type = 'error') {
     const el = document.getElementById(id);
     if (!msg) { el.innerHTML = ''; return; }
-    el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    const d = document.createElement('div'); d.className = 'alert alert-' + type; d.textContent = String(msg); el.innerHTML = ''; el.appendChild(d);
 }
 
 function setBtnLoading(id, loading, text) {

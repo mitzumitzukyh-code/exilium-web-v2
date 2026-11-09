@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liga RBG — Exilium | Inscripción</title>
+    <meta name="description" content="Inscripción a la Liga de Rated Battlegrounds de la guild Exilium. Regístrate con tu Discord y personaliza tu perfil con tu PJ.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.guild-exilium.com/liga-rbg">
+    <meta name="theme-color" content="#f0a000">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.guild-exilium.com/liga-rbg">
+    <meta property="og:title" content="Liga RBG — Exilium">
+    <meta property="og:description" content="Inscríbete a la Liga RBG de Exilium: personaliza tu perfil con tu PJ, elige tu especialización y aparece en el roster.">
+    <meta property="og:image" content="https://www.guild-exilium.com/assets/og-image.jpg">
+    <meta property="og:site_name" content="Exilium">
+
+    <link rel="preconnect" href="https://api.guild-exilium.com">
+    <link rel="stylesheet" href="css/main.css?v=202607071506">
+    <link rel="stylesheet" href="css/rbg.css?v=20260708170000">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="icon" href="assets/logo.webp" type="image/webp">
+</head>
+<body>
+
+<!-- Dragón animado decorativo (VP9 alfa, sin fondo verde) — solo en pantallas anchas.
+     El clip tiene varias escenas: si las dos instancias no van al mismo tiempo,
+     cada lado muestra un personaje distinto. El script de abajo mantiene la
+     izquierda esclava de la derecha (mismo cuadro en ambos lados). -->
+<video class="rbg-deco-dragon rbg-deco-dragon-left" src="assets/rbg/ui/fondo-animado.webm" autoplay muted loop playsinline aria-hidden="true"></video>
+<video class="rbg-deco-dragon rbg-deco-dragon-right" src="assets/rbg/ui/fondo-animado.webm" autoplay muted loop playsinline aria-hidden="true"></video>
+<script>
+(function () {
+  var l = document.querySelector('.rbg-deco-dragon-left');
+  var r = document.querySelector('.rbg-deco-dragon-right');
+  if (!l || !r) return;
+  setInterval(function () {
+    if (r.readyState >= 2 && Math.abs(l.currentTime - r.currentTime) > 0.3) {
+      l.currentTime = r.currentTime;
+    }
+  }, 800);
+})();
+</script>
+
+<div class="rbg-page">
+
+    <!-- Barra superior -->
+    <div class="rbg-topbar">
+        <a href="index.html" aria-label="Volver al inicio" class="rbg-logo-link">
+            <picture>
+                <source srcset="assets/logo.webp" type="image/webp">
+                <img src="assets/logo.png" alt="Exilium" width="44" height="44">
+            </picture>
+        </a>
+        <a class="rbg-back" href="index.html">← Volver al inicio</a>
+    </div>
+
+    <!-- Hero -->
+    <header class="rbg-hero">
+        <div class="rbg-crest">Exilium · Guild PvP</div>
+        <h1>LIGA RBG</h1>
+        <p class="rbg-sub">Un solo registro con <b>Discord</b> (el mismo del casino): personalizá tu perfil una vez y quedás inscrito en la liga.</p>
+    </header>
+
+    <!-- Aviso de registro/edición exitosa (transitorio, se muestra tras guardar) -->
+    <div class="rbg-success" id="rbg-success" hidden>
+        <span class="rbg-success-icon" aria-hidden="true">✓</span>
+        <div class="rbg-success-text">
+            <strong>¡Tu inscripción fue registrada con éxito!</strong>
+            <span>Ya podés verte junto a tus compañeros en el roster oficial de la liga.</span>
+        </div>
+        <button type="button" class="rbg-btn-save" id="rbg-goto-roster">Ver el roster →</button>
+    </div>
+
+    <!-- Perfil ya inscrito: foto/avatar, bandera, nombre, clase y especialización -->
+    <div class="rbg-mine-card" id="rbg-mine" hidden></div>
+
+    <!-- Login gate -->
+    <section class="rbg-section" id="rbg-login" hidden>
+        <div class="rbg-login-gate">
+            <p>Para inscribirte necesitás entrar con tu cuenta de Discord de la guild.</p>
+            <button type="button" class="rbg-btn-discord" id="rbg-login-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.37a19.8 19.8 0 0 0-4.89-1.52.07.07 0 0 0-.08.04c-.21.38-.44.87-.6 1.25a18.3 18.3 0 0 0-5.5 0 12.6 12.6 0 0 0-.61-1.25.08.08 0 0 0-.08-.04 19.7 19.7 0 0 0-4.88 1.52.07.07 0 0 0-.04.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 0 0 .03.05 19.9 19.9 0 0 0 6 3.03.08.08 0 0 0 .08-.03c.46-.63.87-1.3 1.22-2a.08.08 0 0 0-.04-.1 13 13 0 0 1-1.87-.9.08.08 0 0 1-.01-.13c.13-.09.25-.19.37-.29a.07.07 0 0 1 .08 0 14.2 14.2 0 0 0 12.06 0 .07.07 0 0 1 .08 0c.12.1.25.2.37.3a.08.08 0 0 1 0 .12 12.3 12.3 0 0 1-1.88.9.08.08 0 0 0-.04.1c.36.7.77 1.37 1.22 2a.08.08 0 0 0 .08.03 19.8 19.8 0 0 0 6.03-3.03.08.08 0 0 0 .03-.05c.5-5.18-.84-9.68-3.55-13.66a.06.06 0 0 0-.03-.03zM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42 0-1.33.96-2.42 2.16-2.42 1.21 0 2.18 1.1 2.16 2.42 0 1.34-.96 2.42-2.16 2.42zm7.97 0c-1.18 0-2.15-1.08-2.15-2.42 0-1.33.95-2.42 2.15-2.42 1.22 0 2.18 1.1 2.16 2.42 0 1.34-.94 2.42-2.16 2.42z"/></svg>
+                Entrar con Discord
+            </button>
+        </div>
+    </section>
+
+    <!-- Formulario de personalización -->
+    <section class="rbg-section" id="rbg-form-section" hidden>
+        <div class="rbg-eyebrow">Antes de entrar</div>
+        <h2>Personalizá tu perfil</h2>
+        <p class="rbg-lede">La foto es la de <strong style="color:#e8d9a8">tu PJ</strong> — el personaje con el que vas a jugar la liga. Si no subís foto, aparecés con la silueta por defecto.</p>
+
+        <div class="rbg-panel">
+            <div class="rbg-form-grid">
+
+                <!-- Columna foto -->
+                <div>
+                    <span class="rbg-flabel">Foto de tu PJ</span>
+                    <div class="rbg-pj-frame" id="rbg-photo-frame">
+                        <svg class="rbg-silueta" viewBox="0 0 150 186" aria-hidden="true">
+                            <ellipse cx="75" cy="78" rx="27" ry="31" fill="#23232e"/>
+                            <path d="M18 186 Q24 126 60 114 L75 122 L90 114 Q126 126 132 186 Z" fill="#23232e"/>
+                        </svg>
+                    </div>
+                    <label class="rbg-btn-upload" style="display:block;text-align:center;cursor:pointer">
+                        Subir foto
+                        <input type="file" id="rbg-photo-input" accept="image/png,image/webp,image/jpeg" hidden>
+                    </label>
+                    <div class="rbg-nota" style="margin-top:12px">Ideal: <b>PNG con fondo transparente</b> de tu personaje. Se redimensiona sola.</div>
+                </div>
+
+                <!-- Columna datos -->
+                <div>
+                    <div class="rbg-field">
+                        <span class="rbg-flabel">Nombre de Discord</span>
+                        <div class="rbg-input rbg-locked">
+                            <img class="rbg-davatar" id="rbg-dc-avatar" alt="" hidden>
+                            <span id="rbg-dc-name">—</span>
+                            <span class="rbg-lock">⚿ se autorrellena con tu cuenta</span>
+                        </div>
+                    </div>
+
+                    <div class="rbg-field">
+                        <label class="rbg-flabel" for="rbg-char">Tu personaje en WoW <span style="text-transform:none;letter-spacing:0;font-weight:400">(nombre exacto)</span></label>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap">
+                            <div class="rbg-input" style="flex:1;min-width:150px">
+                                <input type="text" id="rbg-char" maxlength="12" placeholder="Ej: Dracomcfly" autocomplete="off">
+                            </div>
+                            <div class="rbg-input" style="flex:1;min-width:150px">
+                                <input type="text" id="rbg-realm" maxlength="30" placeholder="Reino" value="Quel'Thalas" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="rbg-nota" style="margin-top:8px">Es el nombre con el que vas a aparecer en el roster. Con esto tu ficha muestra automáticamente tu <b>rating RBG</b> y el <b>modelo 2D</b> de tu personaje, directo de Blizzard.</div>
+                    </div>
+
+                    <div class="rbg-pick-row">
+                        <div class="rbg-pick-group">
+                            <span class="rbg-flabel">País</span>
+                            <button type="button" class="rbg-pick" id="rbg-country-btn" aria-label="Elegir país" aria-haspopup="true"></button>
+                            <div class="rbg-popover" id="rbg-pop-country" hidden>
+                                <div class="rbg-pop-title">Elegí tu país</div>
+                                <div class="rbg-flag-grid" id="rbg-flag-grid"></div>
+                            </div>
+                        </div>
+                        <div class="rbg-pick-group">
+                            <span class="rbg-flabel">Clase y especialización</span>
+                            <button type="button" class="rbg-pick" id="rbg-spec-btn" aria-label="Elegir especialización" aria-haspopup="true"></button>
+                            <div class="rbg-popover" id="rbg-pop-spec" hidden>
+                                <div class="rbg-pop-title">1 · Elegí tu rol</div>
+                                <div class="rbg-role-row" id="rbg-role-row"></div>
+                                <div class="rbg-pop-title">2 · Elegí tu spec</div>
+                                <div class="rbg-spec-grid" id="rbg-spec-grid"></div>
+                                <div class="rbg-nota" style="margin-top:12px">El icono de rol se asigna solo según tu spec.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rbg-field" style="margin-top:22px">
+                        <span class="rbg-flabel">Me inscribo como</span>
+                        <div class="rbg-form-foot">
+                            <span class="rbg-seg" role="group" aria-label="Titular o banca">
+                                <button type="button" id="rbg-seg-titular" class="rbg-sel">TITULAR</button>
+                                <button type="button" id="rbg-seg-banca">BANCA</button>
+                            </span>
+                            <button type="button" class="rbg-btn-save" id="rbg-save">GUARDAR E INSCRIBIRME</button>
+                        </div>
+                        <div class="rbg-msg" id="rbg-msg" role="status" aria-live="polite"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA al roster oficial (web aparte) -->
+    <section class="rbg-section" style="text-align:center;">
+        <a class="rbg-cta-roster" href="liga-rbg-roster.html">Ver el roster oficial de la Liga →</a>
+    </section>
+
+</div>
+
+<script src="js/rbg.js?v=20260708183000" defer></script>
+</body>
+</html>
