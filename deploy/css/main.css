@@ -1140,6 +1140,83 @@ header .logo img:hover {
     pointer-events: none;
 }
 
+/* Banner de campaña (movimiento) */
+.hof-campaign {
+    display: grid;
+    grid-template-columns: minmax(220px, 340px) 1fr;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-glow);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.hof-campaign-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-glow);
+}
+
+.hof-campaign-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.hof-campaign-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, rgba(212,160,23,0.15), rgba(212,160,23,0.05));
+    border: 1px solid var(--border-glow);
+    border-radius: 30px;
+    padding: 0.4rem 1rem;
+    width: fit-content;
+}
+
+.hof-campaign-badge-icon {
+    color: var(--accent-color);
+    font-size: 1.1rem;
+}
+
+.hof-campaign-badge-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent-color);
+}
+
+.hof-campaign-title {
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1.2;
+}
+
+.hof-campaign-text {
+    margin: 0;
+    line-height: 1.6;
+    opacity: 0.85;
+    white-space: pre-line;
+}
+
+@media (max-width: 768px) {
+    .hof-campaign {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+
+    .hof-campaign-media {
+        max-width: 320px;
+        margin: 0 auto;
+    }
+}
+
 .hof-info-panel {
     display: flex;
     flex-direction: column;
