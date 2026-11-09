@@ -48,6 +48,30 @@ jobs:
           fi
           echo "OK: sin referencias a workers.dev"
 
+      - name: Verify critical files (roulette, banner, RBG)
+        shell: bash
+        run: |
+          # Si algo critico no esta en git, NO se despliega: asi un deploy nunca
+          # vuelve a borrar la ruleta 3D ni el banner de produccion.
+          missing=0
+          for f in \
+            deploy/sala-pandacoins-standalone.html \
+            deploy/assets/vendor/three.min.js \
+            deploy/assets/vendor/gsap.min.js \
+            deploy/assets/ruleta/ruleta-aro-exterior.png \
+            deploy/assets/ruleta/ruleta-numeros.png \
+            deploy/assets/ruleta/asientos.png \
+            deploy/assets/casino/reverso.png \
+            deploy/assets/audio/giro-ruleta.mp3 \
+            deploy/assets/movimiento-exilium.webp \
+            deploy/liga-rbg.html deploy/armario.html deploy/index.html deploy/admin.html; do
+            [ -f "$f" ] || { echo "::error::Falta archivo critico: $f"; missing=1; }
+          done
+          grep -q "three.min.js" deploy/sala-pandacoins-standalone.html || { echo "::error::La ruleta ya no es la version 3D (Three.js)"; missing=1; }
+          grep -q "hof-campaign" deploy/js/app.js || { echo "::error::Falta el banner del movimiento en app.js"; missing=1; }
+          [ "$missing" -eq 0 ] || exit 1
+          echo "OK: archivos criticos presentes"
+
       - name: Validate Cloudflare credentials
         env:
           # Token propio de Pages (recomendado). Si no existe, cae al token generico
@@ -108,6 +132,11 @@ jobs:
 
           echo "$roulette" | grep -q "api.guild-exilium.com" || {
             echo "::error::La ruleta no apunta a api.guild-exilium.com"
+            exit 1
+          }
+
+          echo "$roulette" | grep -q "three.min.js" || {
+            echo "::error::La ruleta en produccion no es la version 3D"
             exit 1
           }
 
