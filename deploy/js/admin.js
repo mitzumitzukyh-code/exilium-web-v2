@@ -1452,7 +1452,7 @@ async function lookupOfficerChar() {
   try {
     var data = await apiCall('/admin/officers/lookup/' + encodeURIComponent(name) + '/' + encodeURIComponent(realm));
     if (data.error) {
-      resultDiv.innerHTML = '<div style="padding:8px;color:#e74c3c;">❌ ' + data.error + '</div>';
+      resultDiv.innerHTML = '<div style="padding:8px;color:#e74c3c;"></div>'; resultDiv.firstChild.textContent = '❌ ' + data.error;
       lookupVerified = false;
       return;
     }

@@ -526,7 +526,11 @@ async function createOrder() {
         });
         const data = await res.json();
         if (data.error) {
-            alertEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+            alertEl.innerHTML = '';
+            const errDiv = document.createElement('div');
+            errDiv.className = 'alert alert-error';
+            errDiv.textContent = String(data.error);
+            alertEl.appendChild(errDiv);
         } else {
             alertEl.innerHTML = '<div class="alert alert-success">&#10003; Pedido creado. Un booster lo reclamará pronto.</div>';
             sel.value = '';
