@@ -195,8 +195,18 @@ Configurar en Cloudflare Dashboard → Workers → Settings → Variables:
 **Emergencias** (Actions caído): `npm run deploy:front`. Se niega a desplegar si `deploy/` tiene cambios sin
 commit o si tu `main` local no es igual a `origin/main`.
 
-**Secrets del repo:** `CLOUDFLARE_API_TOKEN` (permisos *Workers Scripts: Edit* y *Cloudflare Pages: Edit*) y
-`CLOUDFLARE_ACCOUNT_ID`.
+**Secrets del repo (Settings > Secrets and variables > Actions):**
+
+- `CLOUDFLARE_ACCOUNT_ID`: ID de la cuenta Cloudflare que es dueña del proyecto Pages `exilium-battlepass`.
+- `CLOUDFLARE_PAGES_API_TOKEN` (recomendado): token **solo para Pages**. Se crea en
+  Cloudflare > My Profile > API Tokens > Create Token > Custom, con el unico permiso
+  `Account > Cloudflare Pages > Edit` limitado a esa cuenta. Es independiente del token del Worker.
+- `CLOUDFLARE_API_TOKEN`: lo usa el workflow del Worker. El de Pages cae a este solo si
+  `CLOUDFLARE_PAGES_API_TOKEN` no existe.
+
+Nunca pegues tokens en chats, issues ni commits; solo en el formulario de secretos de GitHub.
+Si el job falla en "Validate Cloudflare credentials" con HTTP 401/403, el token no tiene el permiso
+de Pages o es de otra cuenta (error de Cloudflare `10000` / `9106`).
 
 ```bash
 # Worker (backend + Durable Object CasinoTable): solo si Actions no está disponible
