@@ -526,9 +526,43 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
+    // Banner de campaña (movimiento): imagen + texto, independiente de los jugadores
+    function renderHofCampaign(section) {
+        const c = state.hallOfFame.campaign;
+        let box = section.querySelector('.hof-campaign');
+
+        const imgUrl = c && typeof c.image_url === 'string' ? c.image_url.trim() : '';
+        const safeImg = /^https:\/\//i.test(imgUrl) || /^assets\/[\w./-]+$/.test(imgUrl) ? imgUrl : '';
+        const title = c && c.title ? String(c.title) : '';
+        const text = c && c.text ? String(c.text) : '';
+
+        if (!c || !c.enabled || (!safeImg && !title && !text)) {
+            if (box) box.remove();
+            return;
+        }
+
+        if (!box) {
+            box = document.createElement('div');
+            box.className = 'hof-campaign';
+            const showcase = section.querySelector('.hof-showcase');
+            if (showcase) showcase.before(box);
+            else section.appendChild(box);
+        }
+
+        box.innerHTML =
+            (safeImg ? '<div class="hof-campaign-media"><img src="' + escapeHtmlPublic(safeImg) + '" alt="' + escapeHtmlPublic(title || 'Movimiento Exilium') + '" loading="lazy" decoding="async"></div>' : '') +
+            '<div class="hof-campaign-body">' +
+                '<div class="hof-campaign-badge"><span class="hof-campaign-badge-icon">&#9733;</span><span class="hof-campaign-badge-label">Movimiento</span></div>' +
+                (title ? '<h3 class="hof-campaign-title">' + escapeHtmlPublic(title) + '</h3>' : '') +
+                (text ? '<p class="hof-campaign-text">' + escapeHtmlPublic(text) + '</p>' : '') +
+            '</div>';
+    }
+
     function renderHallOfFame() {
         const section = document.getElementById('hall-of-fame');
         if (!section) return;
+
+        renderHofCampaign(section);
 
         const entries = state.hallOfFame.entries || [];
         const videoUrl = state.hallOfFame.video_url || '';

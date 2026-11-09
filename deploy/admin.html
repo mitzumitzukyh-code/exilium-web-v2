@@ -627,6 +627,44 @@
                 </div>
             </div>
 
+            <!-- Banner de campaña / movimiento -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📣 Banner de campaña (movimiento)</span>
+                </div>
+                <div class="card-body">
+                    <p style="color:var(--text-muted);margin-bottom:12px;font-size:.9em;">
+                        Bloque con imagen y texto que aparece arriba del Salón de la Fama, sin necesidad de un jugador. Recuerda pulsar <strong>Guardar todo</strong>.
+                    </p>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="hof-campaign-enabled"> Mostrar el banner en la página pública
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="hof-campaign-title">Título</label>
+                        <input class="input" type="text" id="hof-campaign-title" maxlength="80" placeholder="Ej: Nace el movimiento #Exilium">
+                    </div>
+                    <div class="form-group">
+                        <label for="hof-campaign-text">Descripción</label>
+                        <textarea class="input" id="hof-campaign-text" rows="4" maxlength="400" placeholder="Ej: @Exilium empoderadas, @Guerreras amazonas... Súmate con el hashtag #Exilium."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Imagen</label>
+                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                            <input type="file" id="hof-campaign-image-file" accept="image/*" style="flex:1;padding:6px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-main);cursor:pointer;">
+                            <button class="btn btn-success" id="hof-campaign-upload-btn">⬆️ Subir</button>
+                        </div>
+                        <div style="text-align:center;color:var(--text-muted);font-size:.85em;margin:4px 0;">— o pega una URL —</div>
+                        <input class="input" type="text" id="hof-campaign-image" placeholder="assets/movimiento-exilium.webp" style="margin-top:4px;">
+                        <p style="margin-top:6px;font-size:.8em;color:var(--text-muted);">Por defecto puedes usar <code>assets/movimiento-exilium.webp</code> (ya incluida en el repo).</p>
+                    </div>
+                    <div id="hof-campaign-preview" style="display:none;margin-top:8px;max-width:240px;">
+                        <img id="hof-campaign-preview-img" alt="Vista previa" style="width:100%;border-radius:8px;border:1px solid var(--border);">
+                    </div>
+                </div>
+            </div>
+
             <!-- Jugadores destacados -->
             <div class="card">
                 <div class="card-header">

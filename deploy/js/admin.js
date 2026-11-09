@@ -1888,12 +1888,73 @@ function hofPreviewVideo() {
   toast('Vista previa cargada', 'success');
 }
 
+// ── Banner de campaña (movimiento) ──
+function hofCampaignPreview() {
+  var url = $('hof-campaign-image').value.trim();
+  var wrap = $('hof-campaign-preview');
+  var img = $('hof-campaign-preview-img');
+  if (!url) { wrap.style.display = 'none'; return; }
+  // Las rutas relativas (assets/...) viven en el sitio público, no en el admin
+  img.src = /^https?:\/\//i.test(url) ? url : '../' + url.replace(/^\/+/, '');
+  wrap.style.display = 'block';
+}
+
+function hofLoadCampaignForm() {
+  var c = hofData.campaign || {};
+  $('hof-campaign-enabled').checked = !!c.enabled;
+  $('hof-campaign-title').value = c.title || '';
+  $('hof-campaign-text').value = c.text || '';
+  $('hof-campaign-image').value = c.image_url || '';
+  hofCampaignPreview();
+}
+
+function hofReadCampaignForm() {
+  return {
+    enabled: $('hof-campaign-enabled').checked,
+    title: $('hof-campaign-title').value.trim(),
+    text: $('hof-campaign-text').value.trim(),
+    image_url: $('hof-campaign-image').value.trim(),
+  };
+}
+
+async function hofUploadCampaignImage() {
+  var file = $('hof-campaign-image-file').files[0];
+  if (!file) { toast('Selecciona una imagen primero', 'error'); return; }
+  if (!file.type || !file.type.startsWith('image/')) { toast('El archivo debe ser una imagen', 'error'); return; }
+  if (file.size > 8 * 1024 * 1024) { toast('La imagen supera los 8MB', 'error'); return; }
+
+  var btn = $('hof-campaign-upload-btn');
+  btn.disabled = true;
+  try {
+    var filename = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    var res = await fetch(API_URL + '/admin/upload-media', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + getToken(),
+        'Content-Type': file.type,
+        'X-Filename': filename,
+      },
+      body: file,
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok || !data.url) throw new Error(data.error || ('HTTP ' + res.status));
+    $('hof-campaign-image').value = data.url;
+    hofCampaignPreview();
+    toast('Imagen subida. Recuerda guardar los cambios.', 'success');
+  } catch (err) {
+    toast('Error subiendo la imagen: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 async function loadHallOfFame() {
   try {
     const data = await apiCall('/admin/hall-of-fame');
     hofData = data && Array.isArray(data.entries) ? data : { entries: [] };
     if (!hofData.video_url) hofData.video_url = '';
     $('hof-main-video').value = hofData.video_url || '';
+    hofLoadCampaignForm();
     renderHofEntries();
   } catch (err) {
     $('hof-entries-list').innerHTML = '<div class="empty-state"><p>Error cargando: ' + err.message + '</p></div>';
@@ -2068,6 +2129,7 @@ function hofFormSave() {
 
 async function saveHallOfFame() {
   hofData.video_url = $('hof-main-video').value.trim();
+  hofData.campaign = hofReadCampaignForm();
   try {
     await apiCall('/admin/hall-of-fame', 'PUT', hofData);
     toast('Salón de la Fama guardado', 'success');
@@ -2303,6 +2365,8 @@ document.addEventListener('DOMContentLoaded', function() {
   $('hof-preview-video-btn').addEventListener('click', hofPreviewVideo);
   $('hof-upload-video-btn').addEventListener('click', hofUploadVideo);
   $('hof-entry-upload-btn').addEventListener('click', hofUploadEntryVideo);
+  $('hof-campaign-upload-btn').addEventListener('click', hofUploadCampaignImage);
+  $('hof-campaign-image').addEventListener('input', hofCampaignPreview);
 
   // Tab: Analytics
   $('refresh-analytics-btn').addEventListener('click', loadAnalytics);
