@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://exilium-battlepass.pages.dev/sitemap.xml
+
+Sitemap: https://www.guild-exilium.com/sitemap.xml
