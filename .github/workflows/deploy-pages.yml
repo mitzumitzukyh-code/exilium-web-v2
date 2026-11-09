@@ -1,0 +1,109 @@
+name: Deploy Exilium Frontend (Pages)
+
+# GitHub es la fuente de la verdad del frontend: lo que esta en main es lo que
+# se publica. Nadie deberia desplegar deploy/ desde su disco con wrangler.
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - "deploy/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: exilium-pages-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy exilium-battlepass
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Block dead API hosts
+        shell: bash
+        run: |
+          # workers_dev = false en wrangler.toml: esa URL ya no existe.
+          # Si alguna pagina vuelve a apuntar ahi, la ruleta se queda en
+          # "Conectando con la mesa..." para siempre.
+          if grep -rn --include='*.html' --include='*.js' "workers\.dev" deploy \
+              --exclude-dir=assets; then
+            echo "::error::deploy/ referencia workers.dev (URL desactivada). Usa https://api.guild-exilium.com"
+            exit 1
+          fi
+          echo "OK: sin referencias a workers.dev"
+
+      - name: Validate Cloudflare credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || {
+            echo "::error::Missing CLOUDFLARE_API_TOKEN"
+            exit 1
+          }
+
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || {
+            echo "::error::Missing CLOUDFLARE_ACCOUNT_ID"
+            exit 1
+          }
+
+      - name: Deploy Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@4 pages deploy deploy \
+            --project-name exilium-battlepass \
+            --branch main \
+            --commit-hash "$GITHUB_SHA" \
+            --commit-message "$(git log -1 --pretty=%s)"
+
+      - name: Smoke test production
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fetch() {
+            local url="$1"
+            for attempt in 1 2 3 4 5 6; do
+              if curl --fail --silent --show-error --location --max-time 20 \
+                  "${url}?ci=${GITHUB_SHA}"; then
+                return 0
+              fi
+              if [ "$attempt" -eq 6 ]; then
+                echo "::error::Smoke test failed: $url" >&2
+                return 1
+              fi
+              sleep 5
+            done
+          }
+
+          roulette="$(fetch "https://www.guild-exilium.com/sala-pandacoins-standalone.html")"
+
+          echo "$roulette" | grep -q "api.guild-exilium.com" || {
+            echo "::error::La ruleta no apunta a api.guild-exilium.com"
+            exit 1
+          }
+
+          if echo "$roulette" | grep -q "workers\.dev"; then
+            echo "::error::La ruleta en produccion todavia apunta a workers.dev"
+            exit 1
+          fi
+
+          fetch "https://www.guild-exilium.com/" > /dev/null
+
+          echo "Exilium frontend deployed and smoke tests passed."
