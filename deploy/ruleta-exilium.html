@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exilium Casino - Ruleta</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:#1a4a2e;
+  font-family:Inter,sans-serif;
+  height:100vh;
+  width:100vw;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  user-select:none;
+}
+
+/* HEADER */
+.header{
+  background:#0d0d0d;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 24px;
+  height:48px;
+  flex-shrink:0;
+}
+.header-logo{
+  font-family:Cinzel,serif;
+  font-weight:900;
+  font-size:18px;
+  color:#f0a000;
+  letter-spacing:2px;
+}
+.header-center{
+  font-family:Cinzel,serif;
+  font-weight:600;
+  font-size:12px;
+  color:rgba(255,255,255,0.5);
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+/* MAIN AREA */
+.main{flex:1;display:flex;flex-direction:column;min-height:0;padding:4px 12px 0;}
+
+/* TOP ROW: wheel + side panels */
+.top-row{display:flex;align-items:flex-start;gap:12px;flex-shrink:0;height:auto;}
+
+/* MIN/MAX panel */
+.minmax-panel{
+  width:150px;
+  flex-shrink:0;
+  background:rgba(0,0,0,0.3);
+  border-radius:8px;
+  padding:8px 12px;
+  margin-top:4px;
+}
+.minmax-panel .label{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;}
+.minmax-panel .value{font-size:11px;font-weight:600;color:#f0a000;margin-top:2px;line-height:1.4;}
+
+/* WHEEL */
+.wheel-area{flex:1;display:flex;justify-content:center;align-items:center;min-width:0;}
+#wheelCanvas{width:100%;max-width:340px;height:auto;aspect-ratio:1/1;display:block;cursor:pointer;filter:drop-shadow(0 0 20px rgba(0,0,0,0.5));}
+
+/* HISTORY */
+.history-panel{
+  width:160px;
+  flex-shrink:0;
+  background:rgba(0,0,0,0.3);
+  border-radius:8px;
+  padding:8px;
+  margin-top:4px;
+}
+.history-panel .header-text{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:6px;}
+.history-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;}
+.history-cell{
+  aspect-ratio:1;
+  border-radius:3px;
+  background:rgba(255,255,255,0.06);
+  font-size:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+}
+.history-cell.red{background:#c62828;color:#fff;}
+.history-cell.black{background:#1a1a1a;color:#fff;border:1px solid rgba(255,255,255,0.1);}
+.history-cell.green{background:#2e7d32;color:#fff;}
+
+/* TABLE AREA */
+.table-area{flex:1;display:flex;gap:10px;min-height:0;padding-top:6px;}
+
+/* CHIPS column */
+.chips-col{
+  width:70px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:8px;
+  align-items:center;
+  padding-bottom:4px;
+}
+.chip{
+  width:52px;height:52px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  font-size:13px;
+  color:#fff;
+  cursor:pointer;
+  border:3px solid rgba(255,255,255,0.25);
+  box-shadow:0 2px 8px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.15);
+  transition:transform .15s,border-color .15s;
+  position:relative;
+}
+.chip::after{
+  content:'';
+  position:absolute;
+  inset:4px;
+  border-radius:50%;
+  border:1.5px dashed rgba(255,255,255,0.15);
+}
+.chip:hover{transform:scale(1.08);}
+.chip.active{border-color:#f0a000;transform:scale(1.12);box-shadow:0 0 12px rgba(240,160,0,0.4);}
+.chip-10{background:linear-gradient(135deg,#7b1fa2,#4a148c);}
+.chip-50{background:linear-gradient(135deg,#00bcd4,#00838f);}
+.chip-100{background:linear-gradient(135deg,#1565c0,#0d47a1);}
+.chip-500{background:linear-gradient(135deg,#6a1b9a,#38006b);}
+
+/* TABLE GRID */
+.table-grid-wrap{flex:1;display:flex;flex-direction:column;min-height:0;}
+.table-grid{
+  display:grid;
+  flex:1;
+  gap:2px;
+  background:rgba(0,0,0,0.25);
+  padding:2px;
+  border-radius:6px;
+  grid-template-columns:48px repeat(3,1fr) 40px;
+  grid-template-rows:repeat(12,1fr);
+}
+.cell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+  font-size:13px;
+  border-radius:3px;
+  cursor:pointer;
+  transition:background .15s,box-shadow .15s;
+  position:relative;
+  min-height:0;
+}
+.cell:hover{filter:brightness(1.2);}
+.cell.red{background:#c62828;color:#fff;}
+.cell.black{background:#1a1a1a;color:#fff;border:1px solid rgba(255,255,255,0.08);}
+.cell.zero{background:#2e7d32;color:#fff;grid-column:1;grid-row:1/13;font-size:16px;border-radius:4px;}
+.cell.bet-placed{box-shadow:inset 0 0 0 2px #f0a000,0 0 8px rgba(240,160,0,0.3);}
+.cell .chip-indicator{
+  position:absolute;
+  width:24px;height:24px;
+  border-radius:50%;
+  background:rgba(240,160,0,0.8);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:9px;
+  font-weight:700;
+  color:#000;
+  pointer-events:none;
+  box-shadow:0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* 2to1 column */
+.two-to-one{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,0.06);
+  border-radius:3px;
+  cursor:pointer;
+  font-size:10px;
+  font-weight:600;
+  color:rgba(255,255,255,0.7);
+  transition:background .15s;
+  writing-mode:vertical-lr;
+  text-orientation:mixed;
+  letter-spacing:1px;
+}
+.two-to-one:hover{background:rgba(240,160,0,0.2);color:#f0a000;}
+.two-to-one.bet-placed{background:rgba(240,160,0,0.2);color:#f0a000;box-shadow:inset 0 0 0 2px #f0a000;}
+
+/* bottom rows */
+.bottom-row-12s,.bottom-row-outside{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:2px;
+  margin-top:2px;
+}
+.bottom-row-outside{
+  grid-template-columns:repeat(6,1fr);
+}
+.outside-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,0.06);
+  border-radius:3px;
+  cursor:pointer;
+  font-size:10px;
+  font-weight:600;
+  padding:6px 0;
+  color:rgba(255,255,255,0.7);
+  transition:background .15s,color .15s;
+}
+.outside-btn:hover{background:rgba(240,160,0,0.2);color:#f0a000;}
+.outside-btn.bet-placed{background:rgba(240,160,0,0.2);color:#f0a000;box-shadow:inset 0 0 0 2px #f0a000;}
+.outside-btn .red-diamond{color:#c62828;margin:0 2px;font-size:14px;}
+.outside-btn .black-diamond{color:#1a1a1a;margin:0 2px;font-size:14px;}
+
+/* FOOTER */
+.footer{
+  background:#0d0d0d;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 24px;
+  height:52px;
+  flex-shrink:0;
+  position:relative;
+}
+.footer-left,.footer-right{display:flex;flex-direction:column;gap:1px;}
+.footer-left .label,.footer-right .label{font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;}
+.footer-left .amount,.footer-right .amount{font-size:18px;font-weight:700;color:#f0a000;font-family:Cinzel,serif;}
+.footer-center{font-size:11px;color:rgba(255,255,255,0.35);font-weight:500;letter-spacing:1px;text-transform:uppercase;}
+.spin-btn{
+  position:absolute;
+  right:24px;
+  bottom:58px;
+  width:56px;height:56px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#2e7d32,#1b5e20);
+  border:3px solid #f0a000;
+  color:#f0a000;
+  font-family:Cinzel,serif;
+  font-weight:700;
+  font-size:11px;
+  cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,0.4);
+  transition:transform .15s,box-shadow .15s;
+  z-index:10;
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+}
+.spin-btn:hover{transform:scale(1.08);box-shadow:0 4px 20px rgba(240,160,0,0.3);}
+.spin-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+.spin-btn.spinning{animation:pulse-glow .6s ease-in-out infinite alternate;}
+@keyframes pulse-glow{
+  0%{box-shadow:0 0 8px rgba(240,160,0,0.2);}
+  100%{box-shadow:0 0 24px rgba(240,160,0,0.6);}
+}
+
+/* winner overlay */
+.winner-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+}
+.winner-overlay.show{display:flex;}
+.winner-box{
+  background:#0d0d0d;
+  border:2px solid #f0a000;
+  border-radius:16px;
+  padding:32px 48px;
+  text-align:center;
+  box-shadow:0 0 40px rgba(240,160,0,0.2);
+}
+.winner-box .number{
+  font-family:Cinzel,serif;
+  font-size:64px;
+  font-weight:900;
+  color:#f0a000;
+}
+.winner-box .color-label{
+  font-size:14px;
+  color:rgba(255,255,255,0.5);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  margin-top:8px;
+}
+.winner-box .payout{
+  font-size:18px;
+  color:#fff;
+  margin-top:12px;
+}
+.winner-box .payout span{color:#f0a000;font-weight:700;}
+.winner-box .close-btn{
+  margin-top:20px;
+  padding:10px 32px;
+  background:#f0a000;
+  border:none;
+  border-radius:8px;
+  color:#000;
+  font-weight:700;
+  font-size:14px;
+  cursor:pointer;
+  font-family:Inter,sans-serif;
+}
+
+/* message */
+.msg-bar{
+  position:fixed;
+  top:60px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.85);
+  color:#fff;
+  padding:8px 20px;
+  border-radius:8px;
+  font-size:13px;
+  z-index:200;
+  opacity:0;
+  transition:opacity .3s;
+  pointer-events:none;
+  border:1px solid rgba(240,160,0,0.3);
+}
+.msg-bar.show{opacity:1;}
+
+/* Scrollbar hide */
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+
+<div class="msg-bar" id="msgBar"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">⬡ EXILIUM CASINO</div>
+  <div class="header-center">JUGANDO POR DIVERSIÓN</div>
+  <div style="width:150px"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOP ROW -->
+  <div class="top-row">
+    <div class="minmax-panel">
+      <div class="label">Límites de Mesa</div>
+      <div class="value">MIN: 10<br>MAX: 500<br>MAX MESA: 5000</div>
+    </div>
+    <div class="wheel-area">
+      <canvas id="wheelCanvas" width="400" height="400"></canvas>
+    </div>
+    <div class="history-panel">
+      <div class="header-text">Historial</div>
+      <div class="history-grid" id="historyGrid">
+        <div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div>
+        <div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div>
+        <div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div><div class="history-cell"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-area">
+    <!-- CHIPS -->
+    <div class="chips-col">
+      <div class="chip chip-10" data-value="10">10</div>
+      <div class="chip chip-50" data-value="50">50</div>
+      <div class="chip chip-100" data-value="100">100</div>
+      <div class="chip chip-500" data-value="500">500</div>
+    </div>
+
+    <!-- TABLE GRID -->
+    <div class="table-grid-wrap">
+      <div class="table-grid" id="tableGrid"></div>
+      <div class="bottom-row-12s">
+        <div class="outside-btn" data-bet="dozen:1">1st 12</div>
+        <div class="outside-btn" data-bet="dozen:2">2nd 12</div>
+        <div class="outside-btn" data-bet="dozen:3">3rd 12</div>
+      </div>
+      <div class="bottom-row-outside">
+        <div class="outside-btn" data-bet="low">1-18</div>
+        <div class="outside-btn" data-bet="even">Par</div>
+        <div class="outside-btn" data-bet="red"><span class="red-diamond">♦</span>rojo</div>
+        <div class="outside-btn" data-bet="black"><span class="black-diamond">♦</span>negro</div>
+        <div class="outside-btn" data-bet="odd">Impar</div>
+        <div class="outside-btn" data-bet="high">19-36</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-left">
+    <div class="label">Su Saldo</div>
+    <div class="amount" id="balanceDisplay">10,000</div>
+  </div>
+  <div class="footer-center" id="statusText">HAGA SUS APUESTAS, POR FAVOR</div>
+  <div class="footer-right">
+    <div class="label">Apuesta Total</div>
+    <div class="amount" id="totalBetDisplay">0</div>
+  </div>
+  <button class="spin-btn" id="spinBtn">GIRAR</button>
+</div>
+
+<!-- WINNER OVERLAY -->
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-box">
+    <div class="number" id="winNumber">0</div>
+    <div class="color-label" id="winColor">Verde</div>
+    <div class="payout" id="winPayout">Ganaste <span>0</span> PandaCoins</div>
+    <button class="close-btn" id="winClose">CONTINUAR</button>
+  </div>
+</div>
+
+<script>
+// ========== CONSTANTS ==========
+const REDS=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const WHEEL_ORDER=[0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+const COLS=[[1,4,7,10,13,16,19,22,25,28,31,34],[2,5,8,11,14,17,20,23,26,29,32,35],[3,6,9,12,15,18,21,24,27,30,33,36]];
+const SEG=Math.PI*2/WHEEL_ORDER.length;
+
+let balance=10000;
+let totalBet=0;
+let selectedChip=10;
+let spinning=false;
+let bets={};
+let history=[];
+
+// ========== DOM refs ==========
+const canvas=document.getElementById('wheelCanvas');
+const ctx=canvas.getContext('2d');
+const tableGrid=document.getElementById('tableGrid');
+const balanceDisplay=document.getElementById('balanceDisplay');
+const totalBetDisplay=document.getElementById('totalBetDisplay');
+const statusText=document.getElementById('statusText');
+const spinBtn=document.getElementById('spinBtn');
+const msgBar=document.getElementById('msgBar');
+const winOverlay=document.getElementById('winnerOverlay');
+const winNumber=document.getElementById('winNumber');
+const winColor=document.getElementById('winColor');
+const winPayout=document.getElementById('winPayout');
+const winClose=document.getElementById('winClose');
+
+// ========== HELPERS ==========
+function colorOf(n){
+  if(n===0)return'green';
+  return REDS.has(n)?'red':'black';
+}
+function fmt(n){return n.toLocaleString('es')}
+function msg(text){
+  msgBar.textContent=text;
+  msgBar.classList.add('show');
+  clearTimeout(msgBar._t);
+  msgBar._t=setTimeout(()=>msgBar.classList.remove('show'),2500);
+}
+function betKey(type,val){return type+':'+val}
+
+// ========== DRAW WHEEL ==========
+function drawWheel(rotation){
+  const w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,r=Math.min(cx,cy)-8;
+  ctx.clearRect(0,0,w,h);
+
+  // outer shadow
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx+3,cy+3,r+2,0,Math.PI*2);
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.fill();
+  ctx.restore();
+
+  // outer ring
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle='#1a1a1a';
+  ctx.fill();
+  ctx.strokeStyle='#444';
+  ctx.lineWidth=2;
+  ctx.stroke();
+  ctx.restore();
+
+  // colored segments
+  for(let i=0;i<WHEEL_ORDER.length;i++){
+    const angle=rotation+i*SEG-Math.PI/2;
+    const n=WHEEL_ORDER[i];
+    const c=colorOf(n);
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r-14,angle,angle+SEG);
+    ctx.closePath();
+    ctx.fillStyle=c==='red'?'#c62828':c==='black'?'#111':'#2e7d32';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // segment borders & numbers
+  for(let i=0;i<WHEEL_ORDER.length;i++){
+    const angle=rotation+i*SEG-Math.PI/2;
+    const n=WHEEL_ORDER[i];
+    const mid=angle+SEG/2;
+    const tr=r-22;
+    ctx.save();
+    ctx.translate(cx+Math.cos(mid)*tr,cy+Math.sin(mid)*tr);
+    ctx.rotate(mid+Math.PI/2);
+    ctx.fillStyle='#fff';
+    ctx.font='bold 9px Inter,sans-serif';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText(n,0,0);
+    ctx.restore();
+  }
+
+  // inner metallic ring
+  ctx.save();
+  const grad=ctx.createRadialGradient(cx,cy,8,cx,cy,r-14);
+  grad.addColorStop(0,'#ddd');
+  grad.addColorStop(0.4,'#aaa');
+  grad.addColorStop(0.7,'#888');
+  grad.addColorStop(1,'#555');
+  ctx.beginPath();
+  ctx.arc(cx,cy,r-14,0,Math.PI*2);
+  ctx.fillStyle=grad;
+  ctx.fill();
+  ctx.strokeStyle='#666';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // center cap
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,22,0,Math.PI*2);
+  const cgrad=ctx.createRadialGradient(cx-6,cy-6,2,cx,cy,22);
+  cgrad.addColorStop(0,'#eee');
+  cgrad.addColorStop(0.5,'#b0b0b0');
+  cgrad.addColorStop(1,'#666');
+  ctx.fillStyle=cgrad;
+  ctx.fill();
+  ctx.strokeStyle='#888';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // center dot
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,6,0,Math.PI*2);
+  ctx.fillStyle='#f0a000';
+  ctx.fill();
+  ctx.strokeStyle='#b07200';
+  ctx.lineWidth=1;
+  ctx.stroke();
+  ctx.restore();
+
+  // pointer triangle (top)
+  ctx.save();
+  ctx.translate(cx,cy-r+6);
+  ctx.beginPath();
+  ctx.moveTo(-10,-14);
+  ctx.lineTo(0,-4);
+  ctx.lineTo(10,-14);
+  ctx.closePath();
+  ctx.fillStyle='#f0a000';
+  ctx.fill();
+  ctx.strokeStyle='#b07200';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ========== BUILD TABLE ==========
+function buildTable(){
+  tableGrid.innerHTML='';
+
+  // zero cell
+  const zero=document.createElement('div');
+  zero.className='cell zero';
+  zero.textContent='0';
+  zero.dataset.bet='number:0';
+  zero.addEventListener('click',()=>placeBet('number:0'));
+  tableGrid.appendChild(zero);
+
+  // numbers 1-36 in 3 columns, 12 rows
+  for(let row=0;row<12;row++){
+    for(let col=0;col<3;col++){
+      const num=COLS[col][row];
+      const c=document.createElement('div');
+      c.className='cell '+(colorOf(num)==='red'?'red':'black');
+      c.textContent=num;
+      c.dataset.bet='number:'+num;
+      c.addEventListener('click',()=>placeBet('number:'+num));
+      tableGrid.appendChild(c);
+    }
+  }
+
+  // 2to1 column (col 5, rows 1-4, 5-8, 9-12)
+  for(let i=0;i<3;i++){
+    const el=document.createElement('div');
+    el.className='two-to-one';
+    el.textContent='2→1';
+    el.dataset.bet='col:'+i;
+    el.style.gridColumn='5';
+    el.style.gridRow=(i*4+1)+'/'+(i*4+5);
+    el.addEventListener('click',()=>placeBet('col:'+i));
+    tableGrid.appendChild(el);
+  }
+}
+
+// ========== BETTING ==========
+function placeBet(key){
+  if(spinning){msg('Espera a que termine el giro');return}
+  if(selectedChip>balance){msg('Saldo insuficiente');return}
+  if(totalBet+selectedChip>5000){msg('Límite de mesa: 5000 PandaCoins');return}
+  bets[key]=(bets[key]||0)+selectedChip;
+  balance-=selectedChip;
+  totalBet+=selectedChip;
+  updateUI();
+  statusText.textContent='APUESTA REGISTRADA';
+  setTimeout(()=>{
+    if(!spinning)statusText.textContent='HAGA SUS APUESTAS, POR FAVOR';
+  },1500);
+}
+
+function updateUI(){
+  balanceDisplay.textContent=fmt(balance);
+  totalBetDisplay.textContent=fmt(totalBet);
+  spinBtn.disabled=totalBet===0||spinning;
+
+  // clear indicators
+  document.querySelectorAll('.bet-placed').forEach(e=>e.classList.remove('bet-placed'));
+  document.querySelectorAll('.chip-indicator').forEach(e=>e.remove());
+
+  // show bets
+  for(const key in bets){
+    const amt=bets[key];
+    const parts=key.split(':');
+    let el=null;
+    if(parts[0]==='number'){
+      const num=parseInt(parts[1]);
+      el=tableGrid.querySelector(`[data-bet="number:${num}"]`);
+    }else if(parts[0]==='col'){
+      el=tableGrid.querySelector(`[data-bet="col:${parts[1]}"]`);
+    }else if(parts[0]==='dozen'){
+      el=document.querySelector(`[data-bet="dozen:${parts[1]}"]`);
+    }else{
+      el=document.querySelector(`[data-bet="${key}"]`);
+    }
+    if(el){
+      el.classList.add('bet-placed');
+      const ind=document.createElement('div');
+      ind.className='chip-indicator';
+      ind.textContent=amt;
+      el.appendChild(ind);
+    }
+  }
+}
+
+// ========== CHIP SELECTION ==========
+document.querySelectorAll('.chip').forEach(ch=>{
+  ch.addEventListener('click',()=>{
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    ch.classList.add('active');
+    selectedChip=parseInt(ch.dataset.value);
+  });
+});
+document.querySelector('.chip-10').classList.add('active');
+
+// ========== OUTSIDE BETS ==========
+document.querySelectorAll('.outside-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>placeBet(btn.dataset.bet));
+});
+
+// ========== SPIN ==========
+spinBtn.addEventListener('click',()=>{
+  if(spinning||totalBet===0)return;
+  spinning=true;
+  spinBtn.classList.add('spinning');
+  spinBtn.textContent='...';
+  statusText.textContent='LA RUEDA GIRA...';
+  spinBtn.disabled=true;
+
+  const winNum=Math.floor(Math.random()*37);
+  const winIndex=WHEEL_ORDER.indexOf(winNum);
+
+  // target rotation: several full spins + offset so winNum lands under pointer
+  // pointer is at -PI/2 (top). segment i starts at rotation + i*SEG - PI/2.
+  // For winIndex segment to be at the pointer: rotation + winIndex*SEG - PI/2 ≡ -PI/2 (mod 2π)
+  // → rotation ≡ -winIndex*SEG (mod 2π)
+  const fullSpins=Math.PI*2*(5+Math.random()*3);
+  const finalRotation=fullSpins+(Math.PI*2-winIndex*SEG)%(Math.PI*2);
+  const duration=3000;
+  const startTime=performance.now();
+
+  function animate(now){
+    const elapsed=now-startTime;
+    const t=Math.min(elapsed/duration,1);
+    const ease=1-Math.pow(1-t,3);
+    drawWheel(finalRotation*ease);
+    if(t<1)requestAnimationFrame(animate);
+    else setTimeout(()=>showResult(winNum),300);
+  }
+  requestAnimationFrame(animate);
+});
+
+function showResult(winNum){
+  const winColorName=colorOf(winNum);
+  let winAmount=0;
+
+  for(const key in bets){
+    const amt=bets[key];
+    const parts=key.split(':');
+    let won=false;
+    if(parts[0]==='number'){
+      if(parseInt(parts[1])===winNum){won=true;winAmount+=amt*35}
+    }else if(parts[0]==='col'){
+      const colIdx=parseInt(parts[1]);
+      if(COLS[colIdx].includes(winNum)){won=true;winAmount+=amt*2}
+    }else if(parts[0]==='dozen'){
+      const d=parseInt(parts[1]);
+      const lo=d*12-11,hi=d*12;
+      if(winNum>=lo&&winNum<=hi){won=true;winAmount+=amt*2}
+    }else if(parts[0]==='low'){
+      if(winNum>=1&&winNum<=18){won=true;winAmount+=amt}
+    }else if(parts[0]==='high'){
+      if(winNum>=19&&winNum<=36){won=true;winAmount+=amt}
+    }else if(parts[0]==='even'){
+      if(winNum!==0&&winNum%2===0){won=true;winAmount+=amt}
+    }else if(parts[0]==='odd'){
+      if(winNum%2!==0){won=true;winAmount+=amt}
+    }else if(parts[0]==='red'){
+      if(winColorName==='red'){won=true;winAmount+=amt}
+    }else if(parts[0]==='black'){
+      if(winColorName==='black'){won=true;winAmount+=amt}
+    }
+  }
+
+  totalBet=0;
+  bets={};
+
+  balance+=winAmount;
+  balanceDisplay.textContent=fmt(balance);
+  totalBetDisplay.textContent='0';
+
+  winNumber.textContent=winNum;
+  winColor.textContent=winColorName==='red'?'Rojo':winColorName==='black'?'Negro':'Verde';
+  winNumber.style.color=winColorName==='red'?'#c62828':winColorName==='black'?'#fff':'#2e7d32';
+  if(winAmount>0){
+    winPayout.innerHTML=`¡Ganaste <span>${fmt(winAmount)}</span> PandaCoins!`;
+  }else{
+    winPayout.textContent='Mejor suerte la próxima vez';
+  }
+  winOverlay.classList.add('show');
+
+  // history
+  history.unshift(winNum);
+  if(history.length>15)history.pop();
+  updateHistory();
+
+  spinning=false;
+  spinBtn.classList.remove('spinning');
+  spinBtn.textContent='GIRAR';
+  spinBtn.disabled=false;
+  statusText.textContent='HAGA SUS APUESTAS, POR FAVOR';
+}
+
+winClose.addEventListener('click',()=>winOverlay.classList.remove('show'));
+
+// ========== HISTORY ==========
+function updateHistory(){
+  const cells=document.querySelectorAll('.history-cell');
+  cells.forEach((c,i)=>{
+    if(i<history.length){
+      const n=history[i];
+      c.textContent=n;
+      c.className='history-cell '+colorOf(n);
+    }else{
+      c.textContent='';
+      c.className='history-cell';
+    }
+  });
+}
+
+// ========== INIT ==========
+buildTable();
+drawWheel(0);
+updateUI();
+</script>
+</body>
+</html>

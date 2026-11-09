@@ -39,9 +39,11 @@ jobs:
           # workers_dev = false en wrangler.toml: esa URL ya no existe.
           # Si alguna pagina vuelve a apuntar ahi, la ruleta se queda en
           # "Conectando con la mesa..." para siempre.
-          if grep -rn --include='*.html' --include='*.js' "workers\.dev" deploy \
+          # Solo se bloquea el host de exilium-blizzard (el resto de workers, p. ej.
+          # exilium-app-auth, tienen su propio workers.dev y siguen activos).
+          if grep -rnE --include='*.html' --include='*.js' "exilium-blizzard\.[a-z0-9-]+\.workers\.dev" deploy \
               --exclude-dir=assets; then
-            echo "::error::deploy/ referencia workers.dev (URL desactivada). Usa https://api.guild-exilium.com"
+            echo "::error::deploy/ referencia exilium-blizzard en workers.dev (URL desactivada). Usa https://api.guild-exilium.com"
             exit 1
           fi
           echo "OK: sin referencias a workers.dev"

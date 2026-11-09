@@ -221,6 +221,19 @@ body {
   flex: 1;
   padding: 8px 0;
   overflow-y: auto;
+  /* Scrollbar más visible que la global de 8px: en monitores de poca altura (ultrawide
+     incluido) el listado de pestañas no entra entero y hay que notar que se puede
+     scrollear — con el thumb gris oscuro por defecto pasaba desapercibido. */
+  scrollbar-color: var(--border-light) transparent;
+}
+.sidebar-nav::-webkit-scrollbar-thumb { background: var(--border-light); }
+/* Poca altura (ultrawide corto, portátiles, ventanas no maximizadas): pestañas más
+   compactas para que entren más sin scrollear, y el resto queda accesible con scroll. */
+@media (max-height: 820px) {
+  .sidebar-header { padding: 12px 16px !important; }
+  .sidebar-nav button { padding: 6px 16px !important; font-size: 12.5px !important; }
+  .sidebar-nav .nav-icon { font-size: 14px !important; }
+  .sidebar-footer { padding: 10px 16px !important; }
 }
 
 .sidebar-nav button {
@@ -1064,4 +1077,29 @@ select.input { cursor: pointer; }
 
 @media (min-width: 769px) {
   .mobile-header { display: none; }
+}
+
+/* ═══ Tienda del casino — editor de catálogo (migrado a admin) ═══ */
+.shop-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.4fr .8fr 1fr 1.6fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.shop-row .input { width: 100%; padding: 7px 9px; font-size: 13px; }
+.shop-row-head {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 10px;
+}
+.shop-row-head span { padding-left: 2px; }
+@media (max-width: 860px) {
+  .shop-row, .shop-row-head {
+    grid-template-columns: 1fr 1fr;
+  }
+  .shop-row-head { display: none; }
+  .shop-row { border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
 }

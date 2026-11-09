@@ -558,6 +558,21 @@ document.addEventListener('DOMContentLoaded', () => {
             '</div>';
     }
 
+    function hofIsImageUrl(url) {
+        return /\.(jpe?g|png|gif|webp|avif)(\?|#|$)/i.test(url || '');
+    }
+
+    // Si el medio no carga (p. ej. el bucket R2 devuelve 503) se oculta el hueco
+    // en vez de dejar un recuadro negro vacío en la ficha.
+    window.exiMediaFail = function(el) {
+        const box = el.closest('.hof-video-frame') || el.parentElement;
+        if (box && box.classList.contains('hof-video-frame')) {
+            box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;min-height:120px;color:rgba(255,255,255,.35);font-size:.85rem;text-align:center;padding:1rem;">Contenido multimedia no disponible</div>';
+        } else {
+            el.remove();
+        }
+    };
+
     function renderHallOfFame() {
         const section = document.getElementById('hall-of-fame');
         if (!section) return;
@@ -577,12 +592,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (videoUrl) {
             const frame = section.querySelector('.hof-video-frame');
             if (frame) {
-                const embedUrl = hofGetEmbedUrl(videoUrl);
-                if (embedUrl) {
-                    frame.innerHTML = '<iframe src="' + escapeHtmlPublic(embedUrl) + '" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;" allow="autoplay;encrypted-media" allowfullscreen></iframe><div class="hof-video-overlay"></div>';
-                    frame.style.position = 'relative';
+                if (hofIsImageUrl(videoUrl)) {
+                    // Sin loading="lazy": el marco depende de la altura de la imagen,
+                    // así que en diferido colapsa a 0px y el onerror nunca llega a
+                    // dispararse (quedaba un recuadro negro vacío).
+                    frame.innerHTML = '<img src="' + escapeHtmlPublic(videoUrl) + '" alt="" style="width:100%;height:100%;object-fit:contain;display:block;background:#000;" onerror="exiMediaFail(this)"><div class="hof-video-overlay"></div>';
                 } else {
-                    frame.innerHTML = '<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:contain;display:block;background:#000;"><source src="' + escapeHtmlPublic(videoUrl) + '" type="video/mp4"></video><div class="hof-video-overlay"></div>';
+                    const embedUrl = hofGetEmbedUrl(videoUrl);
+                    if (embedUrl) {
+                        frame.innerHTML = '<iframe src="' + escapeHtmlPublic(embedUrl) + '" style="width:100%;height:100%;border:0;position:absolute;top:0;left:0;" allow="autoplay;encrypted-media" allowfullscreen></iframe><div class="hof-video-overlay"></div>';
+                        frame.style.position = 'relative';
+                    } else {
+                        frame.innerHTML = '<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:contain;display:block;background:#000;" onerror="exiMediaFail(this)"><source src="' + escapeHtmlPublic(videoUrl) + '" type="video/mp4" onerror="exiMediaFail(this.parentElement)"></video><div class="hof-video-overlay"></div>';
+                    }
                 }
             }
         }
@@ -651,12 +673,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let videoHtml = '';
             if (hasEntryVideo) {
-                if (embedUrl) {
+                if (hofIsImageUrl(entry.entry_video_url)) {
+                    videoHtml = `<img src="${entry.entry_video_url}" style="width:100%;border-radius:6px;margin-bottom:10px;max-height:170px;object-fit:contain;background:#000;" loading="lazy" onerror="exiMediaFail(this)">`;
+                } else if (embedUrl) {
                     videoHtml = `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:6px;margin-bottom:10px;">
                         <iframe src="${embedUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" allow="autoplay;encrypted-media" allowfullscreen loading="lazy"></iframe>
                     </div>`;
                 } else {
-                    videoHtml = `<video src="${entry.entry_video_url}" style="width:100%;border-radius:6px;margin-bottom:10px;max-height:170px;object-fit:contain;background:#000;" muted loop playsinline controls></video>`;
+                    videoHtml = `<video src="${entry.entry_video_url}" style="width:100%;border-radius:6px;margin-bottom:10px;max-height:170px;object-fit:contain;background:#000;" muted loop playsinline controls onerror="exiMediaFail(this)"></video>`;
                 }
             }
 

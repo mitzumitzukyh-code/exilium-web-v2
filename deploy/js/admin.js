@@ -226,12 +226,15 @@ function switchTab(tabName) {
     case 'analytics': loadAnalytics(); break;
     case 'n8n': loadN8nConfig(); break;
     case 'errors': loadErrors(); break;
+    case 'backups': loadBackups(); break;
     case 'boost-orders': loadBoostOrders(); break;
     case 'boost-boosters': loadBoostBoosters(); break;
     case 'boost-clients': loadBoostClients(); break;
     case 'rbg-strategies': loadRbgTab(); break;
+    case 'liga-rbg': loadLigaRbg(); break;
     case 'news': loadAdminNews(); loadCronStatus(); break;
     case 'casino': loadCasinoData(); break;
+    case 'accounts': loadAccountsData(); break;
   }
 }
 
@@ -948,6 +951,129 @@ function renderErrors(errors) {
   ).join('');
 }
 
+// ══════════════════════════════════════════════════════════
+//  TAB: BACKUPS
+// ══════════════════════════════════════════════════════════
+
+function fmtBytes(n) {
+  if (!n && n !== 0) return '—';
+  return n < 1024 * 1024
+    ? (n / 1024).toFixed(0) + ' KB'
+    : (n / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+async function loadBackups() {
+  const container = $('backups-list');
+  try {
+    const [list, info] = await Promise.all([
+      apiCall('/admin/backup/list'),
+      apiCall('/admin/backup/info').catch(() => null),
+    ]);
+    const backups = (list && list.backups) || [];
+
+    $('bk-count').textContent = backups.length;
+    $('bk-last').textContent = backups[0] && backups[0].created_at
+      ? new Date(backups[0].created_at).toLocaleString('es')
+      : '—';
+    $('bk-keys').textContent = backups[0] ? (backups[0].total_keys || '—') : '—';
+    $('bk-total').textContent = info && info.current_keys != null ? info.current_keys : '—';
+
+    if (backups.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">💾</div><p>Todavía no hay copias. Pulsa «Hacer copia ahora».</p></div>';
+      return;
+    }
+
+    container.innerHTML = backups.map(b =>
+      '<div class="error-row">' +
+        '<span class="time">' + (b.created_at ? new Date(b.created_at).toLocaleString('es') : '—') + '</span>' +
+        '<span class="module">' + (b.total_keys != null ? b.total_keys + ' claves' : '—') + '</span>' +
+        '<span class="message">' + fmtBytes(b.bytes) + '</span>' +
+        '<span class="details"><button class="btn btn-sm" onclick="downloadBackup(\'' +
+          escapeForJsString(b.key) + '\')">⬇️ Descargar</button></span>' +
+      '</div>'
+    ).join('');
+  } catch (err) {
+    container.innerHTML = '<div class="empty-state"><p>Error cargando copias</p></div>';
+    toast('Error cargando copias: ' + err.message, 'error');
+  }
+}
+
+async function runBackupNow() {
+  const btn = $('backup-run-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Copiando...';
+  try {
+    const r = await apiCall('/admin/backup/run', 'POST');
+    if (r && r.ok) {
+      toast('Copia creada: ' + r.total_keys + ' claves (' + fmtBytes(r.bytes) + ')', 'success');
+    } else {
+      toast('No se pudo crear la copia: ' + ((r && r.error) || 'error desconocido'), 'error');
+    }
+    await loadBackups();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '💾 Hacer copia ahora';
+  }
+}
+
+// Descarga el JSON completo de una copia para guardarlo fuera de Cloudflare.
+window.downloadBackup = async function(key) {
+  try {
+    const res = await fetch(API_URL + '/admin/backup/get?key=' + encodeURIComponent(key), {
+      headers: { 'Authorization': 'Bearer ' + getToken() },
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'exilium-backup-' + key.replace(/^auto:/, '') + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast('Copia descargada', 'success');
+  } catch (err) {
+    toast('Error descargando: ' + err.message, 'error');
+  }
+};
+
+async function restoreFromFile() {
+  const input = $('restore-file');
+  const file = input.files && input.files[0];
+  if (!file) { toast('Elige primero un archivo de copia', 'error'); return; }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(await file.text());
+  } catch (_) {
+    toast('El archivo no es un JSON válido', 'error');
+    return;
+  }
+  const count = parsed && parsed.data ? Object.keys(parsed.data).length : 0;
+  if (!count) { toast('La copia no contiene datos', 'error'); return; }
+
+  if (!confirm('¿Restaurar ' + count + ' claves' +
+      (parsed.created_at ? ' de la copia del ' + new Date(parsed.created_at).toLocaleString('es') : '') +
+      '?\n\nSobrescribe los valores actuales de esas claves.')) return;
+
+  const btn = $('restore-run-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Restaurando...';
+  try {
+    const r = await apiCall('/admin/restore', 'POST', { data: parsed.data });
+    toast(r.message || 'Restauración completada', r.success ? 'success' : 'error');
+    await loadBackups();
+  } catch (err) {
+    toast('Error restaurando: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '♻️ Restaurar copia';
+  }
+}
+
 async function clearErrors() {
   if (!confirm('¿Borrar todos los errores?')) return;
   try {
@@ -965,40 +1091,40 @@ async function clearErrors() {
 
 // Default rewards from the PB images
 const DEFAULT_REWARDS = [
-  { level: 0,  label: 'Paquete Inicial', desc: '30 frascos de honor, 1 gema stat, 10 consumibles, Rango Exiliado', image: 'PB1.png' },
-  { level: 1,  label: 'Nivel 1', desc: '1k gold + x2 boda rango 3', image: 'PB1.png' },
-  { level: 2,  label: 'Nivel 2', desc: '1k gold + x2 boda rango 3', image: 'PB1.png' },
-  { level: 3,  label: 'Nivel 3', desc: '1k gold + x2 boda rango 3', image: 'PB1.png' },
-  { level: 4,  label: 'Nivel 4', desc: '1k gold + x2 boda rango 3', image: 'PB1.png' },
+  { level: 0,  label: 'Paquete Inicial', desc: '30 frascos de honor, 1 gema stat, Rango Exiliado', image: 'PB1.png' },
+  { level: 1,  label: 'Nivel 1', desc: '1k gold + x2 boda rango 3 + x2 healer', image: 'PB1.png' },
+  { level: 2,  label: 'Nivel 2', desc: '1k gold + x2 boda rango 3 + x2 healer', image: 'PB1.png' },
+  { level: 3,  label: 'Nivel 3', desc: '1k gold + x2 boda rango 3 + x2 healer', image: 'PB1.png' },
+  { level: 4,  label: 'Nivel 4', desc: '1k gold + x2 boda rango 3 + x2 healer', image: 'PB1.png' },
   { level: 5,  label: 'Nivel 5', desc: '1 Heliotropo infundido', image: 'PB1.png' },
   { level: 6,  label: 'Nivel 6', desc: '1 gema stat', image: 'PB2.png' },
   { level: 7,  label: 'Nivel 7', desc: '1 gema stat', image: 'PB2.png' },
-  { level: 8,  label: 'Nivel 8', desc: '2k gold + x2 boda rango 3', image: 'PB2.png' },
-  { level: 9,  label: 'Nivel 9', desc: '2k gold + x2 boda rango 3', image: 'PB2.png' },
-  { level: 10, label: 'Nivel 10', desc: '1 sangrita c. + Rango PENITENTE', image: 'PB2.png' },
+  { level: 8,  label: 'Nivel 8', desc: '2k gold + x2 boda rango 3 + x2 healer', image: 'PB2.png' },
+  { level: 9,  label: 'Nivel 9', desc: '2k gold + x2 boda rango 3 + x2 healer', image: 'PB2.png' },
+  { level: 10, label: 'Nivel 10', desc: '1 Heliotropo infundido + Rango PENITENTE', image: 'PB2.png' },
   { level: 11, label: 'Nivel 11', desc: '2k gold', image: 'PB2.png' },
   { level: 12, label: 'Nivel 12', desc: '2k gold', image: 'PB3.png' },
-  { level: 13, label: 'Nivel 13', desc: '2k gold + x2 boda rango 3', image: 'PB3.png' },
+  { level: 13, label: 'Nivel 13', desc: '2k gold + x2 boda rango 3 + x2 healer', image: 'PB3.png' },
   { level: 14, label: 'Nivel 14', desc: '1 gema stat', image: 'PB3.png' },
   { level: 15, label: 'Nivel 15', desc: 'Rango SOMBRA', image: 'PB3.png' },
   { level: 16, label: 'Nivel 16', desc: '2k gold', image: 'PB3.png' },
   { level: 17, label: 'Nivel 17', desc: '2k gold', image: 'PB3.png' },
-  { level: 18, label: 'Nivel 18', desc: '3k gold + x2 boda rango 3', image: 'PB4.png' },
+  { level: 18, label: 'Nivel 18', desc: '3k gold + x2 boda rango 3 + x2 healer', image: 'PB4.png' },
   { level: 19, label: 'Nivel 19', desc: '1 gema stat', image: 'PB4.png' },
   { level: 20, label: 'Nivel 20', desc: '1 Juguete + Rango APÓSTATA', image: 'PB4.png' },
   { level: 21, label: 'Nivel 21', desc: '3k gold', image: 'PB4.png' },
   { level: 22, label: 'Nivel 22', desc: '2 gemas stat', image: 'PB4.png' },
   { level: 23, label: 'Nivel 23', desc: '1 Juguete', image: 'PB4.png' },
-  { level: 24, label: 'Nivel 24', desc: '4k gold + x2 boda rango 3', image: 'PB5.png' },
+  { level: 24, label: 'Nivel 24', desc: '4k gold + x2 boda rango 3 + x2 healer', image: 'PB5.png' },
   { level: 25, label: 'Nivel 25', desc: '1 Juguete + Banco hermandad + Rango ROMPEJURAMENTOS', image: 'PB5.png' },
   { level: 26, label: 'Nivel 26', desc: '2 Heliotropos infundidos', image: 'PB5.png' },
   { level: 27, label: 'Nivel 27', desc: '2 Heliotropos infundidos', image: 'PB5.png' },
-  { level: 28, label: 'Nivel 28', desc: '4k gold + x2 boda rango 3', image: 'PB5.png' },
+  { level: 28, label: 'Nivel 28', desc: '4k gold + x2 boda rango 3 + x2 healer', image: 'PB5.png' },
   { level: 29, label: 'Nivel 29', desc: '2 gemas stat', image: 'PB5.png' },
   { level: 30, label: 'Nivel 30', desc: '2 juguetes + Rango HEREJE', image: 'PB3.2.png' },
   { level: 31, label: 'Nivel 31', desc: '4k gold', image: 'PB3.2.png' },
   { level: 32, label: 'Nivel 32', desc: '3 Heliotropos infundidos', image: 'PB3.2.png' },
-  { level: 33, label: 'Nivel 33', desc: '5k gold + x2 boda rango 3', image: 'PB3.2.png' },
+  { level: 33, label: 'Nivel 33', desc: '5k gold + x2 boda rango 3 + x2 healer', image: 'PB3.2.png' },
   { level: 34, label: 'Nivel 34', desc: '3 Heliotropos infundidos', image: 'PB3.2.png' },
   { level: 35, label: 'Nivel 35', desc: '5k gold + Rango PROFETA', image: 'PB6.png' },
   { level: 36, label: 'Nivel 36', desc: '3 Heliotropos infundidos', image: 'PB6.png' },
@@ -1318,6 +1444,14 @@ function deleteBpReward(level) {
   renderBpRewardsTable();
   renderBpStats();
   toast('Recompensa eliminada (recuerda guardar)', 'info');
+}
+
+function restoreBpDefaultRewards() {
+  if (!confirm('¿Reemplazar la lista de recompensas por los textos por defecto? Los cambios se aplican al guardar.')) return;
+  bpConfig.rewards = JSON.parse(JSON.stringify(DEFAULT_REWARDS));
+  renderBpRewardsTable();
+  renderBpStats();
+  toast('Textos por defecto restaurados (recuerda guardar)', 'info');
 }
 
 async function saveBattlePassConfig() {
@@ -1658,7 +1792,12 @@ async function hofUploadVideo() {
         'X-Filename': filename,
       },
     });
-    if (!initRes.ok) throw new Error('Init falló: HTTP ' + initRes.status);
+    if (!initRes.ok) {
+      // El servidor explica qué hacer (p. ej. vídeo demasiado grande → usar enlace)
+      var initErr = '';
+      try { initErr = (await initRes.json()).error || ''; } catch (_) {}
+      throw new Error(initErr || ('Init falló: HTTP ' + initRes.status));
+    }
     const initData = await initRes.json();
     uploadId = initData.uploadId;
     key = initData.key;
@@ -1724,6 +1863,43 @@ async function hofUploadVideo() {
     }
     statusEl.textContent = '❌ ' + err.message;
     toast('Error al subir: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function hofUploadAvatar() {
+  const fileInput = $('hof-avatar-file');
+  const file = fileInput.files[0];
+  if (!file) { toast('Selecciona una imagen primero', 'error'); return; }
+
+  const MAX_MB = 10;
+  if (file.size > MAX_MB * 1024 * 1024) { toast('La imagen supera los ' + MAX_MB + 'MB', 'error'); return; }
+
+  const statusEl = $('hof-avatar-upload-status');
+  const btn = $('hof-avatar-upload-btn');
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Subiendo...';
+  btn.disabled = true;
+
+  const token = getToken();
+  const filename = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const contentType = file.type || 'image/png';
+
+  try {
+    const res = await fetch(API_URL + '/admin/upload-media', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': contentType, 'X-Filename': filename },
+      body: file,
+    });
+    if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || ('HTTP ' + res.status)); }
+    const data = await res.json();
+    $('hof-avatar-url').value = data.url;
+    statusEl.textContent = '✅ Subida correctamente';
+    toast('Imagen subida.', 'success');
+  } catch (err) {
+    statusEl.textContent = '❌ Error: ' + err.message;
+    toast('Error al subir imagen: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
   }
@@ -1816,7 +1992,12 @@ async function hofUploadEntryVideo() {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': contentType, 'X-Filename': filename },
     });
-    if (!initRes.ok) throw new Error('Init falló: HTTP ' + initRes.status);
+    if (!initRes.ok) {
+      // El servidor explica qué hacer (p. ej. vídeo demasiado grande → usar enlace)
+      var initErr = '';
+      try { initErr = (await initRes.json()).error || ''; } catch (_) {}
+      throw new Error(initErr || ('Init falló: HTTP ' + initRes.status));
+    }
     const initData = await initRes.json();
     uploadId = initData.uploadId; key = initData.key;
 
@@ -1877,6 +2058,13 @@ function hofPreviewVideo() {
   }
 
   previewContainer.style.display = 'block';
+
+  if (/\.(jpe?g|png|gif|webp|avif)(\?|#|$)/i.test(url)) {
+    inner.innerHTML = '<img src="' + escapeHtml(url) + '" style="width:100%;height:100%;object-fit:contain;background:#000;">';
+    toast('Vista previa cargada', 'success');
+    return;
+  }
+
   var embedUrl = getEmbedUrl(url);
 
   if (embedUrl) {
@@ -2062,6 +2250,7 @@ function showHofForm(entry, editIndex) {
     $('hof-achievement').value = entry.achievement || '';
     $('hof-rating').value = entry.rating || '';
     $('hof-entry-video-url').value = entry.entry_video_url || '';
+    $('hof-avatar-url').value = entry.avatar_override || '';
   } else {
     select.value = '';
     $('hof-category').value = 'weekly';
@@ -2069,9 +2258,12 @@ function showHofForm(entry, editIndex) {
     $('hof-achievement').value = '';
     $('hof-rating').value = '';
     $('hof-entry-video-url').value = '';
+    $('hof-avatar-url').value = '';
   }
   $('hof-entry-video-file').value = '';
   $('hof-entry-upload-progress').style.display = 'none';
+  $('hof-avatar-file').value = '';
+  $('hof-avatar-upload-status').style.display = 'none';
 
   formCard.scrollIntoView({ behavior: 'smooth' });
 }
@@ -2100,11 +2292,13 @@ function hofFormSave() {
   var achievement = $('hof-achievement').value.trim();
   var rating = parseInt($('hof-rating').value, 10) || 0;
   var entryVideoUrl = $('hof-entry-video-url').value.trim();
+  var avatarOverride = $('hof-avatar-url').value.trim();
 
   var entry = {
     player_id: playerId,
     player_name: playerName,
-    player_avatar: playerAvatar,
+    player_avatar: avatarOverride || playerAvatar,
+    avatar_override: avatarOverride || undefined,
     player_class: playerClass,
     player_realm: playerRealm,
     category: category,
@@ -2181,6 +2375,15 @@ async function loadAnalytics() {
 }
 
 function renderAnalytics(data) {
+  // Visitas de la web + entradas del casino (mismo formato {total, daily}).
+  renderViewsBlock('analytics', data, 'Visitas');
+  renderViewsBlock('casino-analytics', data?.casino, 'Entradas');
+}
+
+// Pinta un bloque de vistas (stats + gráfico 14 días + tabla 7 días) sobre los IDs
+// `${prefix}-total/today/week/avg/chart/table`. `data` = {total, daily:{fecha:n}}.
+function renderViewsBlock(prefix, data, unitLabel) {
+  if (!$(prefix + '-total')) return; // el bloque no existe en esta página
   const total = data?.total || 0;
   const daily = data?.daily || {};
   const today = new Date().toISOString().slice(0, 10);
@@ -2199,13 +2402,13 @@ function renderAnalytics(data) {
 
   const avg7d = weekViews > 0 ? (weekViews / 7).toFixed(1) : '0';
 
-  $('analytics-total').textContent = total.toLocaleString();
-  $('analytics-today').textContent = todayViews.toLocaleString();
-  $('analytics-week').textContent = weekViews.toLocaleString();
-  $('analytics-avg').textContent = avg7d;
+  $(prefix + '-total').textContent = total.toLocaleString();
+  $(prefix + '-today').textContent = todayViews.toLocaleString();
+  $(prefix + '-week').textContent = weekViews.toLocaleString();
+  $(prefix + '-avg').textContent = avg7d;
 
   // Chart: últimos 14 días
-  const chartEl = $('analytics-chart');
+  const chartEl = $(prefix + '-chart');
   const days = [];
   for (let i = 13; i >= 0; i--) {
     const d = new Date();
@@ -2228,11 +2431,11 @@ function renderAnalytics(data) {
   }).join('');
 
   // Table
-  const tableEl = $('analytics-table');
+  const tableEl = $(prefix + '-table');
   const recentDays = days.slice().reverse().slice(0, 7);
   tableEl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:.85em;">' +
     '<thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid var(--border);color:var(--text-dim);">Fecha</th>' +
-    '<th style="text-align:right;padding:6px;border-bottom:1px solid var(--border);color:var(--text-dim);">Visitas</th></tr></thead>' +
+    '<th style="text-align:right;padding:6px;border-bottom:1px solid var(--border);color:var(--text-dim);">' + unitLabel + '</th></tr></thead>' +
     '<tbody>' + recentDays.map(d =>
       '<tr style="border-bottom:1px solid var(--border);">' +
         '<td style="padding:6px;">' + d.date + (d.date === today ? ' <span style="color:var(--primary);font-weight:600;">(hoy)</span>' : '') + '</td>' +
@@ -2349,6 +2552,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Tab: Battle Pass
   $('bp-add-reward-btn').addEventListener('click', function() { openBpRewardModal(null); });
+  $('bp-restore-defaults-btn').addEventListener('click', restoreBpDefaultRewards);
   $('bp-save-btn').addEventListener('click', saveBattlePassConfig);
 
   // Tab: Officers
@@ -2367,6 +2571,7 @@ document.addEventListener('DOMContentLoaded', function() {
   $('hof-entry-upload-btn').addEventListener('click', hofUploadEntryVideo);
   $('hof-campaign-upload-btn').addEventListener('click', hofUploadCampaignImage);
   $('hof-campaign-image').addEventListener('input', hofCampaignPreview);
+  $('hof-avatar-upload-btn').addEventListener('click', hofUploadAvatar);
 
   // Tab: Analytics
   $('refresh-analytics-btn').addEventListener('click', loadAnalytics);
@@ -2384,6 +2589,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Tab: Errors
   $('clear-errors-btn').addEventListener('click', clearErrors);
+
+  // Tab: Backups
+  $('backup-refresh-btn').addEventListener('click', loadBackups);
+  $('backup-run-btn').addEventListener('click', runBackupNow);
+  $('restore-run-btn').addEventListener('click', restoreFromFile);
 
   // Tab: Boost Orders
   $('refresh-boost-orders-btn').addEventListener('click', loadBoostOrders);
@@ -3157,7 +3367,14 @@ async function loadCasinoData() {
   } catch (err) {
     toast('Error cargando casino: ' + err.message, 'error');
   }
+  // La tienda se carga aparte para que un fallo suyo no tumbe el resto del panel.
+  loadCasinoShop();
+  loadCasinoMaintenance();
 }
+
+// Tasa oficial del casino: 1 PandaCoin = 5.000 oro de WoW (misma tabla que la guía de la sala).
+const PANDA_GOLD_RATE = 5000;
+function fmtGold(coins) { return ((coins || 0) * PANDA_GOLD_RATE).toLocaleString('es-VE') + ' 🪙'; }
 
 function renderCasinoStats(s) {
   const statusMap = { betting: '🟢 Apostando', spinning: '🔄 Girando', result: '🎯 Resultado' };
@@ -3166,6 +3383,7 @@ function renderCasinoStats(s) {
   $('cs-users').textContent = s.total_users ?? '—';
   $('cs-seats').textContent = s.active_seats ?? '—';
   $('cs-balance').textContent = (s.total_balance ?? 0).toLocaleString('es-VE') + ' ₡';
+  $('cs-gold').textContent = fmtGold(s.total_balance);
   $('cs-last').textContent = s.last_result !== null && s.last_result !== undefined ? s.last_result : '—';
 }
 
@@ -3181,13 +3399,14 @@ function renderCasinoConfig(cfg) {
 function renderCasinoUsers(users) {
   const tbody = $('casino-users-tbody');
   if (!users || users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>No hay usuarios registrados</p></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>No hay usuarios registrados</p></td></tr>';
     return;
   }
   tbody.innerHTML = users.map(u =>
     '<tr>' +
       '<td>' + escapeHtml(u.name) + '</td>' +
       '<td>' + (u.balance || 0).toLocaleString('es-VE') + ' ₡</td>' +
+      '<td style="color:#c99a2e;">' + fmtGold(u.balance) + '</td>' +
       '<td>' + (u.total_bet || 0).toLocaleString('es-VE') + '</td>' +
       '<td style="color:#2f9c63;">' + (u.total_won || 0).toLocaleString('es-VE') + '</td>' +
       '<td>' + (u.rounds_played || 0) + '</td>' +
@@ -3281,11 +3500,13 @@ window.deleteCasinoUser = async function(userId, userName) {
 // ─── Leaderboard ───
 function renderCasinoLeaderboard(leaderboard) {
   const tbody = $('casino-leaderboard-tbody');
-  if (!leaderboard || leaderboard.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Sin datos todavía</p></td></tr>';
+  // Solo cuentan jugadores que YA ganaron algo (mismo criterio que el ticker de la sala).
+  const winners = (leaderboard || []).filter(u => (u.total_won || 0) > 0);
+  if (winners.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Sin ganadores todavía</p></td></tr>';
     return;
   }
-  tbody.innerHTML = leaderboard.slice(0, 10).map((u, i) =>
+  tbody.innerHTML = winners.slice(0, 10).map((u, i) =>
     '<tr>' +
       '<td>' + (i + 1) + '</td>' +
       '<td>' + escapeHtml(u.name) + '</td>' +
@@ -3483,7 +3704,19 @@ function renderCasinoAdvancedStats(s) {
     bind('casino-refresh-btn', 'click', loadCasinoData);
     bind('casino-save-config-btn', 'click', saveCasinoConfig);
     bind('casino-reset-btn', 'click', resetCasinoState);
+    bind('casino-factory-reset-btn', 'click', factoryResetCasino);
     bind('casino-clear-rounds-btn', 'click', clearCasinoRounds);
+    bind('casino-clear-chat-btn', 'click', clearCasinoChat);
+    // Tienda de decoraciones (migrado de casino-shop-admin.html)
+    bind('casino-shop-refresh-btn', 'click', loadCasinoShop);
+    bind('casino-shop-clear-sales-btn', 'click', clearShopSales);
+    bind('casino-shop-add-row-btn', 'click', () => addShopRow());
+    bind('casino-shop-restore-btn', 'click', restoreShopCatalog);
+    bind('casino-shop-save-btn', 'click', saveCasinoShop);
+    // Dealer · Mantenimiento
+    bind('maint-close-btn', 'click', () => setCasinoMaintenance(true));
+    bind('maint-open-btn', 'click', () => setCasinoMaintenance(false));
+    bind('maint-dealer-btn', 'click', openCasinoAsDealer);
   }, 100);
 })();
 
@@ -3514,14 +3747,526 @@ async function resetCasinoState() {
   }
 }
 
-async function clearCasinoRounds() {
-  if (!confirm('⚠️ ¿Eliminar todo el historial de rondas? Esta acción no se puede deshacer.')) return;
-  if (!confirm('Última confirmación: ¿borrar todas las rondas del historial?')) return;
+async function factoryResetCasino() {
+  if (!confirm('💣 Esto borra TODAS las cuentas de casino (saldo, skins, avatar), transacciones, rondas, leaderboard, chat y sesiones — y desconecta a todos los jugadores. Es IRREVERSIBLE. ¿Continuar?')) return;
+  const typed = prompt('Última confirmación: escribí BORRAR TODO (en mayúsculas) para reiniciar el casino de fábrica.');
+  if (typed !== 'BORRAR TODO') { toast('Cancelado (no coincidió el texto).', 'error'); return; }
   try {
-    await apiCall('/admin/casino/clear-rounds', 'POST');
-    toast('Historial eliminado', 'success');
+    await apiCall('/admin/casino/factory-reset', 'POST');
+    toast('Casino reiniciado de fábrica: cuentas e historial borrados.', 'success');
     loadCasinoData();
   } catch (err) {
     toast('Error: ' + err.message, 'error');
   }
 }
+
+async function clearCasinoRounds() {
+  if (!confirm('⚠️ ¿Eliminar todo el historial de rondas? Esta acción no se puede deshacer.')) return;
+  if (!confirm('Última confirmación: ¿borrar todas las rondas del historial?')) return;
+  try {
+    await apiCall('/admin/casino/clear-rounds', 'POST');
+    toast('Historial eliminado (también en la sala en vivo)', 'success');
+    loadCasinoData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+async function clearCasinoChat() {
+  if (!confirm('⚠️ ¿Vaciar el chat de la sala? Se borrará para todos los jugadores conectados.')) return;
+  try {
+    await apiCall('/admin/casino/clear-chat', 'POST');
+    toast('Chat de la sala vaciado', 'success');
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  TIENDA DEL CASINO (migrado de casino-shop-admin.html)
+// ══════════════════════════════════════════════════════════
+
+let shopDefaultCatalog = [];
+const SHOP_SLOTS = ['avatar_frame', 'name_effect', 'chip_skin'];
+const SHOP_RARITIES = ['comun', 'raro', 'epico', 'legendario'];
+
+async function loadCasinoShop() {
+  try {
+    const r = await apiCall('/admin/casino/shop');
+    shopDefaultCatalog = r.default_catalog || [];
+    renderShopCatalog(r.catalog || []);
+    renderShopSales(r);
+  } catch (err) {
+    toast('Error cargando tienda: ' + err.message, 'error');
+  }
+}
+
+async function clearShopSales() {
+  if (!confirm('⚠️ ¿Borrar TODO el historial de ventas de la tienda? Las decoraciones compradas por los jugadores NO se pierden; solo se vacía este registro. Esta acción no se puede deshacer.')) return;
+  try {
+    await apiCall('/admin/casino/shop/sales', 'DELETE');
+    toast('Historial de ventas borrado', 'success');
+    loadCasinoShop();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+function renderShopSales(d) {
+  $('shop-total-sales').textContent = (d.total_sales || 0).toLocaleString('es-VE');
+  $('shop-total-revenue').textContent = (d.total_revenue || 0).toLocaleString('es-VE') + ' ₡';
+
+  const summary = d.summary || [];
+  $('shop-summary-tbody').innerHTML = summary.length
+    ? summary.map(s =>
+        '<tr>' +
+          '<td>' + escapeHtml(s.name || s.item_id) + '</td>' +
+          '<td>' + (s.count || 0).toLocaleString('es-VE') + '</td>' +
+          '<td style="color:#f0a52e;">' + (s.revenue || 0).toLocaleString('es-VE') + ' ₡</td>' +
+        '</tr>'
+      ).join('')
+    : '<tr><td colspan="3" class="empty-state"><p>Sin ventas aún</p></td></tr>';
+
+  const sales = d.sales || [];
+  $('shop-sales-tbody').innerHTML = sales.length
+    ? sales.map(s =>
+        '<tr>' +
+          '<td>' + escapeHtml(s.name || '—') + '</td>' +
+          '<td>' + escapeHtml(s.item_name || s.item_id) + '</td>' +
+          '<td style="color:#f0a52e;">' + (s.price || 0).toLocaleString('es-VE') + ' ₡</td>' +
+          '<td>' + (s.ts ? timeAgo(new Date(s.ts).toISOString()) : '—') + '</td>' +
+        '</tr>'
+      ).join('')
+    : '<tr><td colspan="4" class="empty-state"><p>Sin compras aún</p></td></tr>';
+}
+
+function renderShopCatalog(catalog) {
+  $('shop-rows').innerHTML = '';
+  (catalog || []).forEach(addShopRow);
+}
+
+function shopRowHtml(it) {
+  it = it || { id: '', slot: 'avatar_frame', name: '', price: 0, rarity: 'comun', image: '' };
+  const slotOpts = SHOP_SLOTS.map(s => '<option value="' + s + '"' + (it.slot === s ? ' selected' : '') + '>' + s + '</option>').join('');
+  const rarOpts = SHOP_RARITIES.map(r => '<option value="' + r + '"' + (it.rarity === r ? ' selected' : '') + '>' + r + '</option>').join('');
+  return '<div class="shop-row">' +
+    '<input class="input shop-f-id" value="' + escapeHtml(it.id) + '" placeholder="frame_x">' +
+    '<select class="input shop-f-slot">' + slotOpts + '</select>' +
+    '<input class="input shop-f-name" value="' + escapeHtml(it.name) + '" placeholder="Nombre">' +
+    '<input class="input shop-f-price" type="number" min="0" value="' + (Number(it.price) || 0) + '">' +
+    '<select class="input shop-f-rarity">' + rarOpts + '</select>' +
+    '<input class="input shop-f-image" value="' + escapeHtml(it.image || '') + '" placeholder="(CSS por id)">' +
+    '<button class="btn btn-sm btn-danger shop-del" type="button">✕</button>' +
+  '</div>';
+}
+
+function addShopRow(it) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = shopRowHtml(it);
+  const node = tmp.firstChild;
+  $('shop-rows').appendChild(node);
+  node.querySelector('.shop-del').addEventListener('click', () => node.remove());
+}
+
+function collectShopCatalog() {
+  const out = [];
+  document.querySelectorAll('#shop-rows .shop-row').forEach(r => {
+    const id = r.querySelector('.shop-f-id').value.trim();
+    if (!id) return;
+    const item = {
+      id,
+      slot: r.querySelector('.shop-f-slot').value,
+      name: r.querySelector('.shop-f-name').value.trim() || id,
+      price: Math.max(0, Math.round(Number(r.querySelector('.shop-f-price').value) || 0)),
+      rarity: r.querySelector('.shop-f-rarity').value,
+    };
+    const image = r.querySelector('.shop-f-image').value.trim();
+    if (image) item.image = image;
+    out.push(item);
+  });
+  return out;
+}
+
+function restoreShopCatalog() {
+  if (!confirm('¿Cargar el catálogo por defecto en el editor? (no se guarda hasta pulsar Guardar)')) return;
+  renderShopCatalog(shopDefaultCatalog);
+}
+
+async function saveCasinoShop() {
+  const catalog = collectShopCatalog();
+  try {
+    await apiCall('/admin/casino/shop', 'PUT', { catalog });
+    toast('Catálogo guardado (' + catalog.length + ' decoraciones)', 'success');
+  } catch (err) {
+    toast('Error al guardar catálogo: ' + err.message, 'error');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  DEALER · MANTENIMIENTO DEL CASINO
+// ════════════════════════════════════════════════════════════════════
+function renderMaintStatus(active) {
+  const el = $('maint-status');
+  if (!el) return;
+  if (active) {
+    el.textContent = '🔒 CERRADO (mantenimiento)';
+    el.style.background = 'rgba(207,106,100,.18)';
+    el.style.color = '#ff9a93';
+  } else {
+    el.textContent = '🟢 ABIERTO';
+    el.style.background = 'rgba(84,209,138,.15)';
+    el.style.color = '#54d18a';
+  }
+}
+
+async function loadCasinoMaintenance() {
+  try {
+    const m = await apiCall('/admin/casino/maintenance');
+    renderMaintStatus(!!m.active);
+    const msg = $('maint-message');
+    if (msg && !msg.value) msg.value = m.message || '';
+  } catch (err) {
+    // Silencioso: no romper el resto del panel si falla.
+  }
+}
+
+async function setCasinoMaintenance(active) {
+  const message = ($('maint-message') && $('maint-message').value.trim()) || '';
+  try {
+    const r = await apiCall('/admin/casino/maintenance', 'PUT', { active, message });
+    renderMaintStatus(!!r.active);
+    toast(active ? 'Casino CERRADO por mantenimiento.' : 'Casino ABIERTO para todos.', 'success');
+  } catch (err) {
+    toast('Error al cambiar el mantenimiento: ' + err.message, 'error');
+  }
+}
+
+// Abre la sala con un token de dealer (el propio token admin) → bypass del mantenimiento.
+function openCasinoAsDealer() {
+  const tk = getToken();
+  if (!tk) { toast('No hay sesión admin válida.', 'error'); return; }
+  window.open('/sala-pandacoins-standalone?dealer=' + encodeURIComponent(tk), '_blank');
+}
+
+// ══════════════════════════════════════════════════════════
+//  TAB: LIGA RBG (inscritos + core de 12)
+// ══════════════════════════════════════════════════════════
+
+let _ligaRbgRoster = [];
+let _ligaRbgCatalog = null;
+
+async function loadLigaRbg() {
+  const tbody = $('liga-rbg-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);">Cargando…</td></tr>';
+
+  try {
+    // Catálogo de specs (público, sin auth) para mostrar nombres legibles
+    if (!_ligaRbgCatalog) {
+      const catRes = await fetch(API_URL + '/api/rbg/catalog');
+      _ligaRbgCatalog = await catRes.json();
+    }
+    const data = await apiCall('/admin/rbg/roster');
+    _ligaRbgRoster = data.roster || [];
+    renderLigaRbg(data.core || { starters: [], bench: [] });
+  } catch (err) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger,#e05252);">Error: ' + escapeHtml(err.message) + '</td></tr>';
+  }
+}
+
+function renderLigaRbg(core) {
+  const tbody = $('liga-rbg-tbody');
+  const specs = (_ligaRbgCatalog && _ligaRbgCatalog.specs) || {};
+  const ROLE_TXT = { tank: '🛡️ Tanque', healer: '➕ Healer', dps: '⚔️ DPS' };
+
+  if (_ligaRbgRoster.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);">Todavía no hay inscritos.</td></tr>';
+    $('liga-rbg-resumen').textContent = '0 inscritos';
+    return;
+  }
+
+  tbody.innerHTML = _ligaRbgRoster.map(p => {
+    const spec = specs[p.spec] || {};
+    const inCore = core.captain === p.user_id ? 'captain'
+      : core.starters.includes(p.user_id) ? 'starter'
+      : core.bench.includes(p.user_id) ? 'bench' : '';
+    const avatar = p.avatar_url
+      ? '<img src="' + escapeHtml(p.avatar_url) + '" alt="" style="width:26px;height:26px;border-radius:50%;vertical-align:middle;margin-right:8px;">'
+      : '';
+    return '<tr data-userid="' + escapeHtml(p.user_id) + '">' +
+      '<td>' + avatar + escapeHtml(p.discord_name || '—') +
+        '<div style="font-size:.72rem;color:var(--text-muted);">' + escapeHtml(p.user_id) + '</div></td>' +
+      '<td><b>' + escapeHtml(p.nickname) + '</b>' + (p.has_photo ? ' 📷' : '') + '</td>' +
+      '<td>' + escapeHtml((spec.name || p.spec) + ' — ' + (spec.cls || '')) + '</td>' +
+      '<td>' + (ROLE_TXT[p.role] || escapeHtml(p.role)) + '</td>' +
+      '<td>' + escapeHtml(p.country || '—') + '</td>' +
+      '<td>' + (p.starter ? 'Titular' : 'Banca') + '</td>' +
+      '<td><select class="input liga-rbg-core-sel" style="max-width:140px;">' +
+        '<option value=""' + (inCore === '' ? ' selected' : '') + '>—</option>' +
+        '<option value="captain"' + (inCore === 'captain' ? ' selected' : '') + '>⭐ Capitán</option>' +
+        '<option value="starter"' + (inCore === 'starter' ? ' selected' : '') + '>Core Titular</option>' +
+        '<option value="bench"' + (inCore === 'bench' ? ' selected' : '') + '>Core Banca</option>' +
+      '</select></td>' +
+      '<td style="font-size:.78rem;color:var(--text-muted);">' + (p.created_at ? timeAgo(p.created_at) : '—') + '</td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="deleteLigaRbgProfile(\'' + escapeForJsString(p.user_id) + '\')">🗑️</button></td>' +
+      '</tr>';
+  }).join('');
+
+  updateLigaRbgResumen(core);
+}
+
+function updateLigaRbgResumen(core) {
+  const total = _ligaRbgRoster.length;
+  const tanks = _ligaRbgRoster.filter(p => p.role === 'tank').length;
+  const heals = _ligaRbgRoster.filter(p => p.role === 'healer').length;
+  const dps = _ligaRbgRoster.filter(p => p.role === 'dps').length;
+  $('liga-rbg-resumen').innerHTML =
+    '<b>' + total + '</b> inscritos · 🛡️ ' + tanks + ' · ➕ ' + heals + ' · ⚔️ ' + dps +
+    ' &nbsp;|&nbsp; Core actual: ' + ((core && core.starters.length) || 0) + ' titulares + ' +
+    ((core && core.bench.length) || 0) + ' bancas';
+}
+
+async function saveLigaRbgCore() {
+  const rows = document.querySelectorAll('#liga-rbg-tbody tr[data-userid]');
+  const starters = [], bench = [], captains = [];
+  rows.forEach(tr => {
+    const sel = tr.querySelector('.liga-rbg-core-sel');
+    if (!sel) return;
+    if (sel.value === 'captain') { captains.push(tr.dataset.userid); starters.push(tr.dataset.userid); }
+    if (sel.value === 'starter') starters.push(tr.dataset.userid);
+    if (sel.value === 'bench') bench.push(tr.dataset.userid);
+  });
+
+  if (captains.length > 1) { toast('Solo puede haber UN capitán (marcaste ' + captains.length + ')', 'error'); return; }
+  if (starters.length > 10) { toast('Máximo 10 titulares en el core (tenés ' + starters.length + ')', 'error'); return; }
+
+  try {
+    const r = await apiCall('/admin/rbg/core', 'PUT', { starters, bench, captain: captains[0] || null });
+    toast('Core guardado: ' + starters.length + ' titulares (' + (captains.length ? '1 capitán' : 'sin capitán') + ') + ' + bench.length + ' bancas', 'success');
+    updateLigaRbgResumen(r.core);
+  } catch (err) {
+    toast('Error al guardar el core: ' + err.message, 'error');
+  }
+}
+
+async function deleteLigaRbgProfile(userId) {
+  if (!confirm('¿Dar de baja a este inscrito de la Liga RBG? (no toca su cuenta del casino)')) return;
+  try {
+    await apiCall('/admin/rbg/profile/' + encodeURIComponent(userId), 'DELETE');
+    toast('Inscripción eliminada', 'success');
+    loadLigaRbg();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  TAB: CUENTAS APP (worker exilium-app-auth + D1)
+// ══════════════════════════════════════════════════════════
+
+const ACCOUNTS_API = 'https://exilium-app-auth.mitzumitzukyhs.workers.dev';
+
+let accState = { page: 1, perPage: 25, total: 0 };
+
+async function accountsApi(endpoint, method = 'GET', body = null) {
+  const token = getToken();
+  const options = {
+    method,
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+  };
+  if (body) options.body = JSON.stringify(body);
+  const res = await fetch(ACCOUNTS_API + endpoint, options);
+  if (res.status === 401) { clearToken(); showLogin(); throw new Error('Sesión expirada'); }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data && data.error ? data.error : 'Error del servidor');
+  return data;
+}
+
+async function loadAccountsData() {
+  try {
+    const q = encodeURIComponent(($('account-search') ? $('account-search').value : '').trim());
+    const status = $('account-filter') ? $('account-filter').value : '';
+    const [statsRes, listRes] = await Promise.all([
+      accountsApi('/admin/accounts/stats'),
+      accountsApi('/admin/accounts?q=' + q + '&status=' + status +
+                  '&page=' + accState.page + '&per_page=' + accState.perPage),
+    ]);
+    renderAccountStats(statsRes.stats || {});
+    accState.total = listRes.total || 0;
+    renderAccountsTable(listRes.users || []);
+    renderAccountsPager();
+  } catch (err) {
+    toast('Error cargando cuentas: ' + err.message, 'error');
+  }
+}
+
+function renderAccountStats(s) {
+  $('acc-total').textContent    = (s.total != null) ? s.total : '—';
+  $('acc-active').textContent   = (s.active != null) ? s.active : '—';
+  $('acc-banned').textContent   = (s.banned != null) ? s.banned : '—';
+  $('acc-pending').textContent  = (s.pending_validation != null) ? s.pending_validation : '—';
+  $('acc-new7d').textContent    = (s.new_7d != null) ? s.new_7d : '—';
+  $('acc-active7d').textContent = (s.active_7d != null) ? s.active_7d : '—';
+}
+
+function accountStatusBadge(u) {
+  if (u.status === 'banned') {
+    return '<span style="color:#dd4444;font-weight:700;" title="' + escapeHtml(u.ban_reason || '') + '">⛔ Baneada</span>';
+  }
+  return '<span style="color:#2f9c63;">✔ Activa</span>';
+}
+
+function renderAccountsTable(users) {
+  const tbody = $('accounts-tbody');
+  $('accounts-count').textContent = accState.total + ' cuenta' + (accState.total === 1 ? '' : 's');
+  if (!users || users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state"><p>No hay cuentas que coincidan</p></td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u =>
+    '<tr' + (u.status === 'banned' ? ' style="opacity:.6;"' : '') + '>' +
+      '<td>' + escapeHtml(u.character_name || '—') + '</td>' +
+      '<td>' + escapeHtml(u.battle_tag || '—') + '</td>' +
+      '<td>' + escapeHtml(u.email) + '</td>' +
+      '<td>' + (u.discord_username ? escapeHtml(u.discord_username) : '<span style="opacity:.4;">—</span>') + '</td>' +
+      '<td>' + escapeHtml(u.tier || 'free') + '</td>' +
+      '<td>' + (u.member_status === 'MEMBER'
+          ? '<span style="color:#2f9c63;">MEMBER</span>'
+          : '<span style="color:#c99a2e;">PENDIENTE</span>') + '</td>' +
+      '<td>' + accountStatusBadge(u) + '</td>' +
+      '<td>' + (u.created_at ? timeAgo(u.created_at) : '—') + '</td>' +
+      '<td>' + (u.last_login ? timeAgo(u.last_login) : '<span style="opacity:.4;">nunca</span>') + '</td>' +
+      '<td class="player-actions">' +
+        '<button class="btn btn-sm" onclick="viewAccount(\'' + escapeForJsString(u.id) + '\')">🔍 Ver</button>' +
+        '<button class="btn btn-sm" onclick="editAccountTier(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.tier) + '\')">⭐ Tier</button>' +
+        (u.status === 'banned'
+          ? '<button class="btn btn-sm btn-success" onclick="unbanAccount(\'' + escapeForJsString(u.id) + '\')">♻ Desbanear</button>'
+          : '<button class="btn btn-sm btn-danger" onclick="banAccount(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.character_name || u.email) + '\')">⛔ Banear</button>') +
+        '<button class="btn btn-sm btn-danger" onclick="deleteAccount(\'' + escapeForJsString(u.id) + '\', \'' + escapeForJsString(u.email) + '\')">🗑️</button>' +
+      '</td>' +
+    '</tr>'
+  ).join('');
+}
+
+function renderAccountsPager() {
+  const totalPages = Math.max(1, Math.ceil(accState.total / accState.perPage));
+  $('acc-page-info').textContent = 'Página ' + accState.page + ' de ' + totalPages;
+  $('acc-prev-btn').disabled = accState.page <= 1;
+  $('acc-next-btn').disabled = accState.page >= totalPages;
+}
+
+window.viewAccount = async function(userId) {
+  try {
+    const data = await accountsApi('/admin/accounts/' + encodeURIComponent(userId));
+    const u = data.user;
+    const auditRows = (data.audit || []).map(a =>
+      '<tr><td>' + escapeHtml(a.action) + '</td><td>' + escapeHtml(a.detail || '—') + '</td><td>' + timeAgo(a.created_at) + '</td></tr>'
+    ).join('') || '<tr><td colspan="3" style="opacity:.5;">Sin actividad registrada</td></tr>';
+
+    openModal('Cuenta — ' + (u.character_name || u.email),
+      '<div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">' +
+        '<div><b>ID:</b> ' + escapeHtml(u.id) + '</div>' +
+        '<div><b>Email:</b> ' + escapeHtml(u.email) + '</div>' +
+        '<div><b>BattleTag:</b> ' + escapeHtml(u.battle_tag || '—') + '</div>' +
+        '<div><b>Personaje:</b> ' + escapeHtml(u.character_name || '—') + ' (' + escapeHtml(u.wow_class || '—') + ')</div>' +
+        '<div><b>Discord:</b> ' + escapeHtml(u.discord_username || '—') + (u.discord_id ? ' (' + escapeHtml(u.discord_id) + ')' : '') + '</div>' +
+        '<div><b>Tier:</b> ' + escapeHtml(u.tier) + ' · <b>Rol:</b> ' + escapeHtml(u.role) + ' · <b>Coins:</b> ' + (u.coins || 0) + '</div>' +
+        '<div><b>Estado:</b> ' + (u.status === 'banned' ? '⛔ Baneada — ' + escapeHtml(u.ban_reason || 'sin motivo') : '✔ Activa') + '</div>' +
+        '<div><b>Registro:</b> ' + (u.created_at ? new Date(u.created_at).toLocaleString('es-VE') : '—') +
+          ' · <b>Último login:</b> ' + (u.last_login ? new Date(u.last_login).toLocaleString('es-VE') : 'nunca') + '</div>' +
+        '<hr style="border-color:rgba(255,255,255,.1);margin:8px 0;">' +
+        '<b>Auditoría</b>' +
+        '<div class="table-wrap" style="max-height:200px;overflow-y:auto;">' +
+          '<table class="data-table"><thead><tr><th>Acción</th><th>Detalle</th><th>Cuándo</th></tr></thead>' +
+          '<tbody>' + auditRows + '</tbody></table>' +
+        '</div>' +
+      '</div>'
+    );
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+};
+
+window.editAccountTier = function(userId, currentTier) {
+  openModal('Cambiar tier',
+    '<div style="display:flex;flex-direction:column;gap:12px;">' +
+      '<select class="input" id="acc-tier-select">' +
+        ['free', 'premium', 'premium_plus'].map(t =>
+          '<option value="' + t + '"' + (t === currentTier ? ' selected' : '') + '>' + t + '</option>'
+        ).join('') +
+      '</select>' +
+      '<button class="btn btn-primary" id="acc-tier-confirm">✓ Guardar</button>' +
+    '</div>'
+  );
+  setTimeout(() => {
+    const btn = $('acc-tier-confirm');
+    if (btn) btn.addEventListener('click', async () => {
+      try {
+        btn.disabled = true; btn.textContent = '⏳';
+        await accountsApi('/admin/accounts/' + encodeURIComponent(userId), 'PATCH', {
+          tier: $('acc-tier-select').value,
+        });
+        toast('Tier actualizado', 'success');
+        closeModal();
+        loadAccountsData();
+      } catch (err) {
+        toast('Error: ' + err.message, 'error');
+        btn.disabled = false; btn.textContent = '✓ Guardar';
+      }
+    });
+  }, 50);
+};
+
+window.banAccount = async function(userId, name) {
+  const reason = prompt('Motivo del baneo para "' + name + '" (visible para el usuario):');
+  if (reason === null) return;
+  try {
+    await accountsApi('/admin/accounts/' + encodeURIComponent(userId) + '/ban', 'POST', { reason: reason.trim() || null });
+    toast('Cuenta baneada', 'success');
+    loadAccountsData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+};
+
+window.unbanAccount = async function(userId) {
+  try {
+    await accountsApi('/admin/accounts/' + encodeURIComponent(userId) + '/unban', 'POST');
+    toast('Cuenta reactivada', 'success');
+    loadAccountsData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+};
+
+window.deleteAccount = async function(userId, email) {
+  if (!confirm('¿Eliminar permanentemente la cuenta "' + email + '"?')) return;
+  if (!confirm('¿Seguro? Esta acción no se puede deshacer.')) return;
+  try {
+    await accountsApi('/admin/accounts/' + encodeURIComponent(userId), 'DELETE');
+    toast('Cuenta eliminada', 'success');
+    loadAccountsData();
+  } catch (err) {
+    toast('Error: ' + err.message, 'error');
+  }
+};
+
+// Listeners del tab de cuentas (mismo patrón que bindCasinoEvents)
+(function bindAccountEvents() {
+  setTimeout(() => {
+    const search = $('account-search');
+    let accSearchTimer = null;
+    if (search) search.addEventListener('input', () => {
+      clearTimeout(accSearchTimer);
+      accSearchTimer = setTimeout(() => { accState.page = 1; loadAccountsData(); }, 350);
+    });
+    const filter = $('account-filter');
+    if (filter) filter.addEventListener('change', () => { accState.page = 1; loadAccountsData(); });
+    const refresh = $('refresh-accounts-btn');
+    if (refresh) refresh.addEventListener('click', loadAccountsData);
+    const prev = $('acc-prev-btn');
+    if (prev) prev.addEventListener('click', () => { if (accState.page > 1) { accState.page--; loadAccountsData(); } });
+    const next = $('acc-next-btn');
+    if (next) next.addEventListener('click', () => { accState.page++; loadAccountsData(); });
+  }, 100);
+})();

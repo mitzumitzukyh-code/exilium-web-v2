@@ -197,6 +197,62 @@
 
         <hr class="section-divider">
 
+        <!-- Banner Casino PandaCoins: lo más NUEVO de la web → primera sección tras el hero.
+             Moneda con giro 3D (anverso/reverso reales del casino), brillo que barre el banner
+             y destellos. Sin promesas de promo: solo la equivalencia en oro. -->
+        <section id="casino-banner" class="container section reveal" style="text-align:center;padding:0;">
+            <a href="sala-pandacoins-standalone.html" class="casino-promo-link">
+                <div class="casino-promo-banner">
+                    <span class="casino-promo-shine" aria-hidden="true"></span>
+                    <span class="casino-promo-sparkle s1" aria-hidden="true">✦</span>
+                    <span class="casino-promo-sparkle s2" aria-hidden="true">✦</span>
+                    <span class="casino-promo-sparkle s3" aria-hidden="true">✦</span>
+                    <span class="casino-promo-sparkle s4" aria-hidden="true">✦</span>
+                    <div class="casino-promo-left">
+                        <span class="casino-promo-coinflip">
+                            <span class="casino-promo-coinface casino-promo-coinface-front"><img src="assets/coin_3.png" alt="PandaCoin" class="casino-promo-coin" width="64" height="64"></span>
+                            <span class="casino-promo-coinface casino-promo-coinface-back"><img src="assets/casino/reverso.png" alt="" class="casino-promo-coin" width="64" height="64"></span>
+                        </span>
+                    </div>
+                    <div class="casino-promo-center">
+                        <div class="casino-promo-eyebrow">🎰 NUEVO — Sala de PandaCoins</div>
+                        <div class="casino-promo-title">Ruleta Europea Multijugador</div>
+                        <div class="casino-promo-desc">Entra con Discord y apuesta tus PandaCoins en la mesa en tiempo real con la guild. 1 PandaCoin = 5.000 oro de WoW.</div>
+                    </div>
+                    <div class="casino-promo-right">
+                        <span class="casino-promo-cta">Jugar Ahora</span>
+                        <span class="casino-promo-arrow">→</span>
+                    </div>
+                </div>
+            </a>
+        </section>
+
+        <!-- Banner Liga RBG: inscripción a la liga de Rated Battlegrounds de la guild.
+             Mismo componente visual que el banner del casino, con tinte rojo batalla. -->
+        <section id="rbg-banner" class="container section reveal" style="text-align:center;padding:0;">
+            <a href="liga-rbg.html" class="casino-promo-link">
+                <div class="casino-promo-banner rbg-promo-banner">
+                    <span class="casino-promo-shine" aria-hidden="true"></span>
+                    <span class="casino-promo-sparkle s1" aria-hidden="true">✦</span>
+                    <span class="casino-promo-sparkle s3" aria-hidden="true">✦</span>
+                    <div class="casino-promo-left">
+                        <span class="rbg-promo-icon" aria-hidden="true">⚔️</span>
+                    </div>
+                    <div class="casino-promo-center">
+                        <div class="casino-promo-eyebrow rbg-promo-eyebrow">⚔️ NUEVO — Liga RBG</div>
+                        <div class="casino-promo-title">Inscripciones Abiertas</div>
+                        <div class="casino-promo-desc">Entra con Discord, personaliza tu PJ (foto, país y especialización) y aparece en el roster de la liga de la guild.</div>
+                    </div>
+                    <div class="casino-promo-right">
+                        <span class="casino-promo-cta">Inscribirme</span>
+                        <span class="casino-promo-arrow">→</span>
+                    </div>
+                </div>
+            </a>
+        </section>
+
+        <hr class="section-divider">
+
         <!-- Publicidad AdSense - Banner en la sección Hero -->
         <div style="text-align:center; margin: 20px 0;">
             <ins class="adsbygoogle"
@@ -226,27 +282,6 @@
             </a>
         </section>
 
-        <hr class="section-divider">
-
-        <!-- Banner Casino PandaCoins -->
-        <section id="casino-banner" class="container section reveal" style="text-align:center;padding:0;">
-            <a href="sala-pandacoins-standalone.html" class="casino-promo-link">
-                <div class="casino-promo-banner">
-                    <div class="casino-promo-left">
-                        <img src="assets/coin_3.png" alt="PandaCoin" class="casino-promo-coin" width="64" height="64">
-                    </div>
-                    <div class="casino-promo-center">
-                        <div class="casino-promo-eyebrow">🎰 NUEVO — Sala de PandaCoins</div>
-                        <div class="casino-promo-title">Ruleta Europea Multijugador</div>
-                        <div class="casino-promo-desc">Regístrate gratis, recibe 1,000 PandaCoins y compite en la mesa. 1 PandaCoin = 5,000 oro de WoW.</div>
-                    </div>
-                    <div class="casino-promo-right">
-                        <span class="casino-promo-cta">Jugar Ahora</span>
-                        <span class="casino-promo-arrow">→</span>
-                    </div>
-                </div>
-            </a>
-        </section>
 
         <hr class="section-divider">
 
@@ -258,9 +293,10 @@
             <div class="hof-showcase">
                 <div class="hof-video-wrapper">
                     <div class="hof-video-frame">
-                        <video id="hof-video" autoplay muted loop playsinline poster="assets/exilium-fondo.jpg" preload="none" loading="lazy">
-                            <source src="assets/hall-of-fame.mp4" type="video/mp4">
-                        </video>
+                        <!-- Sin <source> estático: assets/hall-of-fame.mp4 ya no existe (se borró
+                             en la optimización a WebP). El video real lo inyecta app.js desde
+                             config:hall_of_fame (video_url del admin); mientras, se ve el póster. -->
+                        <video id="hof-video" autoplay muted loop playsinline poster="assets/exilium-fondo.jpg" preload="none" loading="lazy"></video>
                         <div class="hof-video-overlay"></div>
                     </div>
                 </div>
